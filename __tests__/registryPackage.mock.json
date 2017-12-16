@@ -1,0 +1,146 @@
+{
+  "_id": "dockly",
+  "_rev": "19-8954e52e62d09cfaf1f4839d02fe0929",
+  "name": "dockly",
+  "description": "Interactive shell for managing Docker containers",
+  "dist-tags": {
+    "latest": "3.1.0"
+  },
+  "versions": {
+    "3.1.0": {
+      "name": "dockly",
+      "version": "3.1.0",
+      "description": "Interactive shell for managing Docker containers",
+      "main": "index.js",
+      "scripts": {
+        "test": "yarn run lint",
+        "lint": "standard",
+        "lint:fix": "standard --fix"
+      },
+      "engines": {
+        "node": ">=6.10.0"
+      },
+      "bin": {
+        "dockly": "./index.js"
+      },
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/lirantal/dockly.git"
+      },
+      "keywords": [
+        "docker",
+        "container",
+        "cli",
+        "shell",
+        "blessed",
+        "command",
+        "command line",
+        "console",
+        "terminal"
+      ],
+      "author": {
+        "name": "Liran Tal",
+        "email": "liran.tal@gmail.com"
+      },
+      "license": "MIT",
+      "bugs": {
+        "url": "https://github.com/lirantal/dockly/issues"
+      },
+      "homepage": "https://github.com/lirantal/dockly#readme",
+      "dependencies": {
+        "blessed": "^0.1.81",
+        "blessed-contrib": "^4.7.5",
+        "chalk": "^2.0.1",
+        "command-line-args": "^4.0.6",
+        "command-line-usage": "^4.0.0",
+        "dockerode": "^2.5.0",
+        "figures": "^2.0.0",
+        "glob": "^7.1.2",
+        "opn": "^5.1.0"
+      },
+      "devDependencies": {
+        "standard": "^10.0.2"
+      },
+      "gitHead": "28871c132d0b6a1fe574352af0d32b11fca2de88",
+      "_id": "dockly@3.1.0",
+      "_npmVersion": "5.5.1",
+      "_nodeVersion": "8.4.0",
+      "_npmUser": {
+        "name": "lirantal",
+        "email": "liran.tal@gmail.com"
+      },
+      "dist": {
+        "integrity": "sha512-EJpDtbwaWF2yKhv6ee1jGo3Z+uCF/ESnVGR7LII3hvV6xWSreeJbOKlRRAHCtuA2U2HXwpk5qn1m/J9UqV0rrw==",
+        "shasum": "22cb6bfd2f3bca9e18d5d24cef2c2d83c5780597",
+        "tarball": "https://registry.npmjs.org/dockly/-/dockly-3.1.0.tgz"
+      },
+      "maintainers": [
+        {
+          "name": "lirantal",
+          "email": "liran.tal@gmail.com"
+        }
+      ],
+      "_npmOperationalInternal": {
+        "host": "s3://npm-registry-packages",
+        "tmp": "tmp/dockly-3.1.0.tgz_1509728182483_0.042640595231205225"
+      },
+      "directories": {}
+    }
+  },
+  "readme": "<img width=\"200\" src=\"https://user-images.githubusercontent.com/316371/28937414-67ee5ffa-7893-11e7-95f9-5059cacf9170.png\">\n\n[![view on npm](http://img.shields.io/npm/v/dockly.svg)](https://www.npmjs.org/package/dockly)\n[![view on npm](http://img.shields.io/npm/l/dockly.svg)](https://www.npmjs.org/package/dockly)\n[![npm module downloads](http://img.shields.io/npm/dt/dockly.svg)](https://www.npmjs.org/package/dockly)\n[![Dependency Status](https://david-dm.org/lirantal/dockly.svg)](https://david-dm.org/lirantal/dockly)\n[![Codefresh build status]( https://g.codefresh.io/api/badges/build?repoOwner=lirantal&repoName=dockly&branch=master&pipelineName=dockly&accountName=lirantal&type=cf-1)]( https://g.codefresh.io/repositories/lirantal/dockly/builds?filter=trigger:build;branch:master;service:58127ed36b0e230100f421f6~dockly)\n\n# Dockly\nDocker console UI and Dashboard for quick manging and inspecting of Containers and Images\n\n![dockly-demo-2](https://cloud.githubusercontent.com/assets/316371/25682867/c5212216-3027-11e7-8f36-72d38516d2af.gif)\n\n# Install\nInstall the API module as a depdency in your project so you can easily use it to query Operations Orchestration REST API\n\n```javascript\nnpm install -g dockly\n```\n\n# Usage\n\nJust fire up dockly and it will automatically connect to your localhost docker daemon through the unix socket:\n\n```\ndockly\n```\n\n## Command line options:\n\nIt's also possible to provide command line options for dockly to customize the docker connection\n\n| Param | Type | Description |\n| --- | --- | --- |\n| -h or --host | string | Docker host to connect to |\n| -p or --port | string | Docker port to connect to |\n| -s or --socketPath | string | Docker socket to connect to |\n\n# Docker Support\n\n## Build\nYou can build dockly as a docker image yourself, using the following command:\n\n```\ndocker build -t dockly .\n```\n\n## Run\nTo run dockly as a container, invoke the following command:\n\n```\ndocker run -it --name dockly -v /var/run/docker.sock:/var/run/docker.sock dockly\n```\n\n# Author\nLiran Tal <liran.tal@gmail.com>\n",
+  "maintainers": [
+    {
+      "name": "lirantal",
+      "email": "liran.tal@gmail.com"
+    }
+  ],
+  "time": {
+    "modified": "2017-11-03T16:56:23.414Z",
+    "created": "2016-10-25T08:58:11.022Z",
+    "1.0.0": "2016-10-25T08:58:11.022Z",
+    "1.1.0": "2016-11-02T17:21:35.452Z",
+    "1.1.1": "2016-12-01T20:42:25.535Z",
+    "1.1.2": "2016-12-01T22:48:29.751Z",
+    "1.1.3": "2016-12-02T08:39:10.292Z",
+    "1.1.4": "2017-03-10T08:53:16.270Z",
+    "2.0.0": "2017-04-30T23:55:27.058Z",
+    "2.0.1": "2017-05-01T16:47:38.941Z",
+    "2.0.2": "2017-05-03T17:42:21.861Z",
+    "2.1.0": "2017-05-27T17:10:14.551Z",
+    "2.1.1": "2017-06-17T18:05:51.640Z",
+    "2.1.2": "2017-08-02T19:15:47.545Z",
+    "2.1.3": "2017-08-22T21:04:58.073Z",
+    "2.1.4": "2017-08-30T22:05:58.507Z",
+    "2.2.0": "2017-09-16T20:07:07.687Z",
+    "2.3.0": "2017-09-19T21:18:10.460Z",
+    "2.3.1": "2017-11-01T22:28:19.319Z",
+    "3.0.0": "2017-11-03T16:48:38.068Z",
+    "3.1.0": "2017-11-03T16:56:23.414Z"
+  },
+  "homepage": "https://github.com/lirantal/dockly#readme",
+  "keywords": [
+    "docker",
+    "container",
+    "cli",
+    "shell",
+    "blessed",
+    "command",
+    "command line",
+    "console",
+    "terminal"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lirantal/dockly.git"
+  },
+  "author": {
+    "name": "Liran Tal",
+    "email": "liran.tal@gmail.com"
+  },
+  "bugs": {
+    "url": "https://github.com/lirantal/dockly/issues"
+  },
+  "license": "MIT",
+  "readmeFilename": "README.md",
+  "_attachments": {}
+}
