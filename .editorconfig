@@ -1,0 +1,49 @@
+# EditorConfig is awesome: http://EditorConfig.org
+# Howto with your editor: http://editorconfig.org/#download
+
+# top-most EditorConfig file
+root = true
+
+# Unix-style newlines with a newline ending every file
+[**]
+end_of_line = lf
+insert_final_newline = true
+charset = utf-8
+
+# Standard at: https://github.com/felixge/node-style-guide
+[**.{js,json}]
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+quote_type = single
+
+# LT: the following are enforced by standardjs so I commented
+#curly_bracket_next_line = false
+#spaces_around_operators = true
+#space_after_control_statements = true
+#space_after_anonymous_functions = true
+#spaces_in_brackets = false
+
+# No Standard.  Please document a standard if different from .js
+[**.{yml,css}]
+trim_trailing_whitespace = true
+indent_style = space
+
+[**.html]
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+# No standard.  Please document a standard if different from .js
+[**.md]
+indent_style = tab
+
+# Standard at:
+[Makefile]
+indent_style = tab
+
+# The indentation in package.json will always need to be 2 spaces
+# https://github.com/npm/npm/issues/4718
+[{package, bower}.json]
+indent_style = space
+indent_size = 2

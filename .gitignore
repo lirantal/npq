@@ -1,0 +1,17 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+node_modules
+
+# Coverage
+lib-cov
+coverage
+.nyc_output
+
+# IDE
+*.iml
+.idea
+
+# Docs
+docs/

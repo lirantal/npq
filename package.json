@@ -1,0 +1,97 @@
+{
+  "name": "npq",
+  "version": "1.0.0",
+  "description": "marshall your npm/yarn package installs with high quality and class 🎖",
+  "main": "index.js",
+  "scripts": {
+    "lint": "standard && eslint *.js",
+    "lint:fix": "standard --fix",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "coverage:view": "opn coverage/lcov-report/index.html",
+    "commit": "git-cz",
+    "docs": "yarn run docs:code && yarn run docs:api",
+    "docs:api": "doxdox *.js --layout bootstrap --output docs/index.html",
+    "docs:code": "docco *.js --output docs/code"
+  },
+  "author": "Liran Tal",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "commitizen": "^2.9.5",
+    "cz-conventional-changelog": "^1.2.0",
+    "docco": "^0.7.0",
+    "doxdox": "^2.0.1",
+    "eslint": "^3.19.0",
+    "eslint-plugin-import": "^2.2.0",
+    "eslint-plugin-node": "^4.2.2",
+    "eslint-plugin-security": "^1.3.0",
+    "jest": "^21.1.0",
+    "opn-cli": "^3.1.0",
+    "standard": "^10.0.2"
+  },
+  "jest": {
+    "verbose": true,
+    "notify": true,
+    "collectCoverage": true,
+    "coverageThreshold": {
+      "global": {
+        "branches": 90,
+        "functions": 90,
+        "lines": 90,
+        "statements": 90
+      }
+    }
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  },
+  "standard": {
+    "env": [
+      "node",
+      "jest"
+    ]
+  },
+  "eslintConfig": {
+    "env": {
+      "node": true,
+      "es6": true,
+      "jest": true
+    },
+    "plugins": [
+      "node",
+      "security"
+    ],
+    "extends": [
+      "plugin:node/recommended"
+    ],
+    "rules": {
+      "node/no-unsupported-features": "off",
+      "node/no-unpublished-require": "off",
+      "security/detect-non-literal-fs-filename": "error",
+      "security/detect-unsafe-regex": "error",
+      "security/detect-buffer-noassert": "error",
+      "security/detect-child-process": "error",
+      "security/detect-disable-mustache-escape": "error",
+      "security/detect-eval-with-expression": "error",
+      "security/detect-no-csrf-before-method-override": "error",
+      "security/detect-non-literal-regexp": "error",
+      "security/detect-non-literal-require": "error",
+      "security/detect-object-injection": "error",
+      "security/detect-possible-timing-attacks": "error",
+      "security/detect-pseudoRandomBytes": "error"
+    },
+    "parserOptions": {
+      "ecmaFeatures": {
+        "impliedStrict": true
+      }
+    }
+  },
+  "dependencies": {
+    "axios": "^0.17.1",
+    "glob": "^7.1.2",
+    "listr": "^0.13.0",
+    "yargs": "^10.0.3"
+  }
+}
