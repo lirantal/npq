@@ -40,7 +40,10 @@
         "lines": 90,
         "statements": 90
       }
-    }
+    },
+    "testPathIgnorePatterns": [
+      "/__tests__/__fixtures__/*"
+    ]
   },
   "config": {
     "commitizen": {

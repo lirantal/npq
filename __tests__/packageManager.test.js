@@ -29,7 +29,7 @@ test('package manager has a default manager configured', () => {
 })
 
 test('package manager spawns successfully when provided valid package manager', async () => {
-  const child = await packageManager.process('npm')
+  await packageManager.process('npm')
   expect(childProcess.spawn).toHaveBeenCalled()
   expect(childProcess.spawn.mock.calls.length).toBe(1)
   expect(childProcess.spawn.mock.calls[0][0]).toBe('npm')
@@ -38,7 +38,7 @@ test('package manager spawns successfully when provided valid package manager', 
 })
 
 test('package manager spawns successfully when retrieves default package manager', async () => {
-  const child = await packageManager.process()
+  await packageManager.process()
   expect(childProcess.spawn).toHaveBeenCalled()
   expect(childProcess.spawn.mock.calls.length).toBe(1)
   expect(childProcess.spawn.mock.calls[0][0]).toBe('npm')
