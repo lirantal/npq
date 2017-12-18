@@ -1,6 +1,6 @@
 {
   "name": "npq",
-  "version": "1.0.0",
+  "version": "0.0.0-development",
   "description": "marshall your npm/yarn package installs with high quality and class 🎖",
   "bin": "./bin/npq.js",
   "scripts": {
@@ -12,7 +12,8 @@
     "commit": "git-cz",
     "docs": "yarn run docs:code && yarn run docs:api",
     "docs:api": "doxdox *.js --layout bootstrap --output docs/index.html",
-    "docs:code": "docco *.js --output docs/code"
+    "docs:code": "docco *.js --output docs/code",
+    "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   },
   "author": "Liran Tal",
   "license": "Apache-2.0",
@@ -28,6 +29,7 @@
     "jest": "^21.1.0",
     "opn-cli": "^3.1.0",
     "pre-git": "^3.16.0",
+    "semantic-release": "^8.2.0",
     "standard": "^10.0.2"
   },
   "jest": {
@@ -115,6 +117,7 @@
     "yargs": "^10.0.3"
   },
   "release": {
-    "analyzeCommits": "simple-commit-message"
+    "branch": "master",
+    "analyzeCommits": "conventional"
   }
 }

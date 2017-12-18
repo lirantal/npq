@@ -7,3 +7,5 @@ install:
   - yarn install
 script:
   - yarn run test
+after_success:
+  - yarn run semantic-release
