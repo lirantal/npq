@@ -27,6 +27,7 @@
     "eslint-plugin-security": "^1.3.0",
     "jest": "^21.1.0",
     "opn-cli": "^3.1.0",
+    "pre-git": "^3.16.0",
     "standard": "^10.0.2"
   },
   "jest": {
@@ -48,6 +49,22 @@
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
+    },
+    "pre-git": {
+      "enabled": true,
+      "commit-msg": "conventional",
+      "allow-untracked-files": true,
+      "pre-commit": [],
+      "pre-push": [
+        "yarn run lint"
+      ],
+      "post-commit": [
+        "git status"
+      ],
+      "post-checkout": [],
+      "post-merge": [
+        "yarn install"
+      ]
     }
   },
   "standard": {
@@ -96,5 +113,8 @@
     "glob": "^7.1.2",
     "listr": "^0.13.0",
     "yargs": "^10.0.3"
+  },
+  "release": {
+    "analyzeCommits": "simple-commit-message"
   }
 }
