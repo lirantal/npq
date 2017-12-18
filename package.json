@@ -4,7 +4,7 @@
   "description": "marshall your npm/yarn package installs with high quality and class 🎖",
   "bin": "./bin/npq.js",
   "scripts": {
-    "lint": "standard && eslint .",
+    "lint": "standard && eslint . --ignore-path .gitignore",
     "lint:fix": "standard --fix",
     "test": "jest",
     "test:watch": "jest --watch",
