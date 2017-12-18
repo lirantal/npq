@@ -1,3 +1,7 @@
+beforeEach(() => {
+  jest.resetModules()
+})
+
 test('collecting marshalls resolves with files array', async () => {
   const marshalls = require('../lib/marshalls')
 
@@ -7,9 +11,7 @@ test('collecting marshalls resolves with files array', async () => {
     })
   })
 
-  marshalls.GLOB_MARSHALLS = 'testOk' // trigger success branch
   const marshallFiles = await marshalls.collectMarshalls()
-
   expect(marshallFiles).toEqual(['file1', 'file2'])
 })
 
