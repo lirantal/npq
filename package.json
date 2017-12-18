@@ -17,6 +17,10 @@
   },
   "author": "Liran Tal",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lirantal/npq.git"
+  },
   "devDependencies": {
     "commitizen": "^2.9.5",
     "cz-conventional-changelog": "^1.2.0",
@@ -117,7 +121,6 @@
     "yargs": "^10.0.3"
   },
   "release": {
-    "branch": "master",
-    "analyzeCommits": "conventional"
+    "branch": "master"
   }
 }
