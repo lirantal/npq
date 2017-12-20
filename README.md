@@ -1,6 +1,8 @@
 
 # npq
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/lirantal/npq.svg)](https://greenkeeper.io/)
+
 npq - marshall your npm/yarn package installs with high quality and class 🎖
 
 [![npm](https://img.shields.io/npm/v/npq.svg)](https://www.npmjs.com/package/npq)
