@@ -10,5 +10,7 @@ const marshall = new Marshall({
 })
 
 marshall.process().then(() => {
-  pkgMgr.process(cli.packageManager)
+  if (!cli.dryRun) {
+    pkgMgr.process(cli.packageManager)
+  }
 })
