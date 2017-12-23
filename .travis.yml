@@ -5,7 +5,9 @@ before_script:
   - yarn run lint
 install:
   - yarn install
+  - yarn global add codecov
 script:
   - yarn run test
+  - codecov
 after_success:
   - yarn run semantic-release
