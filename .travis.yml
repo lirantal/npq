@@ -5,7 +5,7 @@ before_script:
   - yarn run lint
 install:
   - yarn install
-  - yarn globl add codecov
+  - yarn global add codecov
 script:
   - yarn run test
   - codecov
