@@ -45,3 +45,17 @@ test('package manager spawns successfully when retrieves default package manager
 
   childProcess.spawn.mockReset()
 })
+
+test('package manager spawns successfully when provided array of packages to handle', async () => {
+  await packageManager.process('npm', ['semver', 'express'])
+  expect(childProcess.spawn).toHaveBeenCalled()
+  expect(childProcess.spawn.mock.calls.length).toBe(1)
+  expect(childProcess.spawn.mock.calls[0][0]).toBe('npm')
+
+  expect(childProcess.spawn.mock.calls[0][1]).toEqual([
+    'install',
+    'semver',
+    'express'
+  ])
+  childProcess.spawn.mockReset()
+})
