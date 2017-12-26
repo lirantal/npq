@@ -27,6 +27,7 @@ npq install express
 * If no match is found, it continues with the following syntactic herustics:
 	* Package age on npm
 	* Package download count, popularity
+	* Package has a README file
 	* Package has pre/post install scripts
 
 If npq is prompted to continue with the install it simply handover the actual package install job to the package manager (npm by default).
