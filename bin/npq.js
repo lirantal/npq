@@ -9,8 +9,8 @@ const marshall = new Marshall({
   pkgs: cli.package
 })
 
-marshall.process().then(() => {
-  if (!cli.dryRun) {
+marshall.process().then(promptInstall => {
+  if (!cli.dryRun && promptInstall.install === true) {
     pkgMgr.process(cli.packageManager, cli.package)
   }
 })

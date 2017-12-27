@@ -116,7 +116,9 @@
   },
   "dependencies": {
     "axios": "^0.17.1",
+    "chalk": "^2.3.0",
     "glob": "^7.1.2",
+    "inquirer": "^4.0.1",
     "listr": "^0.13.0",
     "yargs": "^10.0.3"
   },
