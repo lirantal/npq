@@ -62,7 +62,8 @@
       "allow-untracked-files": true,
       "pre-commit": [],
       "pre-push": [
-        "yarn run lint"
+        "yarn run lint",
+        "yarn run test"
       ],
       "post-commit": [
         "git status"
