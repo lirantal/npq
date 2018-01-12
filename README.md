@@ -22,17 +22,17 @@ Once npq is installed, you can safely* install packages:
 npq install express
 ```
 
-`npq` will perform the following steps to sanity check the package is safe:
+`npq` will perform the following steps to sanity check the package is safe by employing syntactic herustics and querying a CVE database:
+
 * Consult snyk.io database of publically disclosed vulnerabilities to check if a vulnerability exists for this package and its version.
-* If no match is found, it continues with the following syntactic herustics:
-	* Package age on npm
-	* Package download count, popularity
-	* Package has a README file
-	* Package has pre/post install scripts
+* Package age on npm
+* Package download count as a popularity metric
+* Package has a README file
+* [TBD] Package has pre/post install scripts 
 
-If npq is prompted to continue with the install it simply handover the actual package install job to the package manager (npm by default).
+If npq is prompted to continue with the install it simply handovers the actual package install job to the package manager (npm by default).
 
-*safely - there's no guaranteed safety, a malicious or vulnerable package could still exist that has no discloure published and passes npq's checks.
+safely* - there's no guaranteed safety, a malicious or vulnerable package could still exist that has no discloure published and passes npq's checks.
 
 ## Install
 
@@ -70,6 +70,15 @@ Example: create an alias with yarn as the package manager:
 ```bash
 alias npm='npq --packageManager yarn'
 ```
+
+## Marshalls
+
+| Marshall Name | Description | Notes
+| --- | --- | --- 
+| Age | Will show a warning for a package if its age on npm is less than 22 days | Checks a package creation date, not a specific version
+| Downloads | Will show a warning for a package if its download count in the last month is less than 20
+| Readme | Will show a warning if a package has no README or it has been detected as a security placeholder package by npm staff
+| Snyk | Will show a warning if a package has been found with vulnerabilities in snyk's database | For snyk to work you need to either have the `snyk` npm package installed with a valid api token, or make the token available in the SNYK_TOKEN environment variable and npq will use it
 
 ## Contributing
 
