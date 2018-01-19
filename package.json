@@ -37,6 +37,7 @@
     "standard": "^10.0.2"
   },
   "jest": {
+    "testEnvironment": "node",
     "verbose": true,
     "notify": true,
     "collectCoverage": true,
