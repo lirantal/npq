@@ -19,6 +19,7 @@ marshall
     }
 
     if (result && result.error) {
+      console.log()
       return inquirer.prompt([
         {
           type: 'confirm',
