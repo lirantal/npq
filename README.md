@@ -1,7 +1,7 @@
 
 # npq
 
-npq - marshall your npm/yarn package installs with high quality and class 🎖
+ 🎖 marshall your npm/yarn package installs with high quality and class
 
 [![npm](https://img.shields.io/npm/v/npq.svg)](https://www.npmjs.com/package/npq)
 [![npm](https://img.shields.io/npm/l/npq.svg)](https://www.npmjs.com/package/npq)
@@ -75,10 +75,20 @@ alias npm='npq --packageManager yarn'
 
 | Marshall Name | Description | Notes
 | --- | --- | --- 
-| Age | Will show a warning for a package if its age on npm is less than 22 days | Checks a package creation date, not a specific version
-| Downloads | Will show a warning for a package if its download count in the last month is less than 20
-| Readme | Will show a warning if a package has no README or it has been detected as a security placeholder package by npm staff
-| Snyk | Will show a warning if a package has been found with vulnerabilities in snyk's database | For snyk to work you need to either have the `snyk` npm package installed with a valid api token, or make the token available in the SNYK_TOKEN environment variable and npq will use it
+| age | Will show a warning for a package if its age on npm is less than 22 days | Checks a package creation date, not a specific version
+| downloads | Will show a warning for a package if its download count in the last month is less than 20
+| readme | Will show a warning if a package has no README or it has been detected as a security placeholder package by npm staff
+| snyk | Will show a warning if a package has been found with vulnerabilities in snyk's database | For snyk to work you need to either have the `snyk` npm package installed with a valid api token, or make the token available in the SNYK_TOKEN environment variable and npq will use it
+
+### Disabling Marshalls
+
+To disable a marshall altogether set an environment variable using with the marshall's shortname.
+
+Example, to disable snyk:
+
+```
+MARSHALL_DISABLE_SNYK=1 npq install express
+```
 
 ## Contributing
 
