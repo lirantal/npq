@@ -68,7 +68,7 @@ If you're using `yarn`, or generally want to explicitly tell npq which package m
 Example: create an alias with yarn as the package manager:
 
 ```bash
-alias npm='npq --packageManager yarn'
+alias npm='npq-hero --packageManager yarn'
 ```
 
 ## Marshalls

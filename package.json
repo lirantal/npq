@@ -2,7 +2,10 @@
   "name": "npq",
   "version": "0.0.0-development",
   "description": "marshall your npm/yarn package installs with high quality and class 🎖",
-  "bin": "./bin/npq.js",
+  "bin": {
+    "npq": "./bin/npq.js",
+    "npq-hero": "./bin/npq-hero.js"
+  },
   "scripts": {
     "lint": "standard && eslint . --ignore-path .gitignore",
     "lint:fix": "standard --fix",
