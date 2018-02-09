@@ -22,9 +22,9 @@ Once npq is installed, you can safely* install packages:
 npq install express
 ```
 
-`npq` will perform the following steps to sanity check the package is safe by employing syntactic herustics and querying a CVE database:
+`npq` will perform the following steps to sanity check the package is safe by employing syntactic heuristics and querying a CVE database:
 
-* Consult snyk.io database of publically disclosed vulnerabilities to check if a vulnerability exists for this package and its version.
+* Consult snyk.io database of publicly disclosed vulnerabilities to check if a vulnerability exists for this package and its version.
 * Package age on npm
 * Package download count as a popularity metric
 * Package has a README file
@@ -32,7 +32,7 @@ npq install express
 
 If npq is prompted to continue with the install it simply handovers the actual package install job to the package manager (npm by default).
 
-safely* - there's no guaranteed safety, a malicious or vulnerable package could still exist that has no discloure published and passes npq's checks.
+safely* - there's no guaranteed safety, a malicious or vulnerable package could still exist that has no disclosure published and passes npq's checks.
 
 ## Install
 
@@ -58,7 +58,7 @@ alias npm='npq'
 
 ### Offload to package managers
 
-`npq` by default will offload all commands and their arguments to the `npm` package manager after it finished its due-dilegence for the respective packages.
+`npq` by default will offload all commands and their arguments to the `npm` package manager after it finished its due-diligence for the respective packages.
 
 If you're using `yarn`, or generally want to explicitly tell npq which package manager should handle the command use one of the following methods:
 
