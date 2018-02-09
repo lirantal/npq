@@ -53,7 +53,7 @@ npq install express
 Since `npq` is a pre-step to ensure that the npm package you're installing is safe, you can safely embed it in your day-to-day `npm` usage so there's no need to remember to run `npq` explicitly.
 
 ```bash
-alias npm='npq'
+alias npm='npq-hero'
 ```
 
 ### Offload to package managers
