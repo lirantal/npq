@@ -6,17 +6,13 @@ const yargs = require('yargs')
 const pkgMgr = require('../lib/packageManager')
 const Marshall = require('../lib/marshall')
 
+const PACKAGE_MANAGER_TOOL = process.env.NPQ_PKG_MGR
+
 const cli = yargs
   .command({
     command: 'install [package...]',
     aliases: ['i', 'add'],
     desc: 'install a package'
-  })
-  .command({
-    command: '--packageManager [packageManager]',
-    aliases: ['--pkgMgr'],
-    desc: 'the package manager to offload handling the command',
-    builder: yargs => yargs.default('packageManager', 'npm')
   })
   .help(false)
   .version(false).argv
@@ -44,7 +40,7 @@ marshall
   })
   .then(status => {
     if (status && status.hasOwnProperty('install') && status.install === true) {
-      pkgMgr.process(cli.packageManager, cli.package)
+      pkgMgr.process(PACKAGE_MANAGER_TOOL, cli.package)
     }
   })
   .catch(error => {
