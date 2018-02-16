@@ -1,7 +1,7 @@
 
 # npq
 
- 🎖 marshall your npm/yarn package installs with high quality and class
+🎖 marshall your npm/yarn package installs with high quality and class
 
 [![npm](https://img.shields.io/npm/v/npq.svg)](https://www.npmjs.com/package/npq)
 [![npm](https://img.shields.io/npm/l/npq.svg)](https://www.npmjs.com/package/npq)
@@ -12,6 +12,10 @@
 [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg?style=flat)](https://github.com/semantic-release/semantic-release)
 [![Greenkeeper badge](https://badges.greenkeeper.io/lirantal/npq.svg)](https://greenkeeper.io/)
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
+
+With npq, you can safely* install npm packages for your project:
+
+![npq-demo-3-final](https://user-images.githubusercontent.com/316371/36325881-d3c9d0d8-1361-11e8-9179-d08a714f034b.gif)
 
 
 ## About
