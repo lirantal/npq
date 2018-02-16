@@ -58,18 +58,15 @@ alias npm='npq-hero'
 
 ### Offload to package managers
 
-`npq` by default will offload all commands and their arguments to the `npm` package manager after it finished its due-diligence for the respective packages.
-
-If you're using `yarn`, or generally want to explicitly tell npq which package manager should handle the command use one of the following methods:
-
-* A command line option: `--packageManager <npm|yarn>`
-* An environment variable: `NPQ_PKG_MGR=yarn`
+If you're using `yarn`, or generally want to explicitly tell npq which package manager to use you can specify an environment variable: `NPQ_PKG_MGR=yarn`
 
 Example: create an alias with yarn as the package manager:
 
 ```bash
-alias npm='npq-hero --packageManager yarn'
+alias yarn="NPQ_PKG_MGR=yarn npq-hero"
 ```
+
+Note: `npq` by default will offload all commands and their arguments to the `npm` package manager after it finished its due-diligence for the respective packages.
 
 ## Marshalls
 
