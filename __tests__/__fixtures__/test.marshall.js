@@ -46,6 +46,14 @@ class TestMarshall extends BaseMarshall {
       return Promise.reject(new Error('simulating mock error'))
     }
   }
+
+  validate (pkg) {
+    if (pkg === 'express' || pkg === 'semver') {
+      return Promise.resolve('validation-result')
+    } else {
+      return Promise.reject(new Error('simulating mock error'))
+    }
+  }
 }
 
 module.exports = TestMarshall
