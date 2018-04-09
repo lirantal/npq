@@ -1,4 +1,5 @@
 const TestMarshall = require('./__fixtures__/test.marshall')
+const TEST_MARSHALL_NAME = 'test.marshall'
 
 test('base marshall implemented isEnabled', async () => {
   const testMarshall = new TestMarshall({
@@ -6,6 +7,46 @@ test('base marshall implemented isEnabled', async () => {
   })
 
   expect(testMarshall.isEnabled()).toBeTruthy()
+})
+
+test('checkPackage returns validation data if it was a success', async () => {
+  const testMarshall = new TestMarshall({
+    packageRepoUtils: null
+  })
+
+  const ctx = {
+    marshalls: {
+      [TEST_MARSHALL_NAME]: {
+        data: {}
+      }
+    }
+  }
+
+  testMarshall.checkPackage('express', ctx, {})
+  .then(data => {
+    expect(data).toEqual('validation-result')
+  })
+})
+
+test('checkPackage sets the error property if the validaiton failed', async () => {
+  const testMarshall = new TestMarshall({
+    packageRepoUtils: null
+  })
+
+  const pkg = 'trojan'
+  const ctx = {
+    marshalls: {
+      [TEST_MARSHALL_NAME]: {
+        data: {}
+      }
+    }
+  }
+
+  testMarshall.init(ctx)
+  testMarshall.checkPackage(pkg, ctx, {})
+    .then(data => {
+      expect(ctx.marshalls[TEST_MARSHALL_NAME].errors[0].pkg).toEqual(pkg)
+    })
 })
 
 test('base marshall implemented isEnabled', async () => {
