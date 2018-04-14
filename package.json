@@ -39,7 +39,7 @@
     "opn-cli": "^3.1.0",
     "pre-git": "^3.16.0",
     "semantic-release": "^15.0.0",
-    "standard": "^10.0.2"
+    "standard": "^11.0.0"
   },
   "jest": {
     "testEnvironment": "node",
@@ -129,11 +129,11 @@
     }
   },
   "dependencies": {
-    "axios": "^0.17.1",
+    "axios": "^0.18.0",
     "chalk": "^2.3.0",
     "glob": "^7.1.2",
     "inquirer": "^5.0.0",
-    "listr": "^0.13.0",
+    "listr": "^0.14.0",
     "semver": "^5.5.0",
     "yargs": "^11.0.0"
   },
