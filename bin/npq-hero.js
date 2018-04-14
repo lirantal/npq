@@ -1,6 +1,11 @@
 #!/usr/bin/env node
 'use strict'
 
+// Require minimum node version or bail out
+const cliSupport = require('../lib/helpers/cliSupportHandler')
+cliSupport.isEnvSupport() ||
+  (cliSupport.noSupportError() && cliSupport.packageManagerPassthrough())
+
 const inquirer = require('inquirer')
 const yargs = require('yargs')
 const pkgMgr = require('../lib/packageManager')
