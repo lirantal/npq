@@ -3,8 +3,7 @@
 
 // Require minimum node version or bail out
 const cliSupport = require('../lib/helpers/cliSupportHandler')
-cliSupport.isEnvSupport() ||
-  (cliSupport.noSupportError() && cliSupport.packageManagerPassthrough())
+cliSupport.isEnvSupport() || cliSupport.noSupportError(true)
 
 const inquirer = require('inquirer')
 const cli = require('../lib/cli')
