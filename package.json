@@ -18,6 +18,16 @@
     "docs:code": "docco *.js --output docs/code",
     "semantic-release": "semantic-release"
   },
+  "prettier": {
+    "printWidth": 100,
+    "tabWidth": 2,
+    "singleQuote": true,
+    "trailingComma": "none",
+    "bracketSpacing": true,
+    "jsxBracketSameLine": false,
+    "parser": "babylon",
+    "semi": false
+  },
   "author": "Liran Tal",
   "license": "Apache-2.0",
   "repository": {
@@ -39,7 +49,8 @@
     "opn-cli": "^3.1.0",
     "pre-git": "^3.16.0",
     "semantic-release": "^15.0.0",
-    "standard": "^11.0.0"
+    "standard": "^11.0.0",
+    "prettier": "^1.12.0"
   },
   "jest": {
     "testEnvironment": "node",
