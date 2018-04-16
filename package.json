@@ -7,7 +7,7 @@
     "npq-hero": "./bin/npq-hero.js"
   },
   "scripts": {
-    "lint": "standard --fix && eslint . --ignore-path .gitignore",
+    "lint": "yarn run lint:prettier && standard --fix && eslint . --ignore-path .gitignore",
     "lint:prettier": "prettier --loglevel silent --write '**/*.js'",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -86,7 +86,7 @@
     "hooks": {
       "commit-msg": "commitlint -e $GIT_PARAMS",
       "pre-commit": "git status",
-      "pre-push": "yarn run lint && yarn run test",
+      "pre-push": "yarn run lint:prettier && yarn run lint && yarn run test",
       "post-commit": "git status",
       "post-checkout": "git status",
       "post-merge": "yarn install"
