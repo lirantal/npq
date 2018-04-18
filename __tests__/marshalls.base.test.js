@@ -23,9 +23,9 @@ test('checkPackage returns validation data if it was a success', async () => {
   }
 
   testMarshall.checkPackage('express', ctx, {})
-  .then(data => {
-    expect(data).toEqual('validation-result')
-  })
+    .then(data => {
+      expect(data).toEqual('validation-result')
+    })
 })
 
 test('checkPackage sets the error property if the validaiton failed', async () => {
