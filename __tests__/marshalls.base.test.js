@@ -22,7 +22,7 @@ test('checkPackage returns validation data if it was a success', async () => {
     }
   }
 
-  const result = await testMarshall.checkPackage('express', ctx, {});
+  const result = await testMarshall.checkPackage('express', ctx, {})
   expect(result).toEqual('validation-result')
 })
 
@@ -33,7 +33,7 @@ test('checkPackage sets the error property if the validaiton failed', async () =
 
   const pkg = {
     packageString: 'trojan'
-  };
+  }
   const ctx = {
     marshalls: {
       [TEST_MARSHALL_NAME]: {
@@ -43,7 +43,7 @@ test('checkPackage sets the error property if the validaiton failed', async () =
   }
 
   testMarshall.init(ctx)
-  await testMarshall.checkPackage(pkg, ctx, {});
+  await testMarshall.checkPackage(pkg, ctx, {})
   expect(ctx.marshalls[TEST_MARSHALL_NAME].errors[0].pkg).toEqual(pkg.packageString)
 })
 
