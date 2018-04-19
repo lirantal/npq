@@ -22,10 +22,8 @@ test('checkPackage returns validation data if it was a success', async () => {
     }
   }
 
-  testMarshall.checkPackage('express', ctx, {})
-  .then(data => {
-    expect(data).toEqual('validation-result')
-  })
+  const result = await testMarshall.checkPackage('express', ctx, {});
+  expect(result).toEqual('validation-result')
 })
 
 test('checkPackage sets the error property if the validaiton failed', async () => {
@@ -33,7 +31,9 @@ test('checkPackage sets the error property if the validaiton failed', async () =
     packageRepoUtils: null
   })
 
-  const pkg = 'trojan'
+  const pkg = {
+    packageString: 'trojan'
+  };
   const ctx = {
     marshalls: {
       [TEST_MARSHALL_NAME]: {
@@ -43,10 +43,8 @@ test('checkPackage sets the error property if the validaiton failed', async () =
   }
 
   testMarshall.init(ctx)
-  testMarshall.checkPackage(pkg, ctx, {})
-    .then(data => {
-      expect(ctx.marshalls[TEST_MARSHALL_NAME].errors[0].pkg).toEqual(pkg)
-    })
+  await testMarshall.checkPackage(pkg, ctx, {});
+  expect(ctx.marshalls[TEST_MARSHALL_NAME].errors[0].pkg).toEqual(pkg.packageString)
 })
 
 test('base marshall implemented isEnabled', async () => {
