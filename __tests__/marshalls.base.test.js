@@ -34,6 +34,7 @@ test('checkPackage sets the error property if the validaiton failed', async () =
   const pkg = {
     packageString: 'trojan'
   }
+
   const ctx = {
     marshalls: {
       [TEST_MARSHALL_NAME]: {
@@ -88,6 +89,7 @@ test('setWarning sets the warnings properly', () => {
   }
 
   testMarshall.init(ctx)
+
   testMarshall.setMessage(warn, true)
   expect(ctx.marshalls[TEST_MARSHALL_NAME].warnings.length).toEqual(1)
   expect(ctx.marshalls[TEST_MARSHALL_NAME].warnings[0]).toEqual(warn)
