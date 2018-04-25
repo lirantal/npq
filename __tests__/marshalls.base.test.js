@@ -65,7 +65,7 @@ test('setError sets the errors properly', () => {
   }
 
   testMarshall.init(ctx)
-  testMarshall.setError(err)
+  testMarshall.setMessage(err)
   expect(ctx.marshalls[TEST_MARSHALL_NAME].errors.length).toEqual(1)
   expect(ctx.marshalls[TEST_MARSHALL_NAME].errors[0]).toEqual(err)
 })
@@ -88,7 +88,7 @@ test('setWarning sets the warnings properly', () => {
   }
 
   testMarshall.init(ctx)
-  testMarshall.setWarning(warn)
+  testMarshall.setMessage(warn, true)
   expect(ctx.marshalls[TEST_MARSHALL_NAME].warnings.length).toEqual(1)
   expect(ctx.marshalls[TEST_MARSHALL_NAME].warnings[0]).toEqual(warn)
 })

@@ -131,11 +131,11 @@
   "dependencies": {
     "axios": "^0.18.0",
     "chalk": "^2.3.0",
-    "email-validator": "^2.0.3",
     "glob": "^7.1.2",
     "inquirer": "^5.0.0",
     "listr": "^0.14.0",
     "semver": "^5.5.0",
+    "validator": "^9.4.1",
     "yargs": "^11.0.0"
   },
   "release": {
