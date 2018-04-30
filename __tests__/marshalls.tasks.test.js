@@ -20,6 +20,7 @@ test('running marshall tasks succeeds', async () => {
     'test.marshall': {
       status: null,
       errors: [],
+      warnings: [],
       data: { express: 'mock data check', semver: 'mock data check' }
     }
   })
@@ -49,6 +50,7 @@ test('running marshall tasks fails', async () => {
         'test.marshall': {
           status: null,
           errors: [{ pkg: 'dockly', message: 'simulating mock error' }],
+          warnings: [],
           data: { express: 'mock data check' }
         }
       }

@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 'use strict'
 
-const inquirer = require('inquirer')
+// Require minimum node version or bail out
+const cliSupport = require('../lib/helpers/cliSupportHandler')
+cliSupport.isEnvSupport() || cliSupport.noSupportError(true)
 
+const inquirer = require('inquirer')
 const cli = require('../lib/cli')
 const pkgMgr = require('../lib/packageManager')
 const Marshall = require('../lib/marshall')

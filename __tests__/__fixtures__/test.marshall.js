@@ -32,7 +32,7 @@ class TestMarshall extends BaseMarshall {
         return data
       })
       .catch(err => {
-        this.setError({
+        this.setMessage({
           pkg: pkg,
           message: err.message
         })
@@ -42,6 +42,14 @@ class TestMarshall extends BaseMarshall {
   validateSomething (pkg) {
     if (pkg === 'express' || pkg === 'semver') {
       return Promise.resolve()
+    } else {
+      return Promise.reject(new Error('simulating mock error'))
+    }
+  }
+
+  validate (pkg) {
+    if (pkg === 'express' || pkg === 'semver') {
+      return Promise.resolve('validation-result')
     } else {
       return Promise.reject(new Error('simulating mock error'))
     }

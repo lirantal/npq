@@ -47,7 +47,7 @@
     "eslint-plugin-import": "^2.2.0",
     "eslint-plugin-node": "^6.0.0",
     "eslint-plugin-security": "^1.3.0",
-    "husky": "^1.0.0-rc.1",
+    "husky": "^1.0.0-rc.2",
     "jest": "^22.0.0",
     "opn-cli": "^3.1.0",
     "prettier": "^1.12.0",
@@ -146,6 +146,7 @@
     "inquirer": "^5.0.0",
     "listr": "^0.14.0",
     "semver": "^5.5.0",
+    "validator": "^9.4.1",
     "yargs": "^11.0.0"
   },
   "release": {
