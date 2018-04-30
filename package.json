@@ -135,6 +135,7 @@
     "inquirer": "^5.0.0",
     "listr": "^0.14.0",
     "semver": "^5.5.0",
+    "validator": "^9.4.1",
     "yargs": "^11.0.0"
   },
   "release": {
