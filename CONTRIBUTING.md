@@ -21,7 +21,7 @@ If you implement multiple packages checks with a `Promise.all()` strategy you sh
 
 To mitigate that, your specific check method should now throw an exception if it fails, but instead catch it and call
 ```js
-this.setError({
+this.setMessage({
           pkg: pkg,
           message: err.message
         })

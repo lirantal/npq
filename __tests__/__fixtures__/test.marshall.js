@@ -32,7 +32,7 @@ class TestMarshall extends BaseMarshall {
         return data
       })
       .catch(err => {
-        this.setError({
+        this.setMessage({
           pkg: pkg,
           message: err.message
         })
