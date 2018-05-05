@@ -83,7 +83,7 @@ test('throws the right error when there is no repo URL in the pkg data', async (
 })
 
 test('formats the URL the right way before checking if it exists', async () => {
-  const pkgData = { ...fullPkgData }
+  const pkgData = JSON.parse(JSON.stringify(fullPkgData))
   await testMarshall.validate(pkgData)
   expect(urlExists.mock.calls[0][0]).toBe('url')
 
