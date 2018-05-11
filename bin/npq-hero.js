@@ -10,21 +10,21 @@ const inquirer = require('inquirer')
 const yargs = require('yargs')
 const pkgMgr = require('../lib/packageManager')
 const Marshall = require('../lib/marshall')
+const cliCommons = require('../lib/cliCommons')
 
 const PACKAGE_MANAGER_TOOL = process.env.NPQ_PKG_MGR
 
 const cli = yargs
-  .command({
-    command: 'install [package...]',
-    aliases: ['i', 'add'],
-    desc: 'install a package'
-  })
+  .options(cliCommons.getOptions())
+  .command(cliCommons.getInstallCommand())
   .help(false)
   .version(false).argv
 
 const marshall = new Marshall({
   pkgs: cli.package
 })
+
+console.log(cli)
 
 marshall
   .process()
