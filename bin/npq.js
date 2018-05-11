@@ -14,6 +14,8 @@ const marshall = new Marshall({
   pkgs: cli.package
 })
 
+console.log(cli)
+
 marshall
   .process()
   .then(result => {
