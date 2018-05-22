@@ -28,7 +28,10 @@
     "parser": "babylon",
     "semi": false
   },
-  "author": "Liran Tal",
+  "author": {
+    "name": "Liran Tal",
+    "email": "liran.tal@gmail.com"
+  },
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
