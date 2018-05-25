@@ -1,16 +1,13 @@
 const PackageRepoUtils = require('../lib/helpers/packageRepoUtils')
-jest.mock('axios', () => {
-  return {
-    get: jest.fn(() => {
-      return Promise.resolve({
-        data: require('./mocks/registryPackageOk.mock.json')
-      })
-    })
-  }
-})
+const axios = require('axios')
+jest.mock('axios')
+axios.get.mockImplementation(() => Promise.resolve({
+  data: require('./mocks/registryPackageOk.mock.json')
+}))
 
 beforeEach(() => {
   jest.resetModules()
+  axios.get.mockClear()
 })
 
 test('repo utils always has a default package registry url', () => {
@@ -39,6 +36,14 @@ test('repo utils returns a package json object from registry', async () => {
   const packageName = 'testPackage'
   const result = await packageRepoUtils.getPackageInfo(packageName)
   expect(result).toBeTruthy()
+})
+
+test('repo utils uses its cache when called with wit the same parameter for the second time', async () => {
+  const packageRepoUtils = new PackageRepoUtils()
+  const packageName = 'testPackage'
+  await packageRepoUtils.getPackageInfo(packageName)
+  await packageRepoUtils.getPackageInfo(packageName)
+  expect(axios.get.mock.calls.length).toEqual(1)
 })
 
 test('repo utils retrieves package latest version', async () => {
