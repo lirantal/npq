@@ -3,7 +3,7 @@ jest.mock('axios', () => {
   return {
     get: jest.fn(() => {
       return Promise.resolve({
-        data: require('./registryPackage.mock.json')
+        data: require('./mocks/registryPackageOk.mock.json')
       })
     })
   }
@@ -48,6 +48,24 @@ test('repo utils retrieves package latest version', async () => {
   expect(result).toEqual('3.1.0')
 })
 
+test('repo utils retrieves package latest version as null if not exists', async () => {
+  const PackageRepoUtils = require('../lib/helpers/packageRepoUtils')
+  jest.mock('axios', () => {
+    return {
+      get: jest.fn(() => {
+        return Promise.resolve({
+          data: require('./mocks/registryPackageUnpublished.mock.json')
+        })
+      })
+    }
+  })
+
+  const packageRepoUtils = new PackageRepoUtils()
+  const packageName = 'testPackage'
+  const result = await packageRepoUtils.getLatestVersion(packageName)
+  expect(result).toEqual(null)
+})
+
 test('repo utils retrieves package README information', async () => {
   const packageRepoUtils = new PackageRepoUtils()
   const packageName = 'testPackage'
@@ -57,7 +75,6 @@ test('repo utils retrieves package README information', async () => {
 
 test('repo utils retrieves package download count', async () => {
   const PackageRepoUtils = require('../lib/helpers/packageRepoUtils')
-
   jest.mock('axios', () => {
     return {
       get: jest.fn(() => {
@@ -77,4 +94,22 @@ test('repo utils retrieves package download count', async () => {
   const packageName = 'testPackage'
   const result = await packageRepoUtils.getDownloadInfo(packageName)
   expect(result).toEqual(1950)
+})
+
+test('repo utils retrieves package README information even when not available', async () => {
+  const PackageRepoUtils = require('../lib/helpers/packageRepoUtils')
+  jest.mock('axios', () => {
+    return {
+      get: jest.fn(() => {
+        return Promise.resolve({
+          data: require('./mocks/registryPackageUnpublished.mock.json')
+        })
+      })
+    }
+  })
+
+  const packageRepoUtils = new PackageRepoUtils()
+  const packageName = 'testPackage'
+  const result = await packageRepoUtils.getReadmeInfo(packageName)
+  expect(result).toBeFalsy()
 })

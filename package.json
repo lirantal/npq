@@ -8,7 +8,6 @@
   },
   "scripts": {
     "lint": "standard && eslint . --ignore-path .gitignore",
-    "lint:fix": "standard --fix",
     "test": "jest",
     "test:watch": "jest --watch",
     "coverage:view": "opn coverage/lcov-report/index.html",
@@ -18,13 +17,18 @@
     "docs:code": "docco *.js --output docs/code",
     "semantic-release": "semantic-release"
   },
-  "author": "Liran Tal",
+  "author": {
+    "name": "Liran Tal",
+    "email": "liran.tal@gmail.com"
+  },
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lirantal/npq.git"
   },
   "devDependencies": {
+    "@commitlint/cli": "^6.1.3",
+    "@commitlint/config-angular": "^6.1.3",
     "babel-preset-env": "^1.6.1",
     "babel-preset-es2015": "^6.24.1",
     "commitizen": "^2.9.5",
@@ -35,9 +39,9 @@
     "eslint-plugin-import": "^2.2.0",
     "eslint-plugin-node": "^6.0.0",
     "eslint-plugin-security": "^1.3.0",
+    "husky": "^1.0.0-rc.2",
     "jest": "^22.0.0",
     "opn-cli": "^3.1.0",
-    "pre-git": "^3.16.0",
     "semantic-release": "^15.0.0",
     "standard": "^11.0.0",
     "url-exists": "^1.0.3"
@@ -68,24 +72,22 @@
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
-    },
-    "pre-git": {
-      "enabled": true,
-      "commit-msg": "conventional",
-      "allow-untracked-files": true,
-      "pre-commit": [],
-      "pre-push": [
-        "yarn run lint",
-        "yarn run test"
-      ],
-      "post-commit": [
-        "git status"
-      ],
-      "post-checkout": [],
-      "post-merge": [
-        "yarn install"
-      ]
     }
+  },
+  "husky": {
+    "hooks": {
+      "commit-msg": "commitlint -e %HUSKY_GIT_PARAMS%",
+      "pre-commit": "git status",
+      "pre-push": "yarn run lint && yarn run test",
+      "post-commit": "git status",
+      "post-checkout": "git status",
+      "post-merge": "yarn install"
+    }
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-angular"
+    ]
   },
   "standard": {
     "env": [

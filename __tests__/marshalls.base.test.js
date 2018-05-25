@@ -45,7 +45,9 @@ test('checkPackage sets the error property if the validaiton failed', async () =
 
   testMarshall.init(ctx)
   await testMarshall.checkPackage(pkg, ctx, {})
-  expect(ctx.marshalls[TEST_MARSHALL_NAME].errors[0].pkg).toEqual(pkg.packageString)
+  expect(ctx.marshalls[TEST_MARSHALL_NAME].errors[0].pkg).toEqual(
+    pkg.packageString
+  )
 })
 
 test('setError sets the errors properly', () => {

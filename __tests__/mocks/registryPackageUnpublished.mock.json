@@ -1,0 +1,31 @@
+{
+  "_id": "getcookies",
+  "_rev": "4-2f7fba6f65b5c54ec24fa63f6e0325e7",
+  "name": "getcookies",
+  "time": {
+    "created": "2018-03-22T07:45:55.796Z",
+    "1.12.1": "2018-03-22T07:45:55.879Z",
+    "modified": "2018-05-02T14:11:16.630Z",
+    "1.12.2": "2018-03-22T07:47:25.395Z",
+    "1.12.3": "2018-03-22T07:51:03.630Z",
+    "unpublished": {
+      "name": "npm",
+      "time": "2018-05-02T14:11:16.630Z",
+      "tags": {
+        "latest": "1.12.3"
+      },
+      "maintainers": [
+        {
+          "name": "dustin87",
+          "email": "dustin.heidenreich@hotmail.com"
+        }
+      ],
+      "versions": [
+        "1.12.1",
+        "1.12.2",
+        "1.12.3"
+      ]
+    }
+  },
+  "_attachments": {}
+}
