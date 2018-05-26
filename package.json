@@ -8,7 +8,6 @@
   },
   "scripts": {
     "lint": "standard && eslint . --ignore-path .gitignore",
-    "lint:prettier": "prettier --loglevel silent --write '**/*.js' && standard --fix",
     "test": "jest",
     "test:watch": "jest --watch",
     "coverage:view": "opn coverage/lcov-report/index.html",
@@ -17,16 +16,6 @@
     "docs:api": "doxdox *.js --layout bootstrap --output docs/index.html",
     "docs:code": "docco *.js --output docs/code",
     "semantic-release": "semantic-release"
-  },
-  "prettier": {
-    "printWidth": 80,
-    "tabWidth": 2,
-    "singleQuote": true,
-    "trailingComma": "none",
-    "bracketSpacing": true,
-    "jsxBracketSameLine": false,
-    "parser": "babylon",
-    "semi": false
   },
   "author": {
     "name": "Liran Tal",
@@ -53,7 +42,6 @@
     "husky": "^1.0.0-rc.2",
     "jest": "^22.0.0",
     "opn-cli": "^3.1.0",
-    "prettier": "^1.12.0",
     "semantic-release": "^15.0.0",
     "standard": "^11.0.0"
   },
@@ -87,9 +75,9 @@
   },
   "husky": {
     "hooks": {
-      "commit-msg": "commitlint -e $GIT_PARAMS",
+      "commit-msg": "commitlint -e %HUSKY_GIT_PARAMS%",
       "pre-commit": "git status",
-      "pre-push": "yarn run lint:prettier && yarn run lint && yarn run test",
+      "pre-push": "yarn run lint && yarn run test",
       "post-commit": "git status",
       "post-checkout": "git status",
       "post-merge": "yarn install"
