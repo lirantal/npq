@@ -38,7 +38,7 @@ test('throws the right error when there is no pkg data availabile', async () => 
   try {
     await testMarshall.validate({packageName: {}})
   } catch (e) {
-    expect(e.message).toEqual(`the package has no associated repository.`)
+    expect(e.message).toEqual(`the package has no associated repository or homepage.`)
   }
 })
 
@@ -56,7 +56,7 @@ test('throws the right error when there is no repo in the pkg data', async () =>
   try {
     await testMarshall.validate(pkgData)
   } catch (e) {
-    expect(e.message).toEqual(`the package has no associated repository.`)
+    expect(e.message).toEqual(`the package has no associated repository or homepage.`)
   }
 })
 
@@ -76,11 +76,11 @@ test('throws the right error when there is no repo URL in the pkg data', async (
   try {
     await testMarshall.validate(pkgData)
   } catch (e) {
-    expect(e.message).toEqual(`the package has no associated repository.`)
+    expect(e.message).toEqual(`the package has no associated repository or homepage.`)
   }
 })
 
-test('throws the right error when the url does not exist', async () => {
+test('throws the right error when the repository url does not exist', async () => {
   axios.get.mockImplementationOnce(() =>
     Promise.reject(new Error('error'))
   )
@@ -88,6 +88,30 @@ test('throws the right error when the url does not exist', async () => {
     await testMarshall.validate(fullPkgData)
   } catch (e) {
     expect(e.message).toBe('the repository associated with the package (url) does not exist or is unreachable at the moment.')
+  }
+})
+
+test('throws the right error when the homepage url does not exist', async () => {
+  axios.get.mockImplementationOnce(() =>
+    Promise.reject(new Error('error'))
+  )
+  const pkgData = {
+    packageName: {
+      'dist-tags': {
+        latest: '1.0.0'
+      },
+      versions: {
+        '1.0.0': {
+          repository: {},
+          homepage: 'homepage-url'
+        }
+      }
+    }
+  }
+  try {
+    await testMarshall.validate(pkgData)
+  } catch (e) {
+    expect(e.message).toBe('the homepage associated with the package (homepage-url) does not exist or is unreachable at the moment.')
   }
 })
 
