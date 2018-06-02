@@ -7,9 +7,7 @@ const testMarshall = new RepoMarshall({
   packageRepoUtils: {
     getPackageInfo: (pkgInfo) => {
       return new Promise((resolve, reject) => {
-        process.nextTick(
-          () => resolve(pkgInfo)
-        )
+        resolve(pkgInfo)
       })
     }
   }
@@ -34,12 +32,10 @@ test('has the right title', async () => {
   expect(testMarshall.title()).toEqual('Identifying package repository...')
 })
 
-test('throws the right error when there is no pkg data availabile', async () => {
-  try {
-    await testMarshall.validate({packageName: {}})
-  } catch (e) {
-    expect(e.message).toEqual(`the package has no associated repository or homepage.`)
-  }
+test('throws the right error when there is no pkg data available', async () => {
+  await expect(testMarshall.validate({ packageName: {} })).rejects.toThrow(
+    `the package has no associated repository or homepage.`
+  )
 })
 
 test('throws the right error when there is no repo in the pkg data', async () => {
@@ -53,11 +49,10 @@ test('throws the right error when there is no repo in the pkg data', async () =>
       }
     }
   }
-  try {
-    await testMarshall.validate(pkgData)
-  } catch (e) {
-    expect(e.message).toEqual(`the package has no associated repository or homepage.`)
-  }
+
+  await expect(testMarshall.validate(pkgData)).rejects.toThrow(
+    `the package has no associated repository or homepage.`
+  )
 })
 
 test('throws the right error when there is no repo URL in the pkg data', async () => {
@@ -73,28 +68,27 @@ test('throws the right error when there is no repo URL in the pkg data', async (
       }
     }
   }
-  try {
-    await testMarshall.validate(pkgData)
-  } catch (e) {
-    expect(e.message).toEqual(`the package has no associated repository or homepage.`)
-  }
+
+  await expect(testMarshall.validate(pkgData)).rejects.toThrow(
+    `the package has no associated repository or homepage.`
+  )
 })
 
 test('throws the right error when the repository url does not exist', async () => {
   axios.get.mockImplementationOnce(() =>
     Promise.reject(new Error('error'))
   )
-  try {
-    await testMarshall.validate(fullPkgData)
-  } catch (e) {
-    expect(e.message).toBe('the repository associated with the package (url) does not exist or is unreachable at the moment.')
-  }
+
+  await expect(testMarshall.validate(fullPkgData)).rejects.toThrow(
+    `the repository associated with the package (url) does not exist or is unreachable at the moment.`
+  )
 })
 
 test('throws the right error when the homepage url does not exist', async () => {
   axios.get.mockImplementationOnce(() =>
     Promise.reject(new Error('error'))
   )
+
   const pkgData = {
     packageName: {
       'dist-tags': {
@@ -108,20 +102,16 @@ test('throws the right error when the homepage url does not exist', async () => 
       }
     }
   }
-  try {
-    await testMarshall.validate(pkgData)
-  } catch (e) {
-    expect(e.message).toBe('the homepage associated with the package (homepage-url) does not exist or is unreachable at the moment.')
-  }
+
+  await expect(testMarshall.validate(pkgData)).rejects.toThrow(
+    `the homepage associated with the package (homepage-url) does not exist or is unreachable at the moment.`
+  )
 })
 
 test('does not throw any errors if the url exists', async () => {
   axios.get.mockImplementationOnce(() =>
     Promise.resolve('success')
   )
-  try {
-    await testMarshall.validate(fullPkgData)
-  } catch (e) {
-    throw new Error(e, 'The url check should not throw any errors')
-  }
+
+  await expect(testMarshall.validate(fullPkgData)).resolves.toEqual(expect.anything())
 })
