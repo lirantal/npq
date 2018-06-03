@@ -27,7 +27,7 @@
     "url": "git+https://github.com/lirantal/npq.git"
   },
   "devDependencies": {
-    "@commitlint/cli": "^6.1.3",
+    "@commitlint/cli": "^7.0.0",
     "@commitlint/config-angular": "^7.0.0",
     "babel-preset-env": "^1.6.1",
     "babel-preset-es2015": "^6.24.1",
