@@ -39,23 +39,20 @@ test('running marshall tasks fails', async () => {
     packageRepoUtils: packageRepoUtilsMock
   }
 
-  try {
-    await marshalls.tasks(config)
-  } catch (err) {
-    expect(err.message).toEqual('Something went wrong')
-
-    const context = {
-      pkgs: ['express', 'dockly'],
-      marshalls: {
-        'test.marshall': {
-          status: null,
-          errors: [{ pkg: 'dockly', message: 'simulating mock error' }],
-          warnings: [],
-          data: { express: 'mock data check' }
-        }
+  const context = {
+    pkgs: ['express', 'dockly'],
+    marshalls: {
+      'test.marshall': {
+        status: null,
+        errors: [{ pkg: 'dockly', message: 'simulating mock error' }],
+        warnings: [],
+        data: { express: 'mock data check' }
       }
     }
-
-    expect(err.context).toEqual(context)
   }
+
+  await expect(marshalls.tasks(config)).rejects.toMatchObject({
+    message: 'Something went wrong',
+    context: context
+  })
 })
