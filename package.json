@@ -7,7 +7,7 @@
     "npq-hero": "./bin/npq-hero.js"
   },
   "scripts": {
-    "lint": "standard && eslint . --ignore-path .gitignore",
+    "lint": "standard && eslint . --ignore-path .gitignore && opensource-check --path .",
     "test": "jest",
     "test:watch": "jest --watch",
     "coverage:view": "opn coverage/lcov-report/index.html",
@@ -29,6 +29,7 @@
   "devDependencies": {
     "@commitlint/cli": "^7.0.0",
     "@commitlint/config-angular": "^7.0.0",
+    "@condenast/opensource-check": "0.0.1",
     "babel-preset-env": "^1.6.1",
     "babel-preset-es2015": "^6.24.1",
     "commitizen": "^2.9.5",
@@ -75,7 +76,7 @@
   },
   "husky": {
     "hooks": {
-      "commit-msg": "commitlint --env HUSKY_GIT_PARAMS",
+      "commit-msg": "commitlint -e $HUSKY_GIT_PARAMS",
       "pre-commit": "git status",
       "pre-push": "yarn run lint && yarn run test",
       "post-commit": "git status",
