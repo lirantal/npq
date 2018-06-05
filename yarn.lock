@@ -144,9 +144,9 @@
   dependencies:
     find-up "^2.1.0"
 
-"@condenast/opensource-check@0.0.2":
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/@condenast/opensource-check/-/opensource-check-0.0.2.tgz#4a1bded01071cb05b792e5d919ca93f8c4b9f435"
+"@condenast/opensource-check@0.0.3":
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/@condenast/opensource-check/-/opensource-check-0.0.3.tgz#398ed280f10612aeb655248dde768c925464f007"
   dependencies:
     jest-cli "^22.3.0"
     yargs "^11.0.0"
