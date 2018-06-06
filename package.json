@@ -76,7 +76,7 @@
   },
   "husky": {
     "hooks": {
-      "commit-msg": "commitlint -e $HUSKY_GIT_PARAMS",
+      "commit-msg": "commitlint -env $HUSKY_GIT_PARAMS",
       "pre-commit": "git status",
       "pre-push": "yarn run lint && yarn run test",
       "post-commit": "git status",
