@@ -139,7 +139,7 @@
     "semver": "^5.5.0",
     "update-notifier": "^2.5.0",
     "validator": "^10.0.0",
-    "yargs": "^11.0.0"
+    "yargs": "^12.0.1"
   },
   "release": {
     "branch": "master",
