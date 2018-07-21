@@ -95,14 +95,14 @@ MARSHALL_DISABLE_SNYK=1 npq install express
 ```
 
 ## FAQ
-1. Can I use NPQ without having npm or yarn?
+1. **Can I use NPQ without having npm or yarn?**
 * NPQ will audit a package for possible security issues but it isn't a replacement for npm or yarn. When you choose to continue installing the package it will offload the installation process to either npm or yarn (depends on your choosing).
-2. How is NPQ different from npm audit?
+2. **How is NPQ different from npm audit?**
 * npm audit is reserved for npm, but NPQ works for both npm and yarn users
 * npm audit installs a module even if it has vulnerabilities, NPQ will display the issues detected and prompt the user for confirmation whether to proceed installing it.
 * NPQ will run synthathic checks, called [marshalls](https://github.com/lirantal/npq#marshalls), on the characteristics of a module, such as whether the module you are going to install has a `pre-install` script which can be potentially harmful for your system and prompt you whether to install it. Where as, npm audit will not perform any such checks and only consult a vulnerability database for known security issues.
 * npm audit can better be compared with snyk, rather than NPQ.
-3. Do I require to have a snyk API key in order to use NPQ?
+3. **Do I require to have a snyk API key in order to use NPQ?**
 * It's not required. If NPQ won't be able to detect a snyk API key for the user running NPQ then it will skip database vulnerabilities check. We do however greatly encourage you to use snyk and connect it with NPQ for broader security.
 
 
