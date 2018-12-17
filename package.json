@@ -44,7 +44,7 @@
     "jest": "^22.0.0",
     "opn-cli": "^3.1.0",
     "semantic-release": "^15.0.0",
-    "standard": "^11.0.0"
+    "standard": "^12.0.0"
   },
   "jest": {
     "testEnvironment": "node",
