@@ -108,7 +108,7 @@ MARSHALL_DISABLE_SNYK=1 npq install express
 
 ## Contributing
 
-Please consult the [CONTIRBUTING](https://github.com/lirantal/npq/blob/master/CONTRIBUTING.md) for guidelines on contributing to this project
+Please consult the [CONTRIBUTING](https://github.com/lirantal/npq/blob/master/CONTRIBUTING.md) for guidelines on contributing to this project
 
 ## Author
 Liran Tal <liran.tal@gmail.com>
