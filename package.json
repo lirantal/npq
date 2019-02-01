@@ -7,7 +7,7 @@
     "npq-hero": "./bin/npq-hero.js"
   },
   "scripts": {
-    "lint": "standard && eslint . --ignore-path .gitignore && opensource-check",
+    "lint": "standard && eslint . --ignore-path .gitignore",
     "test": "jest",
     "test:watch": "jest --watch",
     "coverage:view": "opn coverage/lcov-report/index.html",
