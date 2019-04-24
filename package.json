@@ -39,7 +39,7 @@
     "eslint-plugin-import": "^2.2.0",
     "eslint-plugin-node": "^8.0.0",
     "eslint-plugin-security": "^1.3.0",
-    "husky": "^1.0.0-rc.2",
+    "husky": "^2.0.0",
     "jest": "^22.0.0",
     "opn-cli": "^4.0.0",
     "semantic-release": "^15.0.0",
