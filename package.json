@@ -37,7 +37,7 @@
     "doxdox": "^2.0.1",
     "eslint": "^5.0.0",
     "eslint-plugin-import": "^2.2.0",
-    "eslint-plugin-node": "^8.0.0",
+    "eslint-plugin-node": "^9.0.0",
     "eslint-plugin-security": "^1.3.0",
     "husky": "^1.0.0-rc.2",
     "jest": "^22.0.0",
