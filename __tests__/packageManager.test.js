@@ -47,7 +47,23 @@ test('package manager spawns successfully when retrieves default package manager
 })
 
 test('package manager spawns successfully when provided array of packages to handle', async () => {
-  await packageManager.process('npm', ['semver', 'express'])
+  process.argv = ['node', 'script name', 'install', 'semver', 'express']
+  await packageManager.process('npm')
+  expect(childProcess.spawn).toHaveBeenCalled()
+  expect(childProcess.spawn.mock.calls.length).toBe(1)
+  expect(childProcess.spawn.mock.calls[0][0]).toBe('npm')
+
+  expect(childProcess.spawn.mock.calls[0][1]).toEqual([
+    'install',
+    'semver',
+    'express'
+  ])
+  childProcess.spawn.mockReset()
+})
+
+test('package manager spawns successfully and ignore npqs own internal commands when spawning package manager', async () => {
+  process.argv = ['node', 'script name', 'install', 'semver', 'express', '--dry-run', '--packageManager']
+  await packageManager.process('npm')
   expect(childProcess.spawn).toHaveBeenCalled()
   expect(childProcess.spawn.mock.calls.length).toBe(1)
   expect(childProcess.spawn.mock.calls[0][0]).toBe('npm')
