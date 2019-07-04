@@ -15,7 +15,9 @@
     "docs": "yarn run docs:code && yarn run docs:api",
     "docs:api": "doxdox *.js --layout bootstrap --output docs/index.html",
     "docs:code": "docco *.js --output docs/code",
-    "semantic-release": "semantic-release"
+    "semantic-release": "semantic-release",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
   },
   "author": {
     "name": "Liran Tal",
@@ -156,7 +158,8 @@
     "semver": "^6.0.0",
     "update-notifier": "^3.0.1",
     "validator": "^11.0.0",
-    "yargs": "^12.0.2"
+    "yargs": "^12.0.2",
+    "snyk": "^1.189.0"
   },
   "release": {
     "branch": "master",
@@ -177,5 +180,6 @@
         }
       ]
     }
-  }
+  },
+  "snyk": true
 }
