@@ -33,7 +33,7 @@
     "@commitlint/config-angular": "^8.0.0",
     "babel-preset-env": "^1.6.1",
     "babel-preset-es2015": "^6.24.1",
-    "commitizen": "^3.0.0",
+    "commitizen": "^4.0.0",
     "cz-conventional-changelog": "^2.1.0",
     "docco": "^0.7.0",
     "doxdox": "^3.0.0",
