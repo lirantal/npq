@@ -28,17 +28,17 @@ Once npq is installed, you can safely* install packages:
 npq install express
 ```
 
-`npq` will perform the following steps to sanity check the package is safe by employing syntactic heuristics and querying a CVE database:
+`npq` will perform the following steps to sanity check that the package is safe by employing syntactic heuristics and querying a CVE database:
 
-* Consult snyk.io database of publicly disclosed vulnerabilities to check if a vulnerability exists for this package and its version.
+* Consult the snyk.io database of publicly disclosed vulnerabilities to check if a vulnerability exists for this package and its version.
 * Package age on npm
 * Package download count as a popularity metric
 * Package has a README file
 * Package has pre/post install scripts 
 
-If npq is prompted to continue with the install it simply handovers the actual package install job to the package manager (npm by default).
+If npq is prompted to continue with the install, it simply hands over the actual package install job to the package manager (npm by default).
 
-safely* - there's no guaranteed safety, a malicious or vulnerable package could still exist that has no disclosure published and passes npq's checks.
+safely* - there's no guaranteed safety; a malicious or vulnerable package could still exist that has no disclosure published and passes npq's checks.
 
 ## Install
 
@@ -82,11 +82,11 @@ Note: `npq` by default will offload all commands and their arguments to the `npm
 | downloads | Will show a warning for a package if its download count in the last month is less than 20
 | readme | Will show a warning if a package has no README or it has been detected as a security placeholder package by npm staff
 | scripts | Will show a warning if a package has a pre/post install script which could potentially be malicious
-| snyk | Will show a warning if a package has been found with vulnerabilities in snyk's database | For snyk to work you need to either have the `snyk` npm package installed with a valid api token, or make the token available in the SNYK_TOKEN environment variable and npq will use it
+| snyk | Will show a warning if a package has been found with vulnerabilities in snyk's database | For snyk to work you need to either have the `snyk` npm package installed with a valid api token, or make the token available in the SNYK_TOKEN environment variable, and npq will use it
 
 ### Disabling Marshalls
 
-To disable a marshall altogether set an environment variable using with the marshall's shortname.
+To disable a marshall altogether, set an environment variable using with the marshall's shortname.
 
 Example, to disable snyk:
 
@@ -96,13 +96,13 @@ MARSHALL_DISABLE_SNYK=1 npq install express
 
 ## FAQ
 1. **Can I use NPQ without having npm or yarn?**
-* NPQ will audit a package for possible security issues but it isn't a replacement for npm or yarn. When you choose to continue installing the package it will offload the installation process to either npm or yarn (depends on your choosing).
+* NPQ will audit a package for possible security issues, but it isn't a replacement for npm or yarn. When you choose to continue installing the package, it will offload the installation process to your choice of either npm or yarn.
 2. **How is NPQ different from npm audit?**
-* npm install will install a module even if it has vulnerabilities, NPQ will display the issues detected and prompt the user for confirmation whether to proceed installing it.
-* NPQ will run synthathic checks, called [marshalls](https://github.com/lirantal/npq#marshalls), on the characteristics of a module, such as whether the module you are going to install has a `pre-install` script which can be potentially harmful for your system and prompt you whether to install it. Where as, npm audit will not perform any such checks and only consult a vulnerability database for known security issues.
-* npm audit can better be compared with snyk, rather than NPQ.
-3. **Do I require to have a snyk API key in order to use NPQ?**
-* It's not required. If NPQ won't be able to detect a snyk API key for the user running NPQ then it will skip database vulnerabilities check. We do however greatly encourage you to use snyk and connect it with NPQ for broader security.
+* `npm install` will install a module even if it has vulnerabilities; NPQ will display the issues detected, and prompt the user for confirmation on whether to proceed installing it.
+* NPQ will run synthethic checks, called [marshalls](https://github.com/lirantal/npq#marshalls), on the characteristics of a module, such as whether the module you are going to install has a `pre-install` script which can be potentially harmful for your system and prompt you whether to install it. Whereas `npm audit` will not perform any such checks, and only consults a vulnerability database for known security issues.
+* `npm audit` is closer in functionality to what snyk does, rather than what NPQ does.
+3. **Do I require a snyk API key in order to use NPQ?**
+* It's not required. If NPQ is unable to detect a snyk API key for the user running NPQ, then it will skip the database vulnerabilities check. We do, however, greatly encourage you to use snyk, and connect it with NPQ for broader security.
 
 
 ## Contributing
