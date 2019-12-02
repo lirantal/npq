@@ -7,7 +7,8 @@
     "npq-hero": "./bin/npq-hero.js"
   },
   "scripts": {
-    "lint": "standard && eslint . --ignore-path .gitignore",
+    "lint": "standard && eslint . --ignore-path .gitignore && yarn run lint:lockfile",
+    "lint:lockfile": "lockfile-lint --path yarn.lock --type yarn --validate-https --allowed-hosts npm yarn",
     "test": "jest",
     "test:watch": "jest --watch",
     "coverage:view": "opn coverage/lcov-report/index.html",
@@ -42,6 +43,7 @@
     "eslint-plugin-node": "^8.0.0",
     "eslint-plugin-security": "^1.3.0",
     "husky": "^3.0.0",
+    "lockfile-lint": "^2.0.1",
     "jest": "^22.0.0",
     "opn-cli": "^4.0.0",
     "semantic-release": "^15.0.0",
@@ -156,10 +158,10 @@
     "inquirer": "^6.3.1",
     "listr": "^0.14.0",
     "semver": "^6.0.0",
+    "snyk": "^1.189.0",
     "update-notifier": "^3.0.1",
     "validator": "^11.0.0",
-    "yargs": "^12.0.2",
-    "snyk": "^1.189.0"
+    "yargs": "^12.0.2"
   },
   "release": {
     "branch": "master",
