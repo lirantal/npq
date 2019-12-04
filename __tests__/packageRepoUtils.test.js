@@ -118,3 +118,21 @@ test('repo utils retrieves package README information even when not available', 
   const result = await packageRepoUtils.getReadmeInfo(packageName)
   expect(result).toBeFalsy()
 })
+
+test('repo utils retrieves package LICENSE information', async () => {
+  const PackageRepoUtils = require('../lib/helpers/packageRepoUtils')
+  jest.mock('axios', () => {
+    return {
+      get: jest.fn(() => {
+        return Promise.resolve({
+          data: require('./mocks/registryPackageOk.mock.json')
+        })
+      })
+    }
+  })
+
+  const packageRepoUtils = new PackageRepoUtils()
+  const packageName = 'testPackage'
+  const result = await packageRepoUtils.getLicenseInfo(packageName)
+  expect(result).toBeTruthy()
+})
