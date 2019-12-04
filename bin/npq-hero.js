@@ -28,6 +28,7 @@ marshall
   .process()
   .then(result => {
     if (result && result.error) {
+      // eslint-disable-next-line no-console
       console.log()
       return inquirer.prompt([
         {
@@ -47,6 +48,7 @@ marshall
     }
   })
   .catch(error => {
+    // eslint-disable-next-line no-console
     console.error(error)
     process.exit(-1)
   })

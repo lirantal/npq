@@ -1,8 +1,10 @@
 const packageManager = require('../lib/packageManager')
+// eslint-disable-next-line security/detect-child-process
 const childProcess = require('child_process')
 
 jest.mock('child_process', () => {
   return {
+    // eslint-disable-next-line no-unused-vars
     spawn: jest.fn((cmd, args, options) => {
       return true
     })

@@ -1,5 +1,6 @@
 const PackageRepoUtils = require('../lib/helpers/packageRepoUtils')
 const axios = require('axios')
+
 jest.mock('axios')
 axios.get.mockImplementation(() => Promise.resolve({
   data: require('./mocks/registryPackageOk.mock.json')
@@ -134,5 +135,23 @@ test('repo utils retrieves package LICENSE information', async () => {
   const packageRepoUtils = new PackageRepoUtils()
   const packageName = 'testPackage'
   const result = await packageRepoUtils.getLicenseInfo(packageName)
+  expect(result).toBeTruthy()
+})
+
+test('repo utils parses package version', async () => {
+  const PackageRepoUtils = require('../lib/helpers/packageRepoUtils')
+  jest.mock('axios', () => {
+    return {
+      get: jest.fn(() => {
+        return Promise.resolve({
+          data: require('./mocks/registryPackageOk.mock.json')
+        })
+      })
+    }
+  })
+
+  const packageRepoUtils = new PackageRepoUtils()
+  const packageName = 'testPackage'
+  const result = await packageRepoUtils.parsePackageVersion(await packageRepoUtils.getLatestVersion(packageName))
   expect(result).toBeTruthy()
 })
