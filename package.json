@@ -158,7 +158,7 @@
     "inquirer": "^7.0.2",
     "listr": "^0.14.0",
     "semver": "^6.3.0",
-    "snyk": "^1.290.1",
+    "snyk": "^1.290.2",
     "update-notifier": "^4.0.0",
     "validator": "^12.2.0",
     "yargs": "^12.0.2"
