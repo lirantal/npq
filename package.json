@@ -152,14 +152,14 @@
     }
   },
   "dependencies": {
-    "axios": "^0.19.2",
+    "axios": "^0.20.0",
     "chalk": "^2.3.0",
     "glob": "^7.1.6",
     "inquirer": "^7.0.2",
     "listr": "^0.14.0",
     "semver": "^6.3.0",
     "snyk": "^1.297.3",
-    "update-notifier": "^4.1.0",
+    "update-notifier": "^4.1.1",
     "validator": "^12.2.0",
     "yargs": "^13.1.0"
   },
