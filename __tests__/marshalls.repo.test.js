@@ -6,7 +6,7 @@ jest.mock('axios')
 const testMarshall = new RepoMarshall({
   packageRepoUtils: {
     getPackageInfo: (pkgInfo) => {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         resolve(pkgInfo)
       })
     }
@@ -34,7 +34,7 @@ test('has the right title', async () => {
 
 test('throws the right error when there is no pkg data available', async () => {
   await expect(testMarshall.validate({ packageName: {} })).rejects.toThrow(
-    `the package has no associated repository or homepage.`
+    'the package has no associated repository or homepage.'
   )
 })
 
@@ -51,7 +51,7 @@ test('throws the right error when there is no repo in the pkg data', async () =>
   }
 
   await expect(testMarshall.validate(pkgData)).rejects.toThrow(
-    `the package has no associated repository or homepage.`
+    'the package has no associated repository or homepage.'
   )
 })
 
@@ -70,7 +70,7 @@ test('throws the right error when there is no repo URL in the pkg data', async (
   }
 
   await expect(testMarshall.validate(pkgData)).rejects.toThrow(
-    `the package has no associated repository or homepage.`
+    'the package has no associated repository or homepage.'
   )
 })
 
@@ -80,7 +80,7 @@ test('throws the right error when the repository url does not exist', async () =
   )
 
   await expect(testMarshall.validate(fullPkgData)).rejects.toThrow(
-    `the repository associated with the package (url) does not exist or is unreachable at the moment.`
+    'the repository associated with the package (url) does not exist or is unreachable at the moment.'
   )
 })
 
@@ -104,7 +104,7 @@ test('throws the right error when the homepage url does not exist', async () => 
   }
 
   await expect(testMarshall.validate(pkgData)).rejects.toThrow(
-    `the homepage associated with the package (homepage-url) does not exist or is unreachable at the moment.`
+    'the homepage associated with the package (homepage-url) does not exist or is unreachable at the moment.'
   )
 })
 
