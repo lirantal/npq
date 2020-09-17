@@ -1,5 +1,6 @@
 const TestMarshall = require('./__fixtures__/test.marshall')
 const TEST_MARSHALL_NAME = 'test.marshall'
+const BaseMarshall = require('../lib/marshalls/baseMarshall')
 
 test('base marshall implemented isEnabled', async () => {
   const testMarshall = new TestMarshall({
@@ -98,16 +99,17 @@ test('setWarning sets the warnings properly', () => {
 })
 
 test('base marshall implemented isEnabled', async () => {
-  const testMarshall = new TestMarshall({
+  const testMarshall = new BaseMarshall({
     packageRepoUtils: null
   })
 
-  testMarshall.validateSomething = jest.fn(() => {
+  testMarshall.validate = jest.fn(() => {
     return Promise.reject(new Error('some mock error'))
   })
 
   const ctx = { pkgs: ['pkg1'], marshalls: {} }
   const task = {}
   testMarshall.init(ctx, task)
-  await testMarshall.run(ctx, task)
+  const result = await testMarshall.run(ctx, task)
+  expect(result).toStrictEqual([undefined])
 })
