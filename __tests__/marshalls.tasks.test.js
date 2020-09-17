@@ -1,6 +1,10 @@
 const path = require('path')
 const marshalls = require('../lib/marshalls')
 
+const PackageRepoUtilsMock = class Fake {
+  getPackageInfo () { return Promise.resolve(true) }
+}
+
 test('running marshall tasks succeeds', async () => {
   marshalls.collectMarshalls = jest.fn(() => {
     return Promise.resolve([
@@ -8,10 +12,9 @@ test('running marshall tasks succeeds', async () => {
     ])
   })
 
-  const packageRepoUtilsMock = jest.fn()
   const config = {
     pkgs: ['express', 'semver'],
-    packageRepoUtils: packageRepoUtilsMock
+    packageRepoUtils: new PackageRepoUtilsMock()
   }
 
   const tasks = await marshalls.tasks(config)
@@ -33,10 +36,9 @@ test('running marshall tasks fails', async () => {
     ])
   })
 
-  const packageRepoUtilsMock = jest.fn()
   const config = {
     pkgs: ['express', 'dockly'],
-    packageRepoUtils: packageRepoUtilsMock
+    packageRepoUtils: new PackageRepoUtilsMock()
   }
 
   const context = {
