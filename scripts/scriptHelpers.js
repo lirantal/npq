@@ -43,7 +43,7 @@ module.exports.removeFromFile = async (profilePath, aliases) => {
 const getProfile = async (profilePath) => {
   try {
     // eslint-disable-next-line security/detect-non-literal-fs-filename
-    const profileData = await fs.promises.readFile(profilePath, 'utf-8')
+    const profileData = await fs.promises.readFile(profilePath, 'utf8')
     return profileData
   } catch (err) {
     if (err && err.code === 'ENOENT') {
