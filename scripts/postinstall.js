@@ -18,10 +18,12 @@ const runPostInstall = async () => {
   }
 
   try {
+    console.log('Thank you for installing npq! We want to help you make conscious decisions before installing potentially dangerous packages.')
+    console.log('To do that, we can alias npm and yarn to npq, so that e.g. `npm install <package>` will first use npq to verify the package and prompt you if it finds any issues.')
     const answers = await inquirer.prompt([{
       type: 'confirm',
       name: 'install',
-      message: `📎 Looks like you're using ${shellConfig.name}. Do you want to add aliases for npm and yarn?`
+      message: `Do you want to add ${shellConfig.name} aliases for npm and yarn?`
     }])
     if (answers['install']) {
       // eslint-disable-next-line security/detect-non-literal-fs-filename
