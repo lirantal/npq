@@ -6,7 +6,7 @@ node_js:
 before_script:
   - yarn run lint
 install:
-  - yarn install --ignore-engines
+  - yarn install --ignore-engines --ignore-scripts
   - yarn global add codecov
 script:
   - yarn run test
