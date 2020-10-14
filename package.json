@@ -18,7 +18,9 @@
     "docs:code": "docco *.js --output docs/code",
     "semantic-release": "semantic-release",
     "snyk-protect": "snyk protect",
-    "prepublish": "npm run snyk-protect"
+    "prepublish": "npm run snyk-protect",
+    "postinstall": "node scripts/postinstall.js",
+    "preuninstall": "node scripts/preuninstall.js"
   },
   "author": {
     "name": "Liran Tal",
@@ -63,6 +65,12 @@
         "functions": 90,
         "lines": 90,
         "statements": 90
+      },
+      "scripts/*": {
+        "branches": 60,
+        "functions": 90,
+        "lines": 80,
+        "statements": 80
       }
     },
     "testPathIgnorePatterns": [
@@ -136,7 +144,14 @@
       "node/no-unsupported-features/node-builtins": [
         "error",
         {
-          "version": ">=6.0.0",
+          "version": ">=10.1.0",
+          "ignores": []
+        }
+      ],
+      "node/no-unsupported-features/es-syntax": [
+        "error",
+        {
+          "version": ">=10.1.0",
           "ignores": []
         }
       ]
