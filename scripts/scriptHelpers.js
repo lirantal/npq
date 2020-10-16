@@ -18,7 +18,7 @@ const SUPPORTED_SHELLS = Object.keys(SHELLS)
 module.exports.getShellConfig = () => {
   const shellPath = process.env.SHELL
   if (shellPath) {
-    const shell = shellPath.split('/').pop()
+    const shell = shellPath.split(path.sep).pop().replace('.exe', '')
     if (SUPPORTED_SHELLS.indexOf(shell) > -1) {
       return { name: shell, ...SHELLS[shell] }
     }
