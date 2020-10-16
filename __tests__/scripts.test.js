@@ -12,9 +12,12 @@ const TEST_ALIAS = 'alias npm="npq-hero"'
 inquirer.prompt = jest.fn().mockResolvedValue({ install: true })
 
 let mockGetShellConfig
+let mockIsRunningInYarn
 
 beforeEach(() => {
   mockGetShellConfig = jest.spyOn(helpers, 'getShellConfig').mockImplementation(() => ({ name: 'testShell', profilePath: TEST_PROFILE_PATH, aliases: TEST_ALIAS }))
+  // Our install script does not run when installing with yarn, but we still want to be able to run tests with yarn
+  mockIsRunningInYarn = jest.spyOn(helpers, 'isRunningInYarn').mockImplementation(() => false)
 })
 
 afterEach(async () => {
@@ -36,6 +39,21 @@ test('postinstall stops when detecting unknown shell', async () => {
   await postinstall.runPostInstall()
   const containsAlias = await helpers.fileContains(TEST_PROFILE_PATH, TEST_ALIAS)
   expect(containsAlias).toBe(false)
+})
+
+test('postinstall script does not run in yarn', async () => {
+  // yarn does not allow for stdin input during `yarn global add npq`
+  mockIsRunningInYarn.mockRestore()
+  const oldExecPath = process.env.npm_execpath
+
+  const spy = jest.spyOn(console, 'log')
+  process.env.npm_execpath = '/usr/lib/node_modules/yarn/bin/yarn.js'
+
+  await postinstall.runPostInstall()
+  expect(spy).not.toHaveBeenCalled()
+
+  process.env.npm_execpath = oldExecPath
+  spy.mockRestore()
 })
 
 test('postinstall script adds aliases', async () => {

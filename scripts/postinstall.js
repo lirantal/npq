@@ -5,6 +5,11 @@ const inquirer = require('inquirer')
 const helpers = require('./scriptHelpers')
 
 const runPostInstall = async () => {
+  if (helpers.isRunningInYarn()) {
+    // `yarn add` cannot get stdin input, so we can't run this script there
+    return
+  }
+
   const shellConfig = helpers.getShellConfig()
   if (!shellConfig) {
     console.log('Could not detect your shell; please add aliases for npq manually.')

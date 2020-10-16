@@ -1,5 +1,6 @@
 const fs = require('fs')
 const os = require('os')
+const path = require('path')
 
 const BASH_ZSH_ALIASES = '\nalias npm="npq-hero"\nalias yarn="NPQ_PKG_MGR=yarn npq-hero"\n'
 const SHELLS = {
@@ -38,6 +39,12 @@ module.exports.removeFromFile = async (profilePath, aliases) => {
   const newProfile = profileData.replace(aliases, '')
   // eslint-disable-next-line security/detect-non-literal-fs-filename
   await fs.promises.writeFile(profilePath, newProfile)
+}
+
+module.exports.isRunningInYarn = () => {
+  const execPath = process.env['npm_execpath'] || ''
+  const binaryName = execPath.split(path.sep).pop()
+  return binaryName.toLowerCase().includes('yarn')
 }
 
 const getProfile = async (profilePath) => {
