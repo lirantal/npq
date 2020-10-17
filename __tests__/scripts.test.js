@@ -47,7 +47,8 @@ test('postinstall script does not run in yarn', async () => {
   const oldExecPath = process.env.npm_execpath
 
   const spy = jest.spyOn(console, 'log')
-  process.env.npm_execpath = '/usr/lib/node_modules/yarn/bin/yarn.js'
+  // pretend that we're running in yarn, whether or not we actually are
+  process.env.npm_execpath = '/example/path/to/yarn.js'
 
   await postinstall.runPostInstall()
   expect(spy).not.toHaveBeenCalled()
