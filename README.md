@@ -56,6 +56,8 @@ safely* - there's no guaranteed safety; a malicious or vulnerable package could 
 npm install -g npq
 ```
 
+*Note: we recommend installing with `npm` rather than `yarn`. That way, `npq` can automatically install shell aliases for you.*
+
 ## Usage
 
 ### Install packages with npq:
