@@ -180,7 +180,7 @@
     "listr": "^0.14.0",
     "semver": "^6.3.0",
     "snyk": "^1.399.1",
-    "update-notifier": "^4.1.1",
+    "update-notifier": "^5.0.0",
     "validator": "^12.2.0",
     "yargs": "^13.1.0"
   },
