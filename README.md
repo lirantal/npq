@@ -107,6 +107,20 @@ Example, to disable snyk:
 MARSHALL_DISABLE_SNYK=1 npq install express
 ```
 
+### Using with TravisCI
+
+An example of using lockfile-lint with a `.travis.yml` configuration as part of your build:
+
+```
+language: node_js
+before_script:
+  - npx lockfile-lint --path package-lock.json --validate-https --allowed-hosts npm
+install:
+  - yarn install
+script:
+  - yarn run test
+```
+
 ## FAQ
 1. **Can I use NPQ without having npm or yarn?**
 * NPQ will audit a package for possible security issues, but it isn't a replacement for npm or yarn. When you choose to continue installing the package, it will offload the installation process to your choice of either npm or yarn.
@@ -116,7 +130,6 @@ MARSHALL_DISABLE_SNYK=1 npq install express
 * `npm audit` is closer in functionality to what snyk does, rather than what NPQ does.
 3. **Do I require a snyk API key in order to use NPQ?**
 * It's not required. If NPQ is unable to detect a snyk API key for the user running NPQ, then it will skip the database vulnerabilities check. We do, however, greatly encourage you to use snyk, and connect it with NPQ for broader security.
-
 
 ## Contributing
 
