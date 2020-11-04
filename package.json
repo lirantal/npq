@@ -180,7 +180,7 @@
     "listr": "^0.14.0",
     "npm-package-arg": "^8.1.0",
     "semver": "^6.3.0",
-    "snyk": "^1.399.1",
+    "snyk": "^1.413.3",
     "update-notifier": "^5.0.0",
     "validator": "^12.2.0",
     "yargs": "^13.1.0"
