@@ -173,7 +173,7 @@
     }
   },
   "dependencies": {
-    "axios": "^0.20.0",
+    "axios": "^0.21.0",
     "chalk": "^2.3.0",
     "glob": "^7.1.6",
     "inquirer": "^7.3.3",
