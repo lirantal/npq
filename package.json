@@ -183,7 +183,7 @@
     "snyk": "^1.413.3",
     "update-notifier": "^5.0.0",
     "validator": "^12.2.0",
-    "yargs": "^13.1.0"
+    "yargs": "^16.0.0"
   },
   "release": {
     "branch": "master",
