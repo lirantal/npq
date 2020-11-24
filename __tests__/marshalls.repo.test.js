@@ -76,7 +76,7 @@ test('throws the right error when there is no repo URL in the pkg data', async (
 
 test('throws the right error when the repository url does not exist', async () => {
   fetch.mockImplementationOnce(() =>
-      Promise.reject(new Error('error'))
+    Promise.reject(new Error('error'))
   )
 
   await expect(testMarshall.validate(fullPkgData)).rejects.toThrow(
