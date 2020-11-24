@@ -18,7 +18,7 @@
     "docs:code": "docco *.js --output docs/code",
     "semantic-release": "semantic-release",
     "snyk-protect": "snyk protect",
-    "prepublish": "npm run snyk-protect",
+    "prepublish": "yarn run snyk-protect",
     "postinstall": "node scripts/postinstall.js",
     "preuninstall": "node scripts/preuninstall.js"
   },
@@ -180,7 +180,7 @@
     "listr": "^0.14.0",
     "npm-package-arg": "^8.1.0",
     "semver": "^6.3.0",
-    "snyk": "^1.413.3",
+    "snyk": "^1.430.2",
     "update-notifier": "^5.0.1",
     "validator": "^12.2.0",
     "yargs": "^16.0.0"
