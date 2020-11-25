@@ -15,7 +15,7 @@ const cliCommons = require('../lib/cli/commons')
 const PACKAGE_MANAGER_TOOL = process.env.NPQ_PKG_MGR
 
 const cli = yargs
-  .options(cliCommons.getOptions())
+  .options(cliCommons.getInstallOptions())
   .command(cliCommons.getInstallCommand())
   .help(false)
   .version(false).argv
