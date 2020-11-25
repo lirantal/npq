@@ -11,8 +11,6 @@ const pkgMgr = require('../lib/packageManager')
 const Marshall = require('../lib/marshall')
 const DependencyResolver = require('../lib/dependencyResolver')
 
-console.log('cli', cli);
-
 if (cli._[0] === 'install') {
   const marshall = new Marshall({
     pkgs: cli.package
