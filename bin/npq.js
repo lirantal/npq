@@ -6,7 +6,7 @@ const cliSupport = require('../lib/helpers/cliSupportHandler')
 cliSupport.isEnvSupport() || cliSupport.noSupportError(true)
 
 const inquirer = require('inquirer')
-const cli = require('../lib/cli')
+const cli = require('../lib/cli/npq')
 const pkgMgr = require('../lib/packageManager')
 const Marshall = require('../lib/marshall')
 

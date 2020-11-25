@@ -10,7 +10,7 @@ const inquirer = require('inquirer')
 const yargs = require('yargs')
 const pkgMgr = require('../lib/packageManager')
 const Marshall = require('../lib/marshall')
-const cliCommons = require('../lib/cliCommons')
+const cliCommons = require('../lib/cli/commons')
 
 const PACKAGE_MANAGER_TOOL = process.env.NPQ_PKG_MGR
 
