@@ -8,7 +8,7 @@ cliSupport.isEnvSupport() || cliSupport.noSupportError(true)
 const inquirer = require('inquirer')
 const cli = require('../lib/cli/npq')
 const pkgMgr = require('../lib/packageManager')
-const Marshall = require('../lib/marshall')
+const { Marshall, MESSAGE_TYPE } = require('../lib/marshall')
 const dependencyResolver = require('../lib/dependencyResolver')
 
 if (cli._[0] === 'install') {
@@ -71,10 +71,18 @@ if (cli._[0] === 'install') {
     .process()
     .then(result => {
       if (result && result.error) {
-        throw new Error(result.error)
+        let hasError = false
+        for (const packageName in result.data) {
+          result.data[packageName].forEach(({ type }) => {
+            if (type === MESSAGE_TYPE) hasError = true
+          })
+        }
+        if (hasError) process.exit(-1)
       }
     })
-    .catch(() => {
+    .catch((error) => {
+      // eslint-disable-next-line no-console
+      console.error(error)
       process.exit(-1)
     })
 } else {
