@@ -74,7 +74,7 @@ if (cli._[0] === 'install') {
         let hasError = false
         for (const packageName in result.data) {
           result.data[packageName].forEach(({ type }) => {
-            if (type === MESSAGE_TYPE) hasError = true
+            if (type === MESSAGE_TYPE.ERROR) hasError = true
           })
         }
         if (hasError) process.exit(-1)
