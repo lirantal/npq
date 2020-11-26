@@ -9,7 +9,7 @@ const inquirer = require('inquirer')
 const cli = require('../lib/cli/npq')
 const pkgMgr = require('../lib/packageManager')
 const Marshall = require('../lib/marshall')
-const DependencyResolver = require('../lib/dependencyResolver')
+const dependencyResolver = require('../lib/dependencyResolver')
 
 if (cli._[0] === 'install') {
   const marshall = new Marshall({
@@ -49,24 +49,24 @@ if (cli._[0] === 'install') {
       process.exit(-1)
     })
 } else if (cli._[0] === 'check') {
-  let dependencyResolver
+  let packageJson
 
   try {
-    dependencyResolver = new DependencyResolver()
-    dependencyResolver.resolvePackageJson()
-    dependencyResolver.getDependencies({ noDev: !cli.dev })
+    packageJson = dependencyResolver.resolvePackageJson()
   } catch (err) {
     // eslint-disable-next-line no-console
     console.error('Error while fetching the list of installed dependencies', err)
     process.exit(-1)
   }
 
+  const dependencies = dependencyResolver.getDependencies(packageJson, { noDev: !cli.dev })
+
   const marshall = new Marshall({
-    pkgs: dependencyResolver.dependencies
+    pkgs: dependencies
   })
 
   // eslint-disable-next-line no-console
-  console.log(`Running marshalls against ${dependencyResolver.dependencies.length} dependencies:`)
+  console.log(`Running marshalls against ${dependencies.length} dependencies:`)
   marshall
     .process()
     .then(result => {
