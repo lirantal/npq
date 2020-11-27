@@ -1,7 +1,7 @@
 const RepoMarshall = require('../lib/marshalls/repo.marshall')
-const axios = require('axios')
+const fetch = require('node-fetch')
 
-jest.mock('axios')
+jest.mock('node-fetch')
 
 const testMarshall = new RepoMarshall({
   packageRepoUtils: {
@@ -75,7 +75,7 @@ test('throws the right error when there is no repo URL in the pkg data', async (
 })
 
 test('throws the right error when the repository url does not exist', async () => {
-  axios.get.mockImplementationOnce(() =>
+  fetch.mockImplementationOnce(() =>
     Promise.reject(new Error('error'))
   )
 
@@ -85,7 +85,7 @@ test('throws the right error when the repository url does not exist', async () =
 })
 
 test('throws the right error when the homepage url does not exist', async () => {
-  axios.get.mockImplementationOnce(() =>
+  fetch.mockImplementationOnce(() =>
     Promise.reject(new Error('error'))
   )
 
@@ -109,7 +109,7 @@ test('throws the right error when the homepage url does not exist', async () => 
 })
 
 test('does not throw any errors if the url exists', async () => {
-  axios.get.mockImplementationOnce(() =>
+  fetch.mockImplementationOnce(() =>
     Promise.resolve('success')
   )
 

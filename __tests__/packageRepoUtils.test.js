@@ -1,14 +1,13 @@
 const PackageRepoUtils = require('../lib/helpers/packageRepoUtils')
-const axios = require('axios')
+const fetch = require('node-fetch')
 
-jest.mock('axios')
-axios.get.mockImplementation(() => Promise.resolve({
+jest.mock('node-fetch')
+fetch.mockImplementation(() => Promise.resolve({
   data: require('./mocks/registryPackageOk.mock.json')
 }))
 
 beforeEach(() => {
-  jest.resetModules()
-  axios.get.mockClear()
+  fetch.mockClear()
 })
 
 test('repo utils always has a default package registry url', () => {
@@ -44,7 +43,7 @@ test('repo utils uses its cache when called with wit the same parameter for the 
   const packageName = 'testPackage'
   await packageRepoUtils.getPackageInfo(packageName)
   await packageRepoUtils.getPackageInfo(packageName)
-  expect(axios.get.mock.calls.length).toEqual(1)
+  expect(fetch.mock.calls.length).toEqual(1)
 })
 
 test('repo utils retrieves package latest version', async () => {
@@ -54,24 +53,6 @@ test('repo utils retrieves package latest version', async () => {
   expect(result).toEqual('3.1.0')
 })
 
-test('repo utils retrieves package latest version as null if not exists', async () => {
-  const PackageRepoUtils = require('../lib/helpers/packageRepoUtils')
-  jest.mock('axios', () => {
-    return {
-      get: jest.fn(() => {
-        return Promise.resolve({
-          data: require('./mocks/registryPackageUnpublished.mock.json')
-        })
-      })
-    }
-  })
-
-  const packageRepoUtils = new PackageRepoUtils()
-  const packageName = 'testPackage'
-  const result = await packageRepoUtils.getLatestVersion(packageName)
-  expect(result).toEqual(null)
-})
-
 test('repo utils retrieves package README information', async () => {
   const packageRepoUtils = new PackageRepoUtils()
   const packageName = 'testPackage'
@@ -79,22 +60,28 @@ test('repo utils retrieves package README information', async () => {
   expect(result).toContain('dockly')
 })
 
+test('repo utils retrieves package latest version as null if not exists', async () => {
+  const PackageRepoUtils = require('../lib/helpers/packageRepoUtils')
+  fetch.mockReturnValue(Promise.resolve({
+    data: require('./mocks/registryPackageUnpublished.mock.json')
+  }))
+
+  const packageRepoUtils = new PackageRepoUtils()
+  const packageName = 'testPackage'
+  const result = await packageRepoUtils.getLatestVersion(packageName)
+  expect(result).toEqual(null)
+})
+
 test('repo utils retrieves package download count', async () => {
   const PackageRepoUtils = require('../lib/helpers/packageRepoUtils')
-  jest.mock('axios', () => {
-    return {
-      get: jest.fn(() => {
-        return Promise.resolve({
-          data: {
-            downloads: 1950,
-            start: '2017-11-26',
-            end: '2017-12-25',
-            package: 'express-version-route'
-          }
-        })
-      })
+  fetch.mockReturnValue(Promise.resolve({
+    data: {
+      downloads: 1950,
+      start: '2017-11-26',
+      end: '2017-12-25',
+      package: 'express-version-route'
     }
-  })
+  }))
 
   const packageRepoUtils = new PackageRepoUtils()
   const packageName = 'testPackage'
@@ -104,15 +91,9 @@ test('repo utils retrieves package download count', async () => {
 
 test('repo utils retrieves package README information even when not available', async () => {
   const PackageRepoUtils = require('../lib/helpers/packageRepoUtils')
-  jest.mock('axios', () => {
-    return {
-      get: jest.fn(() => {
-        return Promise.resolve({
-          data: require('./mocks/registryPackageUnpublished.mock.json')
-        })
-      })
-    }
-  })
+  fetch.mockReturnValue(Promise.resolve({
+    data: require('./mocks/registryPackageUnpublished.mock.json')
+  }))
 
   const packageRepoUtils = new PackageRepoUtils()
   const packageName = 'testPackage'
@@ -122,15 +103,9 @@ test('repo utils retrieves package README information even when not available', 
 
 test('repo utils retrieves package LICENSE information', async () => {
   const PackageRepoUtils = require('../lib/helpers/packageRepoUtils')
-  jest.mock('axios', () => {
-    return {
-      get: jest.fn(() => {
-        return Promise.resolve({
-          data: require('./mocks/registryPackageOk.mock.json')
-        })
-      })
-    }
-  })
+  fetch.mockReturnValue(Promise.resolve({
+    data: require('./mocks/registryPackageOk.mock.json')
+  }))
 
   const packageRepoUtils = new PackageRepoUtils()
   const packageName = 'testPackage'
@@ -140,15 +115,9 @@ test('repo utils retrieves package LICENSE information', async () => {
 
 test('repo utils parses package version', async () => {
   const PackageRepoUtils = require('../lib/helpers/packageRepoUtils')
-  jest.mock('axios', () => {
-    return {
-      get: jest.fn(() => {
-        return Promise.resolve({
-          data: require('./mocks/registryPackageOk.mock.json')
-        })
-      })
-    }
-  })
+  fetch.mockReturnValue(Promise.resolve({
+    data: require('./mocks/registryPackageOk.mock.json')
+  }))
 
   const packageRepoUtils = new PackageRepoUtils()
   const packageName = 'testPackage'
