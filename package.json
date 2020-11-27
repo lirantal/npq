@@ -17,8 +17,6 @@
     "docs:api": "doxdox *.js --layout bootstrap --output docs/index.html",
     "docs:code": "docco *.js --output docs/code",
     "semantic-release": "semantic-release",
-    "snyk-protect": "snyk protect",
-    "prepublish": "npm run snyk-protect",
     "postinstall": "node scripts/postinstall.js",
     "preuninstall": "node scripts/preuninstall.js"
   },
@@ -173,7 +171,6 @@
     }
   },
   "dependencies": {
-    "axios": "^0.21.0",
     "chalk": "^2.3.0",
     "glob": "^7.1.6",
     "inquirer": "^7.3.3",
@@ -181,7 +178,6 @@
     "node-fetch": "^2.6.1",
     "npm-package-arg": "^8.1.0",
     "semver": "^6.3.0",
-    "snyk": "^1.413.3",
     "update-notifier": "^5.0.1",
     "validator": "^12.2.0",
     "yargs": "^16.0.0"
@@ -205,6 +201,5 @@
         }
       ]
     }
-  },
-  "snyk": true
+  }
 }
