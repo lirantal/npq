@@ -3,7 +3,7 @@ const fetch = require('node-fetch')
 
 jest.mock('node-fetch')
 fetch.mockImplementation(() => Promise.resolve({
-  data: require('./mocks/registryPackageOk.mock.json')
+  json: () => require('./mocks/registryPackageOk.mock.json')
 }))
 
 beforeEach(() => {
@@ -63,7 +63,7 @@ test('repo utils retrieves package README information', async () => {
 test('repo utils retrieves package latest version as null if not exists', async () => {
   const PackageRepoUtils = require('../lib/helpers/packageRepoUtils')
   fetch.mockReturnValue(Promise.resolve({
-    data: require('./mocks/registryPackageUnpublished.mock.json')
+    json: () => require('./mocks/registryPackageUnpublished.mock.json')
   }))
 
   const packageRepoUtils = new PackageRepoUtils()
@@ -75,12 +75,12 @@ test('repo utils retrieves package latest version as null if not exists', async 
 test('repo utils retrieves package download count', async () => {
   const PackageRepoUtils = require('../lib/helpers/packageRepoUtils')
   fetch.mockReturnValue(Promise.resolve({
-    data: {
+    json: () => ({
       downloads: 1950,
       start: '2017-11-26',
       end: '2017-12-25',
       package: 'express-version-route'
-    }
+    })
   }))
 
   const packageRepoUtils = new PackageRepoUtils()
@@ -92,7 +92,7 @@ test('repo utils retrieves package download count', async () => {
 test('repo utils retrieves package README information even when not available', async () => {
   const PackageRepoUtils = require('../lib/helpers/packageRepoUtils')
   fetch.mockReturnValue(Promise.resolve({
-    data: require('./mocks/registryPackageUnpublished.mock.json')
+    json: () => require('./mocks/registryPackageUnpublished.mock.json')
   }))
 
   const packageRepoUtils = new PackageRepoUtils()
@@ -104,7 +104,7 @@ test('repo utils retrieves package README information even when not available', 
 test('repo utils retrieves package LICENSE information', async () => {
   const PackageRepoUtils = require('../lib/helpers/packageRepoUtils')
   fetch.mockReturnValue(Promise.resolve({
-    data: require('./mocks/registryPackageOk.mock.json')
+    json: () => require('./mocks/registryPackageOk.mock.json')
   }))
 
   const packageRepoUtils = new PackageRepoUtils()
@@ -116,7 +116,7 @@ test('repo utils retrieves package LICENSE information', async () => {
 test('repo utils parses package version', async () => {
   const PackageRepoUtils = require('../lib/helpers/packageRepoUtils')
   fetch.mockReturnValue(Promise.resolve({
-    data: require('./mocks/registryPackageOk.mock.json')
+    json: () => require('./mocks/registryPackageOk.mock.json')
   }))
 
   const packageRepoUtils = new PackageRepoUtils()
