@@ -28,90 +28,111 @@ const fullPkgData = {
   }
 }
 
-test('has the right title', async () => {
-  expect(testMarshall.title()).toEqual('Identifying package repository...')
-})
+describe('Repo test suites', () => {
 
-test('throws the right error when there is no pkg data available', async () => {
-  await expect(testMarshall.validate({ packageName: {} })).rejects.toThrow(
-    'the package has no associated repository or homepage.'
-  )
-})
+  beforeEach( () => {
+    jest.clearAllMocks()
+    jest.resetAllMocks()
+  })
 
-test('throws the right error when there is no repo in the pkg data', async () => {
-  const pkgData = {
-    packageName: {
-      'dist-tags': {
-        latest: '1.0.0'
-      },
-      versions: {
-        '1.0.0': {}
-      }
-    }
-  }
+  test('has the right title', async () => {
+    expect(testMarshall.title()).toEqual('Identifying package repository...')
+  })
 
-  await expect(testMarshall.validate(pkgData)).rejects.toThrow(
-    'the package has no associated repository or homepage.'
-  )
-})
+  test('throws the right error when there is no pkg data available', async () => {
+    await expect(testMarshall.validate({ packageName: {} })).rejects.toThrow(
+      'the package has no associated repository or homepage.'
+    )
+  })
 
-test('throws the right error when there is no repo URL in the pkg data', async () => {
-  const pkgData = {
-    packageName: {
-      'dist-tags': {
-        latest: '1.0.0'
-      },
-      versions: {
-        '1.0.0': {
-          repository: {}
+  test('throws the right error when there is no repo in the pkg data', async () => {
+    const pkgData = {
+      packageName: {
+        'dist-tags': {
+          latest: '1.0.0'
+        },
+        versions: {
+          '1.0.0': {}
         }
       }
     }
-  }
 
-  await expect(testMarshall.validate(pkgData)).rejects.toThrow(
-    'the package has no associated repository or homepage.'
-  )
-})
+    await expect(testMarshall.validate(pkgData)).rejects.toThrow(
+      'the package has no associated repository or homepage.'
+    )
+  })
 
-test('throws the right error when the repository url does not exist', async () => {
-  fetch.mockImplementationOnce(() =>
-    Promise.reject(new Error('error'))
-  )
-
-  await expect(testMarshall.validate(fullPkgData)).rejects.toThrow(
-    'the repository associated with the package (url) does not exist or is unreachable at the moment.'
-  )
-})
-
-test('throws the right error when the homepage url does not exist', async () => {
-  fetch.mockImplementationOnce(() =>
-    Promise.reject(new Error('error'))
-  )
-
-  const pkgData = {
-    packageName: {
-      'dist-tags': {
-        latest: '1.0.0'
-      },
-      versions: {
-        '1.0.0': {
-          repository: {},
-          homepage: 'homepage-url'
+  test('throws the right error when there is no repo URL in the pkg data', async () => {
+    const pkgData = {
+      packageName: {
+        'dist-tags': {
+          latest: '1.0.0'
+        },
+        versions: {
+          '1.0.0': {
+            repository: {}
+          }
         }
       }
     }
-  }
 
-  await expect(testMarshall.validate(pkgData)).rejects.toThrow(
-    'the homepage associated with the package (homepage-url) does not exist or is unreachable at the moment.'
-  )
-})
+    await expect(testMarshall.validate(pkgData)).rejects.toThrow(
+      'the package has no associated repository or homepage.'
+    )
+  })
 
-test('does not throw any errors if the url exists', async () => {
-  fetch.mockImplementationOnce(() =>
-    Promise.resolve('success')
-  )
+  test('throws the right error when the repository url does not exist', async () => {
+    fetch.mockImplementationOnce(() =>
+      Promise.reject(new Error('error'))
+    )
 
-  await expect(testMarshall.validate(fullPkgData)).resolves.toEqual(expect.anything())
+    await expect(testMarshall.validate(fullPkgData)).rejects.toThrow(
+      'no valid repository is associated with the package'
+    )
+  })
+
+  test('throws the right error when the repository url is unreachable', async () => {
+    fetch.mockImplementationOnce(() =>
+      Promise.reject(new Error('error'))
+    )
+
+    fullPkgData.packageName.versions['1.0.0'].repository.url = "https://dsfsdfsdfs.abcdeugwecwekjasda.com/" 
+    await expect(testMarshall.validate(fullPkgData)).rejects.toThrow(
+      'the repository associated with the package (https://dsfsdfsdfs.abcdeugwecwekjasda.com/) does not exist or is unreachable at the moment.'
+    )
+  })
+
+  test('throws the right error when the homepage url does not exist', async () => {
+    fetch.mockImplementationOnce(() =>
+      Promise.reject(new Error('error'))
+    )
+
+    const pkgData = {
+      packageName: {
+        'dist-tags': {
+          latest: '1.0.0'
+        },
+        versions: {
+          '1.0.0': {
+            repository: {},
+            homepage: 'homepage-url'
+          }
+        }
+      }
+    }
+
+    await expect(testMarshall.validate(pkgData)).rejects.toThrow(
+      'the homepage associated with the package (homepage-url) does not exist or is unreachable at the moment.'
+    )
+  })
+
+  test('does not throw any errors if the url exists', async () => {
+    fetch.mockImplementationOnce(() =>
+      Promise.resolve('success')
+    )
+
+    fullPkgData.packageName.versions['1.0.0'].repository.url = "https://google.com" 
+    await expect(testMarshall.validate(fullPkgData)).resolves.toEqual(expect.anything())
+  })
+
 })
