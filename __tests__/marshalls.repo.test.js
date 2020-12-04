@@ -29,8 +29,7 @@ const fullPkgData = {
 }
 
 describe('Repo test suites', () => {
-
-  beforeEach( () => {
+  beforeEach(() => {
     jest.clearAllMocks()
     jest.resetAllMocks()
   })
@@ -96,7 +95,7 @@ describe('Repo test suites', () => {
       Promise.reject(new Error('error'))
     )
 
-    fullPkgData.packageName.versions['1.0.0'].repository.url = "https://dsfsdfsdfs.abcdeugwecwekjasda.com/" 
+    fullPkgData.packageName.versions['1.0.0'].repository.url = 'https://dsfsdfsdfs.abcdeugwecwekjasda.com/'
     await expect(testMarshall.validate(fullPkgData)).rejects.toThrow(
       'the repository associated with the package (https://dsfsdfsdfs.abcdeugwecwekjasda.com/) does not exist or is unreachable at the moment.'
     )
@@ -131,8 +130,7 @@ describe('Repo test suites', () => {
       Promise.resolve('success')
     )
 
-    fullPkgData.packageName.versions['1.0.0'].repository.url = "https://google.com" 
+    fullPkgData.packageName.versions['1.0.0'].repository.url = 'https://google.com'
     await expect(testMarshall.validate(fullPkgData)).resolves.toEqual(expect.anything())
   })
-
 })
