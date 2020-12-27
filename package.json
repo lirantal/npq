@@ -180,7 +180,7 @@
     "semver": "^6.3.0",
     "update-notifier": "^5.0.1",
     "validator": "^12.2.0",
-    "yargs": "^16.0.0"
+    "yargs": "^16.2.0"
   },
   "release": {
     "branch": "master",
