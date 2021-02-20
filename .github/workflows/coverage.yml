@@ -39,8 +39,8 @@ jobs:
         env:
           CI: true
 
-      - name: Coveralls
-  - uses: codecov/codecov-action@v1
-    with:
-      fail_ci_if_error: true
-      verbose: false
+      - name: Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          fail_ci_if_error: true
+          verbose: false
