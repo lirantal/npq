@@ -8,7 +8,7 @@
 [![npm](https://img.shields.io/npm/v/npq.svg)](https://www.npmjs.com/package/npq)
 [![npm](https://img.shields.io/npm/l/npq.svg)](https://www.npmjs.com/package/npq)
 [![codecov](https://codecov.io/gh/lirantal/npq/branch/master/graph/badge.svg)](https://codecov.io/gh/lirantal/npq)
-[![Build Status](https://travis-ci.org/lirantal/npq.svg?branch=master)](https://travis-ci.org/lirantal/npq)
+[![Build Status](https://github.com/lirantal/npq/workflows/unit-tests/badge.svg)](https://github.com/lirantal/npq/workflows/unit-tests)
 [![Known Vulnerabilities](https://snyk.io/test/github/lirantal/npq/badge.svg)](https://snyk.io/test/github/lirantal/npq)
 [![Security Responsible Disclosure](https://img.shields.io/badge/Security-Responsible%20Disclosure-yellow.svg)](./SECURITY.md)
 
