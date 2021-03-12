@@ -38,12 +38,3 @@ jobs:
         run: yarn run test
         env:
           CI: true
-  release:
-    if: ${{ github.ref == 'master' }}
-    needs: build
-    runs-on: ubuntu-latest
-    name: semantic-release
-
-    steps:
-      - name: Checkout Repository
-        run: yarn run semantic-release
