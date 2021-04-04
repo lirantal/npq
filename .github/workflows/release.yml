@@ -6,10 +6,12 @@ on:
     workflows: ["unit-tests", "linting"]
     types:
       - completed
+    branches:
+      - master
 
 jobs:
   release:
-    if: ${{ github.ref == 'master' && (github.event.workflow_run.name == 'unit-tests' && github.event.workflow_run.conclusion == 'success') && (github.event.workflow_run.name == 'linting' && github.event.workflow_run.conclusion == 'success') }}
+    if: ${{ github.ref == 'master' && github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     name: semantic-release
     strategy:
