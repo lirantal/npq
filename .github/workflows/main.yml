@@ -1,0 +1,53 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        platform: [ubuntu-latest]
+        node: ['12', '14']
+    name: Node ${{ matrix.node }} (${{ matrix.platform }})
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node }}
+      - name: install dependencies
+        run: yarn install --frozen-lockfile --ignore-engines --ignore-scripts
+      - name: lint code
+        run: yarn run lint
+        env:
+          CI: true
+      - name: run tests
+        run: yarn run test
+        env:
+          CI: true
+      - name: coverage
+        uses: codecov/codecov-action@v1
+        with:
+          fail_ci_if_error: true
+          verbose: false
+        env:
+          CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}}
+          CI: true
+
+  release:
+    name: do semantic release
+    runs-on: 'ubuntu-latest'
+    needs: build
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - name: install dependencies
+        run: yarn install --frozen-lockfile --ignore-engines --ignore-scripts
+      - name: release
+        run: yarn run semantic-release
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          NPM_TOKEN: ${{secrets.NPM_TOKEN}}
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
