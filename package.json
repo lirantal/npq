@@ -176,7 +176,7 @@
     "inquirer": "^7.3.3",
     "listr": "^0.14.0",
     "node-fetch": "^2.6.1",
-    "npm-package-arg": "^8.1.1",
+    "npm-package-arg": "^8.1.2",
     "semver": "^6.3.0",
     "update-notifier": "^5.0.1",
     "validator": "^12.2.0",
