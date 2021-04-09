@@ -38,6 +38,7 @@ jobs:
     name: do semantic release
     runs-on: 'ubuntu-latest'
     needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
@@ -50,4 +51,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
           NPM_TOKEN: ${{secrets.NPM_TOKEN}}
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
