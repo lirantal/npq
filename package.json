@@ -172,7 +172,7 @@
   },
   "dependencies": {
     "chalk": "^2.3.0",
-    "glob": "^7.1.6",
+    "glob": "^7.1.7",
     "inquirer": "^7.3.3",
     "listr": "^0.14.0",
     "node-fetch": "^2.6.1",
