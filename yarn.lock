@@ -7052,10 +7052,10 @@ npm-normalize-package-bin@^1.0.0, npm-normalize-package-bin@^1.0.1:
     semver "^5.6.0"
     validate-npm-package-name "^3.0.0"
 
-npm-package-arg@^8.1.2:
-  version "8.1.2"
-  resolved "https://registry.yarnpkg.com/npm-package-arg/-/npm-package-arg-8.1.2.tgz#b868016ae7de5619e729993fbd8d11dc3c52ab62"
-  integrity sha512-6Eem455JsSMJY6Kpd3EyWE+n5hC+g9bSyHr9K9U2zqZb7+02+hObQ2c0+8iDk/mNF+8r1MhY44WypKJAkySIYA==
+npm-package-arg@^8.1.4:
+  version "8.1.5"
+  resolved "https://registry.yarnpkg.com/npm-package-arg/-/npm-package-arg-8.1.5.tgz#3369b2d5fe8fdc674baa7f1786514ddc15466e44"
+  integrity sha512-LhgZrg0n0VgvzVdSm1oiZworPbTxYHUJCgtsJW8mGvlDpxTM1vSJc3m5QZeUkhAHIzbz3VCHd/R4osi1L1Tg/Q==
   dependencies:
     hosted-git-info "^4.0.1"
     semver "^7.3.4"
