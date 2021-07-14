@@ -47,6 +47,11 @@ module.exports.isRunningInYarn = () => {
   return binaryName.toLowerCase().includes('yarn')
 }
 
+module.exports.getNpmVersion = () => {
+  const npmData = process.env['npm_config_user_agent'] || ''
+  return npmData.split(' ')[0].split('/')[1]
+}
+
 const getProfile = async (profilePath) => {
   try {
     // eslint-disable-next-line security/detect-non-literal-fs-filename

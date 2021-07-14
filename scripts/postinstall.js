@@ -1,12 +1,18 @@
 const fs = require('fs')
 const chalk = require('chalk')
 const inquirer = require('inquirer')
+const semver = require('semver')
 
 const helpers = require('./scriptHelpers')
 
 const runPostInstall = async () => {
   if (helpers.isRunningInYarn()) {
     // `yarn add` cannot get stdin input, so we can't run this script there
+    return
+  }
+
+  if (semver.gte(helpers.getNpmVersion(), '7.x.x')) {
+    // `npm install` in npm v7 cannot get stdin input, so we can't run this script there
     return
   }
 
