@@ -11,7 +11,7 @@ const runPostInstall = async () => {
     return
   }
 
-  if (semver.gte(helpers.getNpmVersion(), '7.x.x')) {
+  if (semver.gte(helpers.getNpmVersion(), '7.0.0')) {
     // `npm install` in npm v7 cannot get stdin input, so we can't run this script there
     return
   }

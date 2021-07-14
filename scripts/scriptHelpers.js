@@ -1,6 +1,7 @@
 const fs = require('fs')
 const os = require('os')
 const path = require('path')
+const semver = require('semver')
 
 const BASH_ZSH_ALIASES = '\nalias npm="npq-hero"\nalias yarn="NPQ_PKG_MGR=yarn npq-hero"\n'
 const SHELLS = {
@@ -48,8 +49,9 @@ module.exports.isRunningInYarn = () => {
 }
 
 module.exports.getNpmVersion = () => {
-  const npmData = process.env['npm_config_user_agent'] || ''
-  return npmData.split(' ')[0].split('/')[1]
+  const npmData = process.env['npm_config_user_agent'] || '0.0.0'
+  const version = /npm\/(.*) node/.exec(npmData)[1]
+  return semver.valid(version) ? version : '0.0.0'
 }
 
 const getProfile = async (profilePath) => {
