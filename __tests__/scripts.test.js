@@ -13,11 +13,14 @@ inquirer.prompt = jest.fn().mockResolvedValue({ install: true })
 
 let mockGetShellConfig
 let mockIsRunningInYarn
+let mockGetNpmVersion
 
 beforeEach(() => {
   mockGetShellConfig = jest.spyOn(helpers, 'getShellConfig').mockImplementation(() => ({ name: 'testShell', profilePath: TEST_PROFILE_PATH, aliases: TEST_ALIAS }))
   // Our install script does not run when installing with yarn, but we still want to be able to run tests with yarn
   mockIsRunningInYarn = jest.spyOn(helpers, 'isRunningInYarn').mockImplementation(() => false)
+  // Our install script does not run when installing with npm V7, but we still want to be able to run tests with all npm versions
+  mockGetNpmVersion = jest.spyOn(helpers, 'getNpmVersion').mockImplementation(() => '6.0.0')
 })
 
 afterEach(async () => {
@@ -54,6 +57,22 @@ test('postinstall script does not run in yarn', async () => {
   expect(spy).not.toHaveBeenCalled()
 
   process.env.npm_execpath = oldExecPath
+  spy.mockRestore()
+})
+
+test('postinstall script does not run in npm v7', async () => {
+  // npm v7 does not allow for stdin input during `npm install [-g] npq`
+  mockGetNpmVersion.mockRestore()
+  const oldUserAgent = process.env.npm_config_user_agent
+
+  const spy = jest.spyOn(console, 'log')
+  // pretend that we're running in npm v7, whether or not we actually are
+  process.env.npm_config_user_agent = 'npm/7.19.1 node/v14.16.1 win32 x64 workspaces/false'
+
+  await postinstall.runPostInstall()
+  expect(spy).not.toHaveBeenCalled()
+
+  process.env.npm_config_user_agent = oldUserAgent
   spy.mockRestore()
 })
 
