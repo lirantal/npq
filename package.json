@@ -179,7 +179,7 @@
     "npm-package-arg": "^8.1.4",
     "semver": "^6.3.0",
     "update-notifier": "^5.0.1",
-    "validator": "^13.6.0",
+    "validator": "^13.7.0",
     "yargs": "^16.2.0"
   },
   "release": {
