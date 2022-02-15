@@ -90,8 +90,10 @@ Note: `npq` by default will offload all commands and their arguments to the `npm
 | Marshall Name | Description | Notes
 | --- | --- | ---
 | age | Will show a warning for a package if its age on npm is less than 22 days | Checks a package creation date, not a specific version
+| author | Will show a warning if a package has been found without an author field | Checks the latest version for an author
 | downloads | Will show a warning for a package if its download count in the last month is less than 20
 | readme | Will show a warning if a package has no README or it has been detected as a security placeholder package by npm staff
+| repo | Will show a warning if a package has been found without a valid and working repository URL | Checks the latest version for a repository URL
 | scripts | Will show a warning if a package has a pre/post install script which could potentially be malicious
 | snyk | Will show a warning if a package has been found with vulnerabilities in snyk's database | For snyk to work you need to either have the `snyk` npm package installed with a valid api token, or make the token available in the SNYK_TOKEN environment variable, and npq will use it
 | license | Will show a warning if a package has been found without a license field | Checks the latest version for a license
