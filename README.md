@@ -19,6 +19,7 @@
 
 
 Media coverage about npq:
+- As mentioned on [Thomas Gentilhomme](https://github.com/fraxken)'s French book of [Become a Node.js Developer](https://docs.google.com/document/d/1JHgmEFkc8Py4XSuCB8_DQ5FFEJoogyeninFK6ucTd4o/edit#) 
 - Tao Bojlén's [A web of trust for npm](https://www.btao.org/2020/10/02/npm-trust.html)
 - Zander's [favorite list of command line tools](https://zander.wtf/blog/terminal-commands)
 - Ran Bar Zik's [npq review to install safe modules](https://internet-israel.com/%D7%A4%D7%99%D7%AA%D7%95%D7%97-%D7%90%D7%99%D7%A0%D7%98%D7%A8%D7%A0%D7%98/%D7%91%D7%A0%D7%99%D7%99%D7%AA-%D7%90%D7%AA%D7%A8%D7%99-%D7%90%D7%99%D7%A0%D7%98%D7%A8%D7%A0%D7%98-%D7%9C%D7%9E%D7%A4%D7%AA%D7%97%D7%99%D7%9D/%D7%91%D7%93%D7%99%D7%A7%D7%94-%D7%A2%D7%9D-npq-%D7%9B%D7%93%D7%99-%D7%9C%D7%95%D7%95%D7%93%D7%90-%D7%94%D7%AA%D7%A7%D7%A0%D7%94-%D7%AA%D7%A7%D7%99%D7%A0%D7%94-%D7%A9%D7%9C-%D7%9E%D7%95%D7%93%D7%95/)
