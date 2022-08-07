@@ -111,7 +111,7 @@ MARSHALL_DISABLE_SNYK=1 npq install express
 
 ### Run checks on package without installing it:
 
-```bash
+```sh
 npq install express --dry-run
 ```
 
