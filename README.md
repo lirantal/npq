@@ -109,6 +109,12 @@ Example, to disable snyk:
 MARSHALL_DISABLE_SNYK=1 npq install express
 ```
 
+### Run checks on package without installing it:
+
+```sh
+npq install express --dry-run
+```
+
 ### Using with TravisCI
 
 An example of using lockfile-lint with a `.travis.yml` configuration as part of your build:
