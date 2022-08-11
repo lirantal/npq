@@ -9914,10 +9914,10 @@ update-notifier@2.5.0, update-notifier@^2.2.0, update-notifier@^2.3.0, update-no
     semver-diff "^2.0.0"
     xdg-basedir "^3.0.0"
 
-update-notifier@^6.0.0:
-  version "6.0.1"
-  resolved "https://registry.yarnpkg.com/update-notifier/-/update-notifier-6.0.1.tgz#b23fa8f3976590323e509d2410d2fc14886155a3"
-  integrity sha512-KALq3sbAsXoRcTk1GAWNasUB13TRQ7Kts2jykF53v8Mzx/s4yydEgH7lOAlN7hqsX1xf+SbDxKS0kw80KKI9iw==
+update-notifier@^6.0.2:
+  version "6.0.2"
+  resolved "https://registry.yarnpkg.com/update-notifier/-/update-notifier-6.0.2.tgz#a6990253dfe6d5a02bd04fbb6a61543f55026b60"
+  integrity sha512-EDxhTEVPZZRLWYcJ4ZXjGFN0oP7qYvbXWzEgRm/Yql4dHX5wDbvh89YHP6PK1lzZJYrMtXUuZZz8XGK+U6U1og==
   dependencies:
     boxen "^7.0.0"
     chalk "^5.0.1"
