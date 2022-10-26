@@ -171,7 +171,7 @@
     }
   },
   "dependencies": {
-    "chalk": "^2.3.0",
+    "chalk": "^5.1.0",
     "glob": "^8.0.3",
     "inquirer": "^7.3.3",
     "listr": "^0.14.0",
