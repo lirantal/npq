@@ -177,10 +177,10 @@
     "listr": "^0.14.0",
     "node-fetch": "^2.6.7",
     "npm-package-arg": "^9.1.2",
-    "semver": "^7.3.7",
+    "semver": "^7.3.8",
     "update-notifier": "^6.0.2",
     "validator": "^13.6.0",
-    "yargs": "^17.5.1"
+    "yargs": "^17.6.0"
   },
   "release": {
     "branch": "master",
