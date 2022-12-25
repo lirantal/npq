@@ -175,7 +175,7 @@
     "glob": "^8.0.3",
     "inquirer": "^7.3.3",
     "listr": "^0.14.0",
-    "node-fetch": "^2.6.7",
+    "node-fetch": "^3.3.0",
     "npm-package-arg": "^9.1.2",
     "semver": "^7.3.8",
     "update-notifier": "^6.0.2",
