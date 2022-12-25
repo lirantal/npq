@@ -25,6 +25,7 @@ Media coverage about npq:
 - Ran Bar Zik's [npq review to install safe modules](https://internet-israel.com/%D7%A4%D7%99%D7%AA%D7%95%D7%97-%D7%90%D7%99%D7%A0%D7%98%D7%A8%D7%A0%D7%98/%D7%91%D7%A0%D7%99%D7%99%D7%AA-%D7%90%D7%AA%D7%A8%D7%99-%D7%90%D7%99%D7%A0%D7%98%D7%A8%D7%A0%D7%98-%D7%9C%D7%9E%D7%A4%D7%AA%D7%97%D7%99%D7%9D/%D7%91%D7%93%D7%99%D7%A7%D7%94-%D7%A2%D7%9D-npq-%D7%9B%D7%93%D7%99-%D7%9C%D7%95%D7%95%D7%93%D7%90-%D7%94%D7%AA%D7%A7%D7%A0%D7%94-%D7%AA%D7%A7%D7%99%D7%A0%D7%94-%D7%A9%D7%9C-%D7%9E%D7%95%D7%93%D7%95/)
 - ostechnix's [How To Safely Install Packages Using Npm Or Yarn On Linux](https://ostechnix.com/how-to-safely-install-packages-using-npm-or-yarn-on-linux)
 - debricked's [How to evaluate the security of your NPM Package dependencies](https://debricked.com/blog/2020/03/11/how-to-evaluate-the-security-of-your-npm-package-dependencies)
+- JavaScript January advent calendar's post on [Open Source From Heaven, Modules From Hell](https://www.lirantal.com/blog/2019-01-26)
 - Liran Tal's [Malicious Modules — what you need to know when installing npm packages](https://www.lirantal.com/blog/malicious-modules-what-you-need-to-know-when-installing-npm-packages-12b2f56d3685)
 
 
