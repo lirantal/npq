@@ -13,6 +13,7 @@
     "test:watch": "jest --watch",
     "coverage:view": "opn coverage/lcov-report/index.html",
     "commit": "git-cz",
+    "format": "prettier --config .prettierrc.js --write '**/*.js'",
     "docs": "yarn run docs:code && yarn run docs:api",
     "docs:api": "doxdox *.js --layout bootstrap --output docs/index.html",
     "docs:code": "docco *.js --output docs/code",
@@ -49,6 +50,7 @@
     "jest": "^24.9.0",
     "lockfile-lint": "^2.0.1",
     "opn-cli": "^4.0.0",
+    "prettier": "^2.8.3",
     "semantic-release": "^15.0.0",
     "standard": "^12.0.0"
   },
@@ -91,7 +93,7 @@
   "husky": {
     "hooks": {
       "commit-msg": "commitlint --env HUSKY_GIT_PARAMS",
-      "pre-commit": "git status",
+      "pre-commit": "git status && yarn run format",
       "pre-push": "yarn run lint && yarn run test",
       "post-commit": "git status",
       "post-checkout": "git status",

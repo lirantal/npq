@@ -16,7 +16,7 @@ const marshall = new Marshall({
 
 marshall
   .process()
-  .then(result => {
+  .then((result) => {
     if (cli.dryRun) {
       process.exit(0)
     }
@@ -36,12 +36,12 @@ marshall
 
     return { install: true }
   })
-  .then(status => {
+  .then((status) => {
     if (status && status.hasOwnProperty('install') && status.install === true) {
       pkgMgr.process(cli.packageManager)
     }
   })
-  .catch(error => {
+  .catch((error) => {
     // eslint-disable-next-line no-console
     console.error(error)
     process.exit(-1)
