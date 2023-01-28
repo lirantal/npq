@@ -7,7 +7,7 @@
     "npq-hero": "./bin/npq-hero.js"
   },
   "scripts": {
-    "lint": "standard && eslint . --ignore-path .gitignore && yarn run lint:lockfile",
+    "lint": "standard --fix && eslint . --ignore-path .gitignore && yarn run lint:lockfile",
     "lint:lockfile": "lockfile-lint --path yarn.lock --type yarn --validate-https --allowed-hosts npm yarn",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -109,6 +109,7 @@
   "lint-staged": {
     "**/*.js": [
       "yarn run format",
+      "yarn run lint",
       "git add"
     ]
   },
