@@ -16,13 +16,11 @@ let mockIsRunningInYarn
 let mockGetNpmVersion
 
 beforeEach(() => {
-  mockGetShellConfig = jest
-    .spyOn(helpers, 'getShellConfig')
-    .mockImplementation(() => ({
-      name: 'testShell',
-      profilePath: TEST_PROFILE_PATH,
-      aliases: TEST_ALIAS
-    }))
+  mockGetShellConfig = jest.spyOn(helpers, 'getShellConfig').mockImplementation(() => ({
+    name: 'testShell',
+    profilePath: TEST_PROFILE_PATH,
+    aliases: TEST_ALIAS
+  }))
   // Our install script does not run when installing with yarn, but we still want to be able to run tests with yarn
   mockIsRunningInYarn = jest.spyOn(helpers, 'isRunningInYarn').mockImplementation(() => false)
   // Our install script does not run when installing with npm V7, but we still want to be able to run tests with all npm versions
