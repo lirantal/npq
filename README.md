@@ -1,13 +1,13 @@
 <p align="center">
 	<br>
-  <img width="200" src="https://github.com/lirantal/npq/raw/master/.github/Logo%20Horizontal.png">
+  <img width="200" src="https://github.com/lirantal/npq/raw/main/.github/Logo%20Horizontal.png">
 	<br>
 	safely* install packages with npm/yarn by auditing them as part of your install process
 </p>
 
 [![npm](https://img.shields.io/npm/v/npq.svg)](https://www.npmjs.com/package/npq)
 [![npm](https://img.shields.io/npm/l/npq.svg)](https://www.npmjs.com/package/npq)
-[![codecov](https://codecov.io/gh/lirantal/npq/branch/master/graph/badge.svg)](https://codecov.io/gh/lirantal/npq)
+[![codecov](https://codecov.io/gh/lirantal/npq/branch/main/graph/badge.svg)](https://codecov.io/gh/lirantal/npq)
 [![Build Status](https://github.com/lirantal/npq/workflows/unit-tests/badge.svg)](https://github.com/lirantal/npq/workflows/unit-tests)
 [![Known Vulnerabilities](https://snyk.io/test/github/lirantal/npq/badge.svg)](https://snyk.io/test/github/lirantal/npq)
 [![Security Responsible Disclosure](https://img.shields.io/badge/Security-Responsible%20Disclosure-yellow.svg)](./SECURITY.md)
@@ -15,7 +15,7 @@
 
 [![npq](https://snyk.io/advisor/npm-package/npq/badge.svg)](https://snyk.io/advisor/npm-package/npq)
 
-![npq-demo-3-final](https://github.com/lirantal/npq/blob/master/.github/npq-demo.gif?raw=true)
+![npq-demo-3-final](https://github.com/lirantal/npq/blob/main/.github/npq-demo.gif?raw=true)
 
 
 Media coverage about npq:
@@ -141,7 +141,7 @@ script:
 
 ## Contributing
 
-Please consult the [CONTRIBUTING](https://github.com/lirantal/npq/blob/master/CONTRIBUTING.md) for guidelines on contributing to this project
+Please consult the [CONTRIBUTING](https://github.com/lirantal/npq/blob/main/CONTRIBUTING.md) for guidelines on contributing to this project
 
 ## Author
 Liran Tal <liran.tal@gmail.com>
