@@ -193,7 +193,7 @@
     "yargs": "^17.6.2"
   },
   "release": {
-    "branch": "master",
+    "branches": ["main"],
     "analyzeCommits": {
       "preset": "angular",
       "releaseRules": [
