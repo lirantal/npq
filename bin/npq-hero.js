@@ -43,7 +43,7 @@ marshall
   })
   .then((status) => {
     if (status && status.hasOwnProperty('install') && status.install === true) {
-      pkgMgr.process(PACKAGE_MANAGER_TOOL, cli.package)
+      pkgMgr.process(PACKAGE_MANAGER_TOOL)
     }
   })
   .catch((error) => {
