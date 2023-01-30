@@ -59,7 +59,7 @@ test('package manager spawns successfully when provided array of packages to han
   childProcess.spawn.mockReset()
 })
 
-test('package manager spawns successfully and ignore npqs own internal commands when spawning package manager', async () => {
+test("package manager spawns successfully and ignore npq's own internal commands when spawning package manager", async () => {
   process.argv = [
     'node',
     'script name',
