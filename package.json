@@ -152,14 +152,14 @@
       "node/no-unsupported-features/node-builtins": [
         "error",
         {
-          "version": ">=10.1.0",
+          "version": ">=10.6.0",
           "ignores": []
         }
       ],
       "node/no-unsupported-features/es-syntax": [
         "error",
         {
-          "version": ">=10.1.0",
+          "version": ">=10.6.0",
           "ignores": []
         }
       ]
