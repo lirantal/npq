@@ -1,7 +1,5 @@
 const ExpiredDomainsMarshall = require('../lib/marshalls/expiredDomains.marshall')
 
-jest.mock('node-fetch')
-
 const testMarshall = new ExpiredDomainsMarshall({
   packageRepoUtils: {
     getPackageInfo: (pkgInfo) => {
