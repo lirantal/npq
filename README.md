@@ -96,14 +96,15 @@ Note: `npq` by default will offload all commands and their arguments to the `npm
 | readme | Will show a warning if a package has no README or it has been detected as a security placeholder package by npm staff
 | repo | Will show a warning if a package has been found without a valid and working repository URL | Checks the latest version for a repository URL
 | scripts | Will show a warning if a package has a pre/post install script which could potentially be malicious
-| snyk | Will show a warning if a package has been found with vulnerabilities in snyk's database | For snyk to work you need to either have the `snyk` npm package installed with a valid api token, or make the token available in the SNYK_TOKEN environment variable, and npq will use it
+| snyk | Will show a warning if a package has been found with vulnerabilities in Snyk's database | For Snyk to work you need to either have the `snyk` npm package installed with a valid api token, or make the token available in the SNYK_TOKEN environment variable, and npq will use it
 | license | Will show a warning if a package has been found without a license field | Checks the latest version for a license
+| expired domains | Will show a warning if a package has been found with one of its maintainers having an email address that includes an expired domain | Checks a dependency version for a maintainer with an expired domain
 
 ### Disabling Marshalls
 
 To disable a marshall altogether, set an environment variable using with the marshall's shortname.
 
-Example, to disable snyk:
+Example, to disable the Snyk vulnerability marshall:
 
 ```
 MARSHALL_DISABLE_SNYK=1 npq install express
@@ -134,10 +135,10 @@ script:
 * NPQ will audit a package for possible security issues, but it isn't a replacement for npm or yarn. When you choose to continue installing the package, it will offload the installation process to your choice of either npm or yarn.
 2. **How is NPQ different from npm audit?**
 * `npm install` will install a module even if it has vulnerabilities; NPQ will display the issues detected, and prompt the user for confirmation on whether to proceed installing it.
-* NPQ will run synthethic checks, called [marshalls](https://github.com/lirantal/npq#marshalls), on the characteristics of a module, such as whether the module you are going to install has a `pre-install` script which can be potentially harmful for your system and prompt you whether to install it. Whereas `npm audit` will not perform any such checks, and only consults a vulnerability database for known security issues.
-* `npm audit` is closer in functionality to what snyk does, rather than what NPQ does.
-3. **Do I require a snyk API key in order to use NPQ?**
-* It's not required. If NPQ is unable to detect a snyk API key for the user running NPQ, then it will skip the database vulnerabilities check. We do, however, greatly encourage you to use snyk, and connect it with NPQ for broader security.
+* NPQ will run synthetic checks, called [marshalls](https://github.com/lirantal/npq#marshalls), on the characteristics of a module, such as whether the module you are going to install has a `pre-install` script which can be potentially harmful for your system and prompt you whether to install it. Whereas `npm audit` will not perform any such checks, and only consults a vulnerability database for known security issues.
+* `npm audit` is closer in functionality to what Snyk does, rather than what NPQ does.
+3. **Do I require a Snyk API key in order to use NPQ?**
+* It's not required. If NPQ is unable to detect a Snyk API key for the user running NPQ, then it will skip the database vulnerabilities check. We do, however, greatly encourage you to use Snyk, and connect it with NPQ for broader security.
 
 ## Contributing
 
