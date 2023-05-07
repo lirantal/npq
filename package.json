@@ -30,6 +30,10 @@
     "type": "git",
     "url": "git+https://github.com/lirantal/npq.git"
   },
+  "publishConfig": {
+    "provenance": true,
+    "access": "public"
+  },
   "devDependencies": {
     "@babel/core": "^7.7.4",
     "@babel/plugin-transform-runtime": "^7.7.4",
