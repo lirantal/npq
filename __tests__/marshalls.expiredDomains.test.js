@@ -47,6 +47,32 @@ describe('Expired domains test suites', () => {
     )
   })
 
+  test('if email hostname is empty then show an unknown message', async () => {
+    const nonExistentEmailAddress = ''
+    const pkgData = {
+      packageName: {
+        'dist-tags': {
+          latest: '1.0.0'
+        },
+        versions: {
+          '1.0.0': {
+            maintainers: [
+              { name: 'lirantal', email: 'liran.tal@gmail.com' },
+              {
+                name: 'lirantal_test_user',
+                email: nonExistentEmailAddress
+              }
+            ]
+          }
+        }
+      }
+    }
+
+    await expect(testMarshall.validate(pkgData)).rejects.toThrow(
+      /Unable to resolve domain for maintainer e-mail, could be an expired account: <unknown>/
+    )
+  })
+
   test('does not throw any errors if the domain resolves well', async () => {
     jest.setTimeout(15000)
 
