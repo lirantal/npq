@@ -37,6 +37,9 @@ jobs:
   release:
     name: do semantic release
     runs-on: 'ubuntu-latest'
+    permissions:
+      contents: read
+      id-token: write
     needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
