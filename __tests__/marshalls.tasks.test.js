@@ -2,14 +2,14 @@ const path = require('path')
 const marshalls = require('../lib/marshalls')
 
 const PackageRepoUtilsMock = class Fake {
-  getPackageInfo () { return Promise.resolve(true) }
+  getPackageInfo () {
+    return Promise.resolve(true)
+  }
 }
 
 test('running marshall tasks succeeds', async () => {
   marshalls.collectMarshalls = jest.fn(() => {
-    return Promise.resolve([
-      path.join(process.cwd(), '__tests__/__fixtures__/test.marshall.js')
-    ])
+    return Promise.resolve([path.join(process.cwd(), '__tests__/__fixtures__/test.marshall.js')])
   })
 
   const config = {
@@ -31,9 +31,7 @@ test('running marshall tasks succeeds', async () => {
 
 test('running marshall tasks fails', async () => {
   marshalls.collectMarshalls = jest.fn(() => {
-    return Promise.resolve([
-      path.join(process.cwd(), '__tests__/__fixtures__/test.marshall.js')
-    ])
+    return Promise.resolve([path.join(process.cwd(), '__tests__/__fixtures__/test.marshall.js')])
   })
 
   const config = {

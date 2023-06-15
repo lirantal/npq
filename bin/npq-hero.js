@@ -3,8 +3,7 @@
 
 // Require minimum node version or bail out
 const cliSupport = require('../lib/helpers/cliSupportHandler')
-cliSupport.isEnvSupport() ||
-  (cliSupport.noSupportError() && cliSupport.packageManagerPassthrough())
+cliSupport.isEnvSupport() || (cliSupport.noSupportError() && cliSupport.packageManagerPassthrough())
 
 const inquirer = require('inquirer')
 const yargs = require('yargs')
@@ -26,7 +25,7 @@ const marshall = new Marshall({
 
 marshall
   .process()
-  .then(result => {
+  .then((result) => {
     if (result && result.error) {
       // eslint-disable-next-line no-console
       console.log()
@@ -42,12 +41,12 @@ marshall
 
     return { install: true }
   })
-  .then(status => {
+  .then((status) => {
     if (status && status.hasOwnProperty('install') && status.install === true) {
-      pkgMgr.process(PACKAGE_MANAGER_TOOL, cli.package)
+      pkgMgr.process(PACKAGE_MANAGER_TOOL)
     }
   })
-  .catch(error => {
+  .catch((error) => {
     // eslint-disable-next-line no-console
     console.error(error)
     process.exit(-1)

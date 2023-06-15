@@ -16,7 +16,11 @@ let mockIsRunningInYarn
 let mockGetNpmVersion
 
 beforeEach(() => {
-  mockGetShellConfig = jest.spyOn(helpers, 'getShellConfig').mockImplementation(() => ({ name: 'testShell', profilePath: TEST_PROFILE_PATH, aliases: TEST_ALIAS }))
+  mockGetShellConfig = jest.spyOn(helpers, 'getShellConfig').mockImplementation(() => ({
+    name: 'testShell',
+    profilePath: TEST_PROFILE_PATH,
+    aliases: TEST_ALIAS
+  }))
   // Our install script does not run when installing with yarn, but we still want to be able to run tests with yarn
   mockIsRunningInYarn = jest.spyOn(helpers, 'isRunningInYarn').mockImplementation(() => false)
   // Our install script does not run when installing with npm V7, but we still want to be able to run tests with all npm versions
@@ -88,7 +92,10 @@ test('postinstall script does not create duplicate aliases', async () => {
   await postinstall.runPostInstall()
 
   const containsAlias = await helpers.fileContains(TEST_PROFILE_PATH, TEST_ALIAS)
-  const containsDoubleAlias = await helpers.fileContains(TEST_PROFILE_PATH, `${TEST_ALIAS}${TEST_ALIAS}`)
+  const containsDoubleAlias = await helpers.fileContains(
+    TEST_PROFILE_PATH,
+    `${TEST_ALIAS}${TEST_ALIAS}`
+  )
   expect(containsAlias).toBe(true)
   expect(containsDoubleAlias).toBe(false)
 })
@@ -115,7 +122,10 @@ test('uninstall script does nothing in unknown shell', async () => {
 test('uninstall handles empty profile', async () => {
   await preuninstall.runPreUninstall()
 
-  const profileExists = await fs.promises.access(TEST_PROFILE_PATH, fs.constants.F_OK).then(() => true).catch(() => false)
+  const profileExists = await fs.promises
+    .access(TEST_PROFILE_PATH, fs.constants.F_OK)
+    .then(() => true)
+    .catch(() => false)
   expect(profileExists).toBe(false)
 })
 

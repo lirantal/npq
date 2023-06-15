@@ -27,7 +27,7 @@ test('checkPackage returns validation data if it was a success', async () => {
   expect(result).toEqual('validation-result')
 })
 
-test('checkPackage sets the error property if the validaiton failed', async () => {
+test('checkPackage sets the error property if the validation failed', async () => {
   const testMarshall = new TestMarshall({
     packageRepoUtils: null
   })
@@ -46,9 +46,7 @@ test('checkPackage sets the error property if the validaiton failed', async () =
 
   testMarshall.init(ctx)
   await testMarshall.checkPackage(pkg, ctx, {})
-  expect(ctx.marshalls[TEST_MARSHALL_NAME].errors[0].pkg).toEqual(
-    pkg.packageString
-  )
+  expect(ctx.marshalls[TEST_MARSHALL_NAME].errors[0].pkg).toEqual(pkg.packageString)
 })
 
 test('setError sets the errors properly', () => {

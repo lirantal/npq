@@ -33,7 +33,5 @@ test('build marshalls without any should throw error', () => {
   expect(marshalls.buildMarshallTasks([])).rejects.toEqual(expect.any(Error))
   expect(marshalls.buildMarshallTasks({})).rejects.toEqual(expect.any(Error))
   expect(marshalls.buildMarshallTasks(5)).rejects.toEqual(expect.any(Error))
-  expect(marshalls.buildMarshallTasks('something')).rejects.toEqual(
-    expect.any(Error)
-  )
+  expect(marshalls.buildMarshallTasks('something')).rejects.toEqual(expect.any(Error))
 })

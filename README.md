@@ -1,13 +1,13 @@
 <p align="center">
 	<br>
-  <img width="200" src="https://github.com/lirantal/npq/raw/master/.github/Logo%20Horizontal.png">
+  <img width="200" src="https://github.com/lirantal/npq/raw/main/.github/Logo%20Horizontal.png">
 	<br>
 	safely* install packages with npm/yarn by auditing them as part of your install process
 </p>
 
 [![npm](https://img.shields.io/npm/v/npq.svg)](https://www.npmjs.com/package/npq)
 [![npm](https://img.shields.io/npm/l/npq.svg)](https://www.npmjs.com/package/npq)
-[![codecov](https://codecov.io/gh/lirantal/npq/branch/master/graph/badge.svg)](https://codecov.io/gh/lirantal/npq)
+[![codecov](https://codecov.io/gh/lirantal/npq/branch/main/graph/badge.svg)](https://codecov.io/gh/lirantal/npq)
 [![Build Status](https://github.com/lirantal/npq/workflows/unit-tests/badge.svg)](https://github.com/lirantal/npq/workflows/unit-tests)
 [![Known Vulnerabilities](https://snyk.io/test/github/lirantal/npq/badge.svg)](https://snyk.io/test/github/lirantal/npq)
 [![Security Responsible Disclosure](https://img.shields.io/badge/Security-Responsible%20Disclosure-yellow.svg)](./SECURITY.md)
@@ -15,17 +15,18 @@
 
 [![npq](https://snyk.io/advisor/npm-package/npq/badge.svg)](https://snyk.io/advisor/npm-package/npq)
 
-![npq-demo-3-final](https://github.com/lirantal/npq/blob/master/.github/npq-demo.gif?raw=true)
+![npq-demo-3-final](https://github.com/lirantal/npq/blob/main/.github/npq-demo.gif?raw=true)
 
 
 Media coverage about npq:
+- As mentioned on [Thomas Gentilhomme](https://github.com/fraxken)'s French book of [Become a Node.js Developer](https://docs.google.com/document/d/1JHgmEFkc8Py4XSuCB8_DQ5FFEJoogyeninFK6ucTd4o/edit#) 
 - Tao Bojlén's [A web of trust for npm](https://www.btao.org/2020/10/02/npm-trust.html)
 - Zander's [favorite list of command line tools](https://zander.wtf/blog/terminal-commands)
 - Ran Bar Zik's [npq review to install safe modules](https://internet-israel.com/%D7%A4%D7%99%D7%AA%D7%95%D7%97-%D7%90%D7%99%D7%A0%D7%98%D7%A8%D7%A0%D7%98/%D7%91%D7%A0%D7%99%D7%99%D7%AA-%D7%90%D7%AA%D7%A8%D7%99-%D7%90%D7%99%D7%A0%D7%98%D7%A8%D7%A0%D7%98-%D7%9C%D7%9E%D7%A4%D7%AA%D7%97%D7%99%D7%9D/%D7%91%D7%93%D7%99%D7%A7%D7%94-%D7%A2%D7%9D-npq-%D7%9B%D7%93%D7%99-%D7%9C%D7%95%D7%95%D7%93%D7%90-%D7%94%D7%AA%D7%A7%D7%A0%D7%94-%D7%AA%D7%A7%D7%99%D7%A0%D7%94-%D7%A9%D7%9C-%D7%9E%D7%95%D7%93%D7%95/)
 - ostechnix's [How To Safely Install Packages Using Npm Or Yarn On Linux](https://ostechnix.com/how-to-safely-install-packages-using-npm-or-yarn-on-linux)
 - debricked's [How to evaluate the security of your NPM Package dependencies](https://debricked.com/blog/2020/03/11/how-to-evaluate-the-security-of-your-npm-package-dependencies)
-- JavaScript January advent calendar's post on [Open Source From Heaven, Modules From Hell](https://www.javascriptjanuary.com/blog/open-source-from-heaven-modules-from-hell)
-- Liran Tal's [Malicious Modules — what you need to know when installing npm packages](https://medium.com/@liran.tal/malicious-modules-what-you-need-to-know-when-installing-npm-packages-12b2f56d3685)
+- JavaScript January advent calendar's post on [Open Source From Heaven, Modules From Hell](https://www.lirantal.com/blog/2019-01-26)
+- Liran Tal's [Malicious Modules — what you need to know when installing npm packages](https://www.lirantal.com/blog/malicious-modules-what-you-need-to-know-when-installing-npm-packages-12b2f56d3685)
 
 
 ## About
@@ -90,20 +91,29 @@ Note: `npq` by default will offload all commands and their arguments to the `npm
 | Marshall Name | Description | Notes
 | --- | --- | ---
 | age | Will show a warning for a package if its age on npm is less than 22 days | Checks a package creation date, not a specific version
+| author | Will show a warning if a package has been found without an author field | Checks the latest version for an author
 | downloads | Will show a warning for a package if its download count in the last month is less than 20
 | readme | Will show a warning if a package has no README or it has been detected as a security placeholder package by npm staff
+| repo | Will show a warning if a package has been found without a valid and working repository URL | Checks the latest version for a repository URL
 | scripts | Will show a warning if a package has a pre/post install script which could potentially be malicious
-| snyk | Will show a warning if a package has been found with vulnerabilities in snyk's database | For snyk to work you need to either have the `snyk` npm package installed with a valid api token, or make the token available in the SNYK_TOKEN environment variable, and npq will use it
+| snyk | Will show a warning if a package has been found with vulnerabilities in Snyk's database | For Snyk to work you need to either have the `snyk` npm package installed with a valid api token, or make the token available in the SNYK_TOKEN environment variable, and npq will use it
 | license | Will show a warning if a package has been found without a license field | Checks the latest version for a license
+| expired domains | Will show a warning if a package has been found with one of its maintainers having an email address that includes an expired domain | Checks a dependency version for a maintainer with an expired domain
 
 ### Disabling Marshalls
 
 To disable a marshall altogether, set an environment variable using with the marshall's shortname.
 
-Example, to disable snyk:
+Example, to disable the Snyk vulnerability marshall:
 
 ```
 MARSHALL_DISABLE_SNYK=1 npq install express
+```
+
+### Run checks on package without installing it:
+
+```sh
+npq install express --dry-run
 ```
 
 ### Using with TravisCI
@@ -125,14 +135,14 @@ script:
 * NPQ will audit a package for possible security issues, but it isn't a replacement for npm or yarn. When you choose to continue installing the package, it will offload the installation process to your choice of either npm or yarn.
 2. **How is NPQ different from npm audit?**
 * `npm install` will install a module even if it has vulnerabilities; NPQ will display the issues detected, and prompt the user for confirmation on whether to proceed installing it.
-* NPQ will run synthethic checks, called [marshalls](https://github.com/lirantal/npq#marshalls), on the characteristics of a module, such as whether the module you are going to install has a `pre-install` script which can be potentially harmful for your system and prompt you whether to install it. Whereas `npm audit` will not perform any such checks, and only consults a vulnerability database for known security issues.
-* `npm audit` is closer in functionality to what snyk does, rather than what NPQ does.
-3. **Do I require a snyk API key in order to use NPQ?**
-* It's not required. If NPQ is unable to detect a snyk API key for the user running NPQ, then it will skip the database vulnerabilities check. We do, however, greatly encourage you to use snyk, and connect it with NPQ for broader security.
+* NPQ will run synthetic checks, called [marshalls](https://github.com/lirantal/npq#marshalls), on the characteristics of a module, such as whether the module you are going to install has a `pre-install` script which can be potentially harmful for your system and prompt you whether to install it. Whereas `npm audit` will not perform any such checks, and only consults a vulnerability database for known security issues.
+* `npm audit` is closer in functionality to what Snyk does, rather than what NPQ does.
+3. **Do I require a Snyk API key in order to use NPQ?**
+* It's not required. If NPQ is unable to detect a Snyk API key for the user running NPQ, then it will skip the database vulnerabilities check. We do, however, greatly encourage you to use Snyk, and connect it with NPQ for broader security.
 
 ## Contributing
 
-Please consult the [CONTRIBUTING](https://github.com/lirantal/npq/blob/master/CONTRIBUTING.md) for guidelines on contributing to this project
+Please consult the [CONTRIBUTING](https://github.com/lirantal/npq/blob/main/CONTRIBUTING.md) for guidelines on contributing to this project
 
 ## Author
 Liran Tal <liran.tal@gmail.com>

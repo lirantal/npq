@@ -5,11 +5,11 @@ const semver = require('semver')
 
 const BASH_ZSH_ALIASES = '\nalias npm="npq-hero"\nalias yarn="NPQ_PKG_MGR=yarn npq-hero"\n'
 const SHELLS = {
-  'bash': {
+  bash: {
     profilePath: `${os.homedir()}/.bash_profile`,
     aliases: BASH_ZSH_ALIASES
   },
-  'zsh': {
+  zsh: {
     profilePath: `${os.homedir()}/.zshrc`,
     aliases: BASH_ZSH_ALIASES
   }
@@ -61,7 +61,6 @@ const getProfile = async (profilePath) => {
     return profileData
   } catch (err) {
     if (err && err.code === 'ENOENT') {
-
     } else if (err) {
       throw err
     }
