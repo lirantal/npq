@@ -5,16 +5,16 @@ const BaseMarshall = require('../../lib/marshalls/baseMarshall')
 const MARSHALL_NAME = 'test.marshall'
 
 class TestMarshall extends BaseMarshall {
-  constructor(options) {
+  constructor (options) {
     super(options)
     this.name = MARSHALL_NAME
   }
 
-  title() {
+  title () {
     return 'A test marshall'
   }
 
-  run(ctx, task) {
+  run (ctx, task) {
     const tasks = ctx.pkgs.reduce((prevPkg, currPkg) => {
       return prevPkg.concat(this.mockCheck(currPkg, ctx, task))
     }, [])
@@ -22,7 +22,7 @@ class TestMarshall extends BaseMarshall {
     return Promise.all(tasks)
   }
 
-  mockCheck(pkg, ctx, task) {
+  mockCheck (pkg, ctx, task) {
     return this.validateSomething(pkg)
       .then(() => {
         const data = 'mock data check'
@@ -39,7 +39,7 @@ class TestMarshall extends BaseMarshall {
       })
   }
 
-  validateSomething(pkg) {
+  validateSomething (pkg) {
     if (pkg === 'express' || pkg === 'semver') {
       return Promise.resolve()
     } else {
@@ -47,7 +47,7 @@ class TestMarshall extends BaseMarshall {
     }
   }
 
-  validate(pkg) {
+  validate (pkg) {
     if (pkg === 'express' || pkg === 'semver') {
       return Promise.resolve('validation-result')
     } else {

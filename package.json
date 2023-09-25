@@ -1,20 +1,20 @@
 {
   "name": "npq",
   "version": "0.0.0-development",
-  "description": "marshall your npm/yarn package installs with high quality and class 🎖",
+  "description": "marshall your npm/npm package installs with high quality and class 🎖",
   "bin": {
     "npq": "./bin/npq.js",
     "npq-hero": "./bin/npq-hero.js"
   },
   "scripts": {
-    "lint": "standard --fix && eslint . --ignore-path .gitignore && yarn run lint:lockfile",
-    "lint:lockfile": "lockfile-lint --path yarn.lock --type yarn --validate-https --allowed-hosts npm yarn",
+    "lint": "standard --fix && eslint . --ignore-path .gitignore && npm run lint:lockfile",
+    "lint:lockfile": "lockfile-lint --path package-lock.json --type npm --validate-https --allowed-hosts npm npm",
     "test": "jest",
     "test:watch": "jest --watch",
     "coverage:view": "opn coverage/lcov-report/index.html",
     "commit": "git-cz",
     "format": "prettier --config .prettierrc.js --write '**/*.js'",
-    "docs": "yarn run docs:code && yarn run docs:api",
+    "docs": "npm run docs:code && npm run docs:api",
     "docs:api": "doxdox *.js --layout bootstrap --output docs/index.html",
     "docs:code": "docco *.js --output docs/code",
     "semantic-release": "semantic-release",
@@ -44,8 +44,6 @@
     "@commitlint/config-angular": "^8.0.0",
     "commitizen": "^3.0.0",
     "cz-conventional-changelog": "^2.1.0",
-    "docco": "^0.7.0",
-    "doxdox": "^3.0.0",
     "eslint": "^5.0.0",
     "eslint-plugin-import": "^2.2.0",
     "eslint-plugin-node": "^8.0.0",
@@ -53,7 +51,7 @@
     "husky": "^3.0.0",
     "jest": "^24.9.0",
     "lint-staged": "^13.1.0",
-    "lockfile-lint": "^2.0.1",
+    "lockfile-lint": "^4.12.1",
     "opn-cli": "^4.0.0",
     "prettier": "^2.8.3",
     "semantic-release": "21.0.2",
@@ -99,10 +97,10 @@
     "hooks": {
       "commit-msg": "commitlint --env HUSKY_GIT_PARAMS",
       "pre-commit": "lint-staged",
-      "pre-push": "yarn run lint && yarn run test",
+      "pre-push": "npm run lint && npm run test",
       "post-commit": "git status",
       "post-checkout": "git status",
-      "post-merge": "yarn install"
+      "post-merge": "npm install"
     }
   },
   "commitlint": {
@@ -112,8 +110,8 @@
   },
   "lint-staged": {
     "**/*.js": [
-      "yarn run format",
-      "yarn run lint",
+      "npm run format",
+      "npm run lint",
       "git add"
     ]
   },

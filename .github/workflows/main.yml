@@ -7,7 +7,7 @@ jobs:
     strategy:
       matrix:
         platform: [ubuntu-latest]
-        node: ['12', '14', '16', '18']
+        node: ['18', '20']
     name: Node ${{ matrix.node }} (${{ matrix.platform }})
     runs-on: ${{ matrix.platform }}
     steps:
@@ -16,13 +16,13 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - name: install dependencies
-        run: yarn install --frozen-lockfile --ignore-engines --ignore-scripts
+        run: npm ci --ignore-engines --ignore-scripts
       - name: lint code
-        run: yarn run lint
+        run: npm run lint
         env:
           CI: true
       - name: run tests
-        run: yarn run test
+        run: npm run test
         env:
           CI: true
       - name: coverage
@@ -50,9 +50,9 @@ jobs:
         with:
           node-version: '18'
       - name: install dependencies
-        run: yarn install --frozen-lockfile --ignore-engines --ignore-scripts
+        run: npm ci --ignore-engines --ignore-scripts
       - name: release
-        run: yarn run semantic-release
+        run: npm run semantic-release
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
           NPM_TOKEN: ${{secrets.NPM_TOKEN}}
