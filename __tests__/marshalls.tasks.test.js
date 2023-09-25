@@ -2,7 +2,7 @@ const path = require('path')
 const marshalls = require('../lib/marshalls')
 
 const PackageRepoUtilsMock = class Fake {
-  getPackageInfo() {
+  getPackageInfo () {
     return Promise.resolve(true)
   }
 }
