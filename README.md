@@ -100,6 +100,7 @@ Note: `npq` by default will offload all commands and their arguments to the `npm
 | license | Will show a warning if a package has been found without a license field | Checks the latest version for a license
 | expired domains | Will show a warning if a package has been found with one of its maintainers having an email address that includes an expired domain | Checks a dependency version for a maintainer with an expired domain
 | signatures | Will compare the package's signature as it shows on the registry's pakument with the keys published on the npmjs.com registry 
+| provenance | Will verify the package's attestations of provenance metadata for the published package
 
 ### Disabling Marshalls
 
