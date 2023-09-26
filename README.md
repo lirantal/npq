@@ -99,6 +99,7 @@ Note: `npq` by default will offload all commands and their arguments to the `npm
 | snyk | Will show a warning if a package has been found with vulnerabilities in Snyk's database | For Snyk to work you need to either have the `snyk` npm package installed with a valid api token, or make the token available in the SNYK_TOKEN environment variable, and npq will use it
 | license | Will show a warning if a package has been found without a license field | Checks the latest version for a license
 | expired domains | Will show a warning if a package has been found with one of its maintainers having an email address that includes an expired domain | Checks a dependency version for a maintainer with an expired domain
+| signatures | Will compare the package's signature as it shows on the registry's pakument with the keys published on the npmjs.com registry 
 
 ### Disabling Marshalls
 
