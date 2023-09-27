@@ -1,14 +1,4 @@
-jest.mock('pacote', () => {
-  return {
-    // manifest method should be a promise that resolves to a value:
-    manifest: jest.fn().mockResolvedValue({
-      name: 'packageName',
-      version: '1.0.0'
-      // Add other relevant properties
-    })
-  }
-})
-
+jest.mock('pacote')
 jest.mock('node-fetch')
 
 const fetch = require('node-fetch')
@@ -36,7 +26,7 @@ describe('Provenance test suites', () => {
     expect(testMarshall.title()).toEqual('Verifying package provenance')
   })
 
-  test('should successfully validate a package with correct signature', async () => {
+  test('should successfully validate a package with verified attestations', async () => {
     // Mock the response from fetch
     const mockResponse = {
       json: jest.fn().mockResolvedValue({
@@ -51,6 +41,15 @@ describe('Provenance test suites', () => {
       })
     }
     fetch.mockImplementationOnce(() => Promise.resolve(mockResponse))
+
+    pacote.manifest = jest.fn().mockResolvedValue({
+      name: 'packageName',
+      version: '1.0.0',
+      _attestations: {
+        url: 'https://registry.npmjs.org/-/npm/v1/attestations/pacote@17.0.4',
+        provenance: { predicateType: 'https://slsa.dev/provenance/v1' }
+      }
+    })
 
     // Call the validate method with a package object
     const pkg = {
@@ -101,7 +100,7 @@ describe('Provenance test suites', () => {
     })
   })
 
-  test('should throw an error if keys dont match and manifest() throws an error', async () => {
+  test('should throw an error if attestation verification fails and manifest() throws an error', async () => {
     // Mock the response from fetch
     const mockResponse = {
       json: jest.fn().mockResolvedValue({
@@ -147,6 +146,61 @@ describe('Provenance test suites', () => {
     // We assert that the validate method didn't throw an error,
     // because the keys match the signature
     await expect(testMarshall.validate(pkg)).rejects.toThrow('mocked manifest error')
+
+    // Assert that the fetch method is called with the correct URL
+    // eslint-disable-next-line no-undef
+    expect(fetch).toHaveBeenCalledWith('https://registry.npmjs.org/-/npm/v1/keys')
+  })
+
+  test('should throw a warning if attestations cant be found for the package', async () => {
+    // Mock the response from fetch
+    const mockResponse = {
+      json: jest.fn().mockResolvedValue({
+        keys: [
+          {
+            key: 'publicKey1'
+          },
+          {
+            key: 'publicKey2'
+          }
+        ]
+      })
+    }
+    fetch.mockImplementationOnce(() => Promise.resolve(mockResponse))
+
+    const pkg = {
+      packageName: 'packageName',
+      packageVersion: '1.0.0'
+    }
+
+    pacote.manifest = jest.fn().mockResolvedValue({
+      name: 'packageName',
+      version: '1.0.0'
+    })
+
+    const testMarshall = new ProvenanceMarshall({
+      packageRepoUtils: {
+        getPackageInfo: (pkgInfo) => {
+          return new Promise((resolve) => {
+            resolve({
+              name: pkg.packageName,
+              version: pkg.packageVersion
+            })
+          })
+        },
+        parsePackageVersion: (pkgVersion) => {
+          return {
+            version: pkgVersion
+          }
+        }
+      }
+    })
+
+    // We assert that the validate method didn't throw an error,
+    // because the keys match the signature
+    await expect(testMarshall.validate(pkg)).rejects.toThrow(
+      'the package was published without any attestations. Proceed with care.'
+    )
 
     // Assert that the fetch method is called with the correct URL
     // eslint-disable-next-line no-undef
