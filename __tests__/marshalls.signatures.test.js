@@ -9,6 +9,10 @@ jest.mock('pacote', () => {
   }
 })
 
+jest.mock('node-fetch')
+
+const fetch = require('node-fetch')
+
 const SignaturesMarshall = require('../lib/marshalls/signatures.marshall')
 const pacote = require('pacote')
 
@@ -46,7 +50,7 @@ describe('Signature test suites', () => {
         ]
       })
     }
-    global.fetch = jest.fn().mockResolvedValue(mockResponse)
+    fetch.mockImplementationOnce(() => Promise.resolve(mockResponse))
 
     const testMarshall = new SignaturesMarshall({
       packageRepoUtils: {
@@ -103,7 +107,7 @@ describe('Signature test suites', () => {
         ]
       })
     }
-    global.fetch = jest.fn().mockResolvedValue(mockResponse)
+    fetch.mockImplementationOnce(() => Promise.resolve(mockResponse))
 
     // the manifest() method should throw an error
     // in this jest mock to simulate a problem:
