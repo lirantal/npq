@@ -1,7 +1,4 @@
 jest.mock('pacote')
-jest.mock('node-fetch')
-
-const fetch = require('node-fetch')
 
 const ProvenanceMarshall = require('../lib/marshalls/provenance.marshall')
 const pacote = require('pacote')
@@ -40,7 +37,7 @@ describe('Provenance test suites', () => {
         ]
       })
     }
-    fetch.mockImplementationOnce(() => Promise.resolve(mockResponse))
+    global.fetch = jest.fn().mockImplementationOnce(() => Promise.resolve(mockResponse))
 
     pacote.manifest = jest.fn().mockResolvedValue({
       name: 'packageName',
@@ -114,7 +111,7 @@ describe('Provenance test suites', () => {
         ]
       })
     }
-    fetch.mockImplementationOnce(() => Promise.resolve(mockResponse))
+    global.fetch = jest.fn().mockImplementationOnce(() => Promise.resolve(mockResponse))
 
     const pkg = {
       packageName: 'packageName',
@@ -166,7 +163,7 @@ describe('Provenance test suites', () => {
         ]
       })
     }
-    fetch.mockImplementationOnce(() => Promise.resolve(mockResponse))
+    global.fetch = jest.fn().mockImplementationOnce(() => Promise.resolve(mockResponse))
 
     const pkg = {
       packageName: 'packageName',

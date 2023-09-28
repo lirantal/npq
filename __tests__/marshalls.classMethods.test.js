@@ -2,14 +2,14 @@ beforeEach(() => {
   jest.resetModules()
 })
 
+jest.mock('glob', () => {
+  return {
+    glob: jest.fn().mockResolvedValue(['file1', 'file2'])
+  }
+})
+
 test('collecting marshalls resolves with files array', async () => {
   const marshalls = require('../lib/marshalls')
-
-  jest.mock('glob', () => {
-    return jest.fn((pattern, options, callback) => {
-      return callback(null, ['file1', 'file2'])
-    })
-  })
 
   const marshallFiles = await marshalls.collectMarshalls()
   expect(marshallFiles).toEqual(['file1', 'file2'])
@@ -19,9 +19,9 @@ test('collecting marshalls resolves with error if unable to process files', () =
   const marshalls = require('../lib/marshalls')
 
   jest.mock('glob', () => {
-    return jest.fn((pattern, options, callback) => {
-      return callback(new Error('some error'), null)
-    })
+    return {
+      glob: jest.fn().mockRejectedValue(new Error('error'))
+    }
   })
 
   expect(marshalls.collectMarshalls()).rejects.toEqual(expect.any(Error))

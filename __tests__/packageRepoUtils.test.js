@@ -1,8 +1,6 @@
 const PackageRepoUtils = require('../lib/helpers/packageRepoUtils')
-const fetch = require('node-fetch')
 
-jest.mock('node-fetch')
-fetch.mockImplementation(() =>
+global.fetch = jest.fn().mockImplementation(() =>
   Promise.resolve({
     json: () => require('./mocks/registryPackageOk.mock.json')
   })
@@ -64,7 +62,7 @@ test('repo utils retrieves package README information', async () => {
 
 test('repo utils retrieves package latest version as null if not exists', async () => {
   const PackageRepoUtils = require('../lib/helpers/packageRepoUtils')
-  fetch.mockReturnValue(
+  global.fetch = jest.fn().mockImplementation(() =>
     Promise.resolve({
       json: () => require('./mocks/registryPackageUnpublished.mock.json')
     })
@@ -78,7 +76,7 @@ test('repo utils retrieves package latest version as null if not exists', async 
 
 test('repo utils retrieves package download count', async () => {
   const PackageRepoUtils = require('../lib/helpers/packageRepoUtils')
-  fetch.mockReturnValue(
+  global.fetch = jest.fn().mockImplementation(() =>
     Promise.resolve({
       json: () => ({
         downloads: 1950,
@@ -97,7 +95,7 @@ test('repo utils retrieves package download count', async () => {
 
 test('repo utils retrieves package README information even when not available', async () => {
   const PackageRepoUtils = require('../lib/helpers/packageRepoUtils')
-  fetch.mockReturnValue(
+  global.fetch = jest.fn().mockImplementation(() =>
     Promise.resolve({
       json: () => require('./mocks/registryPackageUnpublished.mock.json')
     })
@@ -111,7 +109,7 @@ test('repo utils retrieves package README information even when not available', 
 
 test('repo utils retrieves package LICENSE information', async () => {
   const PackageRepoUtils = require('../lib/helpers/packageRepoUtils')
-  fetch.mockReturnValue(
+  global.fetch = jest.fn().mockImplementation(() =>
     Promise.resolve({
       json: () => require('./mocks/registryPackageOk.mock.json')
     })
@@ -125,7 +123,7 @@ test('repo utils retrieves package LICENSE information', async () => {
 
 test('repo utils parses package version', async () => {
   const PackageRepoUtils = require('../lib/helpers/packageRepoUtils')
-  fetch.mockReturnValue(
+  global.fetch = jest.fn().mockImplementation(() =>
     Promise.resolve({
       json: () => require('./mocks/registryPackageOk.mock.json')
     })
