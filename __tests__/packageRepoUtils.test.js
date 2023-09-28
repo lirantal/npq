@@ -1,8 +1,10 @@
 const PackageRepoUtils = require('../lib/helpers/packageRepoUtils')
 
-global.fetch = jest.fn().mockImplementation(() => Promise.resolve({
-  json: () => require('./mocks/registryPackageOk.mock.json')
-}))
+global.fetch = jest.fn().mockImplementation(() =>
+  Promise.resolve({
+    json: () => require('./mocks/registryPackageOk.mock.json')
+  })
+)
 
 beforeEach(() => {
   fetch.mockClear()

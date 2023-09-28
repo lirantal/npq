@@ -2,7 +2,7 @@ const path = require('path')
 const marshalls = require('../lib/marshalls')
 
 const PackageRepoUtilsMock = class Fake {
-  getPackageInfo () {
+  getPackageInfo() {
     return Promise.resolve(true)
   }
 }
@@ -53,6 +53,6 @@ test('running marshall tasks fails', async () => {
 
   await expect(marshalls.tasks(config)).rejects.toMatchObject({
     message: 'Something went wrong',
-    context: context
+    context
   })
 })

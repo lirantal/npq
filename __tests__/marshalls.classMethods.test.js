@@ -11,9 +11,6 @@ jest.mock('glob', () => {
 test('collecting marshalls resolves with files array', async () => {
   const marshalls = require('../lib/marshalls')
 
-
-    
-
   const marshallFiles = await marshalls.collectMarshalls()
   expect(marshallFiles).toEqual(['file1', 'file2'])
 })

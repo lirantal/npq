@@ -43,13 +43,13 @@ module.exports.removeFromFile = async (profilePath, aliases) => {
 }
 
 module.exports.isRunningInYarn = () => {
-  const execPath = process.env['npm_execpath'] || ''
+  const execPath = process.env.npm_execpath || ''
   const binaryName = execPath.split(path.sep).pop()
   return binaryName.toLowerCase().includes('yarn')
 }
 
 module.exports.getNpmVersion = () => {
-  const npmData = process.env['npm_config_user_agent'] || '0.0.0'
+  const npmData = process.env.npm_config_user_agent || '0.0.0'
   const version = /npm\/(.*) node/.exec(npmData)[1]
   return semver.valid(version) ? version : '0.0.0'
 }
@@ -61,6 +61,7 @@ const getProfile = async (profilePath) => {
     return profileData
   } catch (err) {
     if (err && err.code === 'ENOENT') {
+      return null
     } else if (err) {
       throw err
     }

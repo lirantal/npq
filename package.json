@@ -7,7 +7,7 @@
     "npq-hero": "./bin/npq-hero.js"
   },
   "scripts": {
-    "lint": "standard --fix && eslint . --ignore-path .gitignore && npm run lint:lockfile",
+    "lint": "eslint . --ignore-path .gitignore && npm run lint:lockfile",
     "lint:lockfile": "lockfile-lint --path package-lock.json --type npm --validate-https --allowed-hosts npm npm",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -55,8 +55,7 @@
     "jest": "^29.7.0",
     "lint-staged": "^14.0.1",
     "lockfile-lint": "^4.12.1",
-    "prettier": "^3.0.3",
-    "standard": "^17.1.0"
+    "prettier": "^3.0.3"
   },
   "jest": {
     "testEnvironment": "node",
@@ -116,12 +115,6 @@
       "git add"
     ]
   },
-  "standard": {
-    "env": [
-      "node",
-      "jest"
-    ]
-  },
   "eslintConfig": {
     "env": {
       "node": true,
@@ -133,7 +126,8 @@
       "security"
     ],
     "extends": [
-      "plugin:node/recommended"
+      "plugin:node/recommended",
+      "plugin:security/recommended"
     ],
     "rules": {
       "semi": "off",
@@ -155,14 +149,14 @@
       "node/no-unsupported-features/node-builtins": [
         "error",
         {
-          "version": ">=10.6.0",
+          "version": ">=18.17.0",
           "ignores": []
         }
       ],
       "node/no-unsupported-features/es-syntax": [
         "error",
         {
-          "version": ">=10.6.0",
+          "version": ">=18.17.0",
           "ignores": []
         }
       ]

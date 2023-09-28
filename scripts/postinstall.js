@@ -42,7 +42,7 @@ const runPostInstall = async () => {
         message: `Do you want to add ${shellConfig.name} aliases for npm and yarn?`
       }
     ])
-    if (answers['install']) {
+    if (answers.install) {
       // eslint-disable-next-line security/detect-non-literal-fs-filename
       await fs.promises.appendFile(shellConfig.profilePath, shellConfig.aliases)
       console.log(color.green('✔'), 'Reload your shell profile to use npq!')
