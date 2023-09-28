@@ -19,7 +19,8 @@
     "docs:code": "docco *.js --output docs/code",
     "semantic-release": "npx semantic-release",
     "#postinstall": "node scripts/postinstall.js",
-    "#preuninstall": "node scripts/preuninstall.js"
+    "#preuninstall": "node scripts/preuninstall.js",
+    "prepare": "husky install"
   },
   "engines": {
     "node": ">=18"
@@ -91,16 +92,6 @@
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
-    }
-  },
-  "husky": {
-    "hooks": {
-      "commit-msg": "commitlint --env HUSKY_GIT_PARAMS",
-      "pre-commit": "lint-staged",
-      "pre-push": "npm run lint && npm run test",
-      "post-commit": "git status",
-      "post-checkout": "git status",
-      "post-merge": "npm install"
     }
   },
   "commitlint": {
