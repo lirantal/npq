@@ -17,7 +17,7 @@
     "docs": "npm run docs:code && npm run docs:api",
     "docs:api": "doxdox *.js --layout bootstrap --output docs/index.html",
     "docs:code": "docco *.js --output docs/code",
-    "semantic-release": "semantic-release",
+    "semantic-release": "npx semantic-release",
     "#postinstall": "node scripts/postinstall.js",
     "#preuninstall": "node scripts/preuninstall.js"
   },
@@ -56,7 +56,6 @@
     "lint-staged": "^14.0.1",
     "lockfile-lint": "^4.12.1",
     "prettier": "^3.0.3",
-    "semantic-release": "22.0.5",
     "standard": "^17.1.0"
   },
   "jest": {

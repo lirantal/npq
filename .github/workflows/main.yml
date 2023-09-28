@@ -52,7 +52,7 @@ jobs:
       - name: install dependencies
         run: npm ci --ignore-engines --ignore-scripts
       - name: release
-        run: npm run semantic-release
+        run: npx semantic-release
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
           NPM_TOKEN: ${{secrets.NPM_TOKEN}}
