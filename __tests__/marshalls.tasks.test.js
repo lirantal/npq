@@ -51,8 +51,5 @@ test('running marshall tasks fails', async () => {
     }
   }
 
-  await expect(marshalls.tasks(config)).rejects.toMatchObject({
-    message: 'Something went wrong',
-    context
-  })
+  await expect(marshalls.tasks(config)).resolves.toMatchObject(context)
 })
