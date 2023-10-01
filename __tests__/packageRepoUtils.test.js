@@ -136,3 +136,27 @@ test('repo utils parses package version', async () => {
   )
   expect(result).toBeTruthy()
 })
+
+test('repo utils returns valid semver for different cases of version asked', async () => {
+  const PackageRepoUtils = require('../lib/helpers/packageRepoUtils')
+  global.fetch = jest.fn().mockImplementation(() =>
+    Promise.resolve({
+      json: () => require('./mocks/registryPackageOk.mock.json')
+    })
+  )
+
+  const packageRepoUtils = new PackageRepoUtils()
+  const packageName = 'testPackage'
+
+  let result
+
+  result = await packageRepoUtils.getSemVer(packageName, 'latest')
+  expect(result).toEqual('3.1.0')
+
+  result = await packageRepoUtils.getSemVer(packageName, '3.1.0')
+  expect(result).toEqual('3.1.0')
+
+  await expect(packageRepoUtils.getSemVer(packageName, 'next')).rejects.toThrow(
+    'could not find dist-tag next for package testPackage'
+  )
+})
