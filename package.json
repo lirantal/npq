@@ -10,6 +10,7 @@
     "lint": "eslint . --ignore-path .gitignore && npm run lint:lockfile",
     "lint:lockfile": "lockfile-lint --path package-lock.json --type npm --validate-https --allowed-hosts npm npm",
     "test": "NODE_OPTIONS=\"--experimental-vm-modules\" jest",
+    "build": "node scripts/build.js",
     "test:watch": "NODE_OPTIONS=\"--experimental-vm-modules\" jest --watch",
     "coverage:view": "opn coverage/lcov-report/index.html",
     "commit": "git-cz",
