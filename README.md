@@ -15,7 +15,7 @@
 
 [![npq](https://snyk.io/advisor/npm-package/npq/badge.svg)](https://snyk.io/advisor/npm-package/npq)
 
-![npq-demo-3-final](https://github.com/lirantal/npq/blob/main/.github/npq-demo.gif?raw=true)
+![npq-demo-3-final](https://github.com/lirantal/npq/blob/main/.github/npq-demo-1.gif?raw=true)
 
 
 Media coverage about npq:
