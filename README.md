@@ -117,6 +117,24 @@ MARSHALL_DISABLE_SNYK=1 npq install express
 npq install express --dry-run
 ```
 
+## Learn Node.js Security
+
+<div align="center">
+
+<p>
+  <a href="https://nodejs-security.com">
+    <img alt="Node.js Security" align="center" src="https://img.shields.io/badge/%F0%9F%A6%84-Learn%20Node.js%20Security%E2%86%92-gray.svg?colorA=5734F5&colorB=5734F5&style=flat" />
+  </a>
+</p>
+
+![Screenshot 2024-09-12 at 20 14 27](https://github.com/user-attachments/assets/586f3151-eed9-4542-92f1-de9237f6783c)
+
+<p>
+  Learn Node.js Secure Coding techniques and best practices from <a href="https://www.lirantal.com">Liran Tal</a>
+</p>
+
+</div>
+
 ## FAQ
 1. **Can I use NPQ without having npm or yarn?**
 * NPQ will audit a package for possible security issues, but it isn't a replacement for npm or yarn. When you choose to continue installing the package, it will offload the installation process to your choice of either npm or yarn.
