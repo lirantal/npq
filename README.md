@@ -28,7 +28,6 @@ Media coverage about npq:
 - JavaScript January advent calendar's post on [Open Source From Heaven, Modules From Hell](https://www.lirantal.com/blog/2019-01-26)
 - Liran Tal's [Malicious Modules — what you need to know when installing npm packages](https://www.lirantal.com/blog/malicious-modules-what-you-need-to-know-when-installing-npm-packages-12b2f56d3685)
 
-
 ## About
 
 Once npq is installed, you can safely* install packages:
@@ -116,20 +115,6 @@ MARSHALL_DISABLE_SNYK=1 npq install express
 
 ```sh
 npq install express --dry-run
-```
-
-### Using with TravisCI
-
-An example of using lockfile-lint with a `.travis.yml` configuration as part of your build:
-
-```
-language: node_js
-before_script:
-  - npx lockfile-lint --path package-lock.json --validate-https --allowed-hosts npm
-install:
-  - yarn install
-script:
-  - yarn run test
 ```
 
 ## FAQ
