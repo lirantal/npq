@@ -108,6 +108,24 @@ Example, to disable the Snyk vulnerability marshall:
 MARSHALL_DISABLE_SNYK=1 npq install express
 ```
 
+#### Available Marshall Environment Variables
+
+Here are all the available environment variable names for disabling specific marshalls:
+
+| Marshall Name | Environment Variable | Description |
+| --- | --- | --- |
+| age | `MARSHALL_DISABLE_AGE` | Disable package age checks |
+| author | `MARSHALL_DISABLE_AUTHOR` | Disable package author verification |
+| downloads | `MARSHALL_DISABLE_DOWNLOADS` | Disable download count checks |
+| expired domains | `MARSHALL_DISABLE_MAINTAINERS_EXPIRED_EMAILS` | Disable expired domain checks for maintainer emails |
+| license | `MARSHALL_DISABLE_LICENSE` | Disable license availability checks |
+| provenance | `MARSHALL_DISABLE_PROVENANCE` | Disable package provenance verification |
+| repo | `MARSHALL_DISABLE_REPO` | Disable repository URL validation |
+| scripts | `MARSHALL_DISABLE_SCRIPTS` | Disable pre/post install script checks |
+| signatures | `MARSHALL_DISABLE_SIGNATURES` | Disable registry signature verification |
+| snyk | `MARSHALL_DISABLE_SNYK` | Disable Snyk vulnerability checks |
+| typosquatting | `MARSHALL_DISABLE_TYPOSQUATTING` | Disable typosquatting detection |
+
 ### Run checks on package without installing it:
 
 ```sh
