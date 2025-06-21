@@ -97,6 +97,7 @@ Note: `npq` by default will offload all commands and their arguments to the `npm
 | expired domains | Will show a warning if a package has been found with one of its maintainers having an email address that includes an expired domain | Checks a dependency version for a maintainer with an expired domain
 | signatures | Will compare the package's signature as it shows on the registry's pakument with the keys published on the npmjs.com registry 
 | provenance | Will verify the package's attestations of provenance metadata for the published package
+| version-maturity | Will show a warning if the specific version being installed was published less than 7 days ago | Helps identify recently published versions that may not have been reviewed by the community yet
 
 ### Disabling Marshalls
 
@@ -125,6 +126,7 @@ Here are all the available environment variable names for disabling specific mar
 | signatures | `MARSHALL_DISABLE_SIGNATURES` | Disable registry signature verification |
 | snyk | `MARSHALL_DISABLE_SNYK` | Disable Snyk vulnerability checks |
 | typosquatting | `MARSHALL_DISABLE_TYPOSQUATTING` | Disable typosquatting detection |
+| version-maturity | `MARSHALL_DISABLE_VERSION_MATURITY` | Disable version maturity checks |
 
 ### Run checks on package without installing it:
 
