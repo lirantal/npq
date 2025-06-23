@@ -58,6 +58,15 @@ describe('NewBinMarshall', () => {
     return fullPackageData
   }
 
+  test('should return correct title', () => {
+    const newBinMarshall = new NewBinMarshall({
+      packageRepoUtils: null
+    })
+
+    const title = newBinMarshall.title()
+    expect(title).toBe('Checking for new binaries introduced in package.json')
+  })
+
   it('should pass if no previous version exists', async () => {
     const pkg = {
       packageName: 'test-pkg',
