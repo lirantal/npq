@@ -357,4 +357,85 @@ describe('NewBinMarshall', () => {
     )
     expect(newBinMarshall.ctx.marshalls.newBin.warnings[0].message).toContain(`command: 'cli.js'`)
   })
+
+  it('should use pkg.packageName when newVersionData.name is falsy (line 40 coverage)', async () => {
+    const pkg = {
+      packageName: 'fallback-pkg',
+      packageVersion: '1.0.1',
+      packageString: 'fallback-pkg@1.0.1'
+    }
+    const versions = {
+      '1.0.0': { bin: null },
+      '1.0.1': { bin: 'cli.js' } // This version will have name: falsy
+    }
+    const mockPkgData = mockPackageInfo('fallback-pkg', versions)
+    // Set name to falsy to test the fallback in line 40: newVersionData.name || pkg.packageName
+    mockPkgData.versions['1.0.1'].name = ''
+
+    packageRepoUtilsMock.getPackageInfo.mockResolvedValue(mockPkgData)
+    packageRepoUtilsMock.getSemVer.mockImplementation(async (name, version) => version)
+
+    await expect(newBinMarshall.validate(pkg)).rejects.toThrow(
+      'New binaries detected for fallback-pkg@1.0.1'
+    )
+    expect(newBinMarshall.ctx.marshalls.newBin.warnings).toHaveLength(1)
+    expect(newBinMarshall.ctx.marshalls.newBin.warnings[0].message).toContain(
+      "introduces a new binary 'fallback-pkg'"
+    )
+    expect(newBinMarshall.ctx.marshalls.newBin.warnings[0].message).toContain("command: 'cli.js'")
+  })
+
+  it('should use pkg.packageName when previousVersionData.name is falsy (line 56 coverage)', async () => {
+    const pkg = {
+      packageName: 'fallback-pkg',
+      packageVersion: '1.0.1',
+      packageString: 'fallback-pkg@1.0.1'
+    }
+    const versions = {
+      '1.0.0': { bin: 'old.js' }, // This version will have name: falsy
+      '1.0.1': { bin: { 'fallback-pkg': 'old.js', 'new-cli': 'new.js' } }
+    }
+    const mockPkgData = mockPackageInfo('fallback-pkg', versions)
+    // Set name to falsy to test the fallback in line 56: previousVersionData.name || pkg.packageName
+    mockPkgData.versions['1.0.0'].name = undefined
+
+    packageRepoUtilsMock.getPackageInfo.mockResolvedValue(mockPkgData)
+    packageRepoUtilsMock.getSemVer.mockImplementation(async (name, version) => version)
+
+    await expect(newBinMarshall.validate(pkg)).rejects.toThrow(
+      'New binaries detected for fallback-pkg@1.0.1'
+    )
+    expect(newBinMarshall.ctx.marshalls.newBin.warnings).toHaveLength(1)
+    expect(newBinMarshall.ctx.marshalls.newBin.warnings[0].message).toContain(
+      "introduces a new binary 'new-cli'"
+    )
+  })
+
+  it('should use pkg.packageName when both version data names are falsy (covers both lines)', async () => {
+    const pkg = {
+      packageName: 'double-fallback-pkg',
+      packageVersion: '1.0.1',
+      packageString: 'double-fallback-pkg@1.0.1'
+    }
+    const versions = {
+      '1.0.0': { bin: null },
+      '1.0.1': { bin: 'cli.js' }
+    }
+    const mockPkgData = mockPackageInfo('double-fallback-pkg', versions)
+    // Set both names to falsy values to test both fallbacks
+    mockPkgData.versions['1.0.0'].name = null
+    mockPkgData.versions['1.0.1'].name = ''
+
+    packageRepoUtilsMock.getPackageInfo.mockResolvedValue(mockPkgData)
+    packageRepoUtilsMock.getSemVer.mockImplementation(async (name, version) => version)
+
+    await expect(newBinMarshall.validate(pkg)).rejects.toThrow(
+      'New binaries detected for double-fallback-pkg@1.0.1'
+    )
+    expect(newBinMarshall.ctx.marshalls.newBin.warnings).toHaveLength(1)
+    expect(newBinMarshall.ctx.marshalls.newBin.warnings[0].message).toContain(
+      "introduces a new binary 'double-fallback-pkg'"
+    )
+    expect(newBinMarshall.ctx.marshalls.newBin.warnings[0].message).toContain("command: 'cli.js'")
+  })
 })
