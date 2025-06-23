@@ -45,7 +45,7 @@ describe('NewBinMarshall', () => {
       fullPackageData.versions[vStr] = {
         name: packageName,
         version: vStr,
-        bin: versions[vStr].bin,
+        bin: versions[vStr].bin
         // other fields like scripts, dependencies might be needed if other marshalls run
       }
       if (!latestTag || require('semver').gt(vStr, latestTag)) {
@@ -59,20 +59,27 @@ describe('NewBinMarshall', () => {
   }
 
   it('should pass if no previous version exists', async () => {
-    const pkg = { packageName: 'test-pkg', packageVersion: '1.0.0', packageString: 'test-pkg@1.0.0' }
+    const pkg = {
+      packageName: 'test-pkg',
+      packageVersion: '1.0.0',
+      packageString: 'test-pkg@1.0.0'
+    }
     const versions = {
       '1.0.0': { bin: { 'my-cli': 'cli.js' } }
     }
     packageRepoUtilsMock.getPackageInfo.mockResolvedValue(mockPackageInfo('test-pkg', versions))
     packageRepoUtilsMock.getSemVer.mockImplementation(async (name, version) => version)
 
-
     await expect(newBinMarshall.validate(pkg)).resolves.toBeUndefined()
     expect(newBinMarshall.ctx.marshalls.newBin.warnings).toHaveLength(0)
   })
 
   it('should pass if bin field is the same', async () => {
-    const pkg = { packageName: 'test-pkg', packageVersion: '1.0.1', packageString: 'test-pkg@1.0.1' }
+    const pkg = {
+      packageName: 'test-pkg',
+      packageVersion: '1.0.1',
+      packageString: 'test-pkg@1.0.1'
+    }
     const versions = {
       '1.0.0': { bin: { 'my-cli': 'cli.js' } },
       '1.0.1': { bin: { 'my-cli': 'cli.js' } }
@@ -85,7 +92,11 @@ describe('NewBinMarshall', () => {
   })
 
   it('should warn if a new binary is introduced (object format)', async () => {
-    const pkg = { packageName: 'test-pkg', packageVersion: '1.0.1', packageString: 'test-pkg@1.0.1' }
+    const pkg = {
+      packageName: 'test-pkg',
+      packageVersion: '1.0.1',
+      packageString: 'test-pkg@1.0.1'
+    }
     const versions = {
       '1.0.0': { bin: { 'old-cli': 'old.js' } },
       '1.0.1': { bin: { 'old-cli': 'old.js', 'new-cli': 'new.js' } }
@@ -93,14 +104,24 @@ describe('NewBinMarshall', () => {
     packageRepoUtilsMock.getPackageInfo.mockResolvedValue(mockPackageInfo('test-pkg', versions))
     packageRepoUtilsMock.getSemVer.mockImplementation(async (name, version) => version)
 
-    await expect(newBinMarshall.validate(pkg)).rejects.toThrow('New binaries detected for test-pkg@1.0.1')
+    await expect(newBinMarshall.validate(pkg)).rejects.toThrow(
+      'New binaries detected for test-pkg@1.0.1'
+    )
     expect(newBinMarshall.ctx.marshalls.newBin.warnings).toHaveLength(1)
-    expect(newBinMarshall.ctx.marshalls.newBin.warnings[0].message).toContain("introduces a new binary 'new-cli'")
-    expect(newBinMarshall.ctx.marshalls.newBin.warnings[0].message).toContain("compared to version '1.0.0'")
+    expect(newBinMarshall.ctx.marshalls.newBin.warnings[0].message).toContain(
+      "introduces a new binary 'new-cli'"
+    )
+    expect(newBinMarshall.ctx.marshalls.newBin.warnings[0].message).toContain(
+      "compared to version '1.0.0'"
+    )
   })
 
   it('should warn if a new binary is introduced (string format to object)', async () => {
-    const pkg = { packageName: 'test-pkg', packageVersion: '1.0.1', packageString: 'test-pkg@1.0.1' }
+    const pkg = {
+      packageName: 'test-pkg',
+      packageVersion: '1.0.1',
+      packageString: 'test-pkg@1.0.1'
+    }
     // Previous version has string bin, new one has object bin
     const versions = {
       '1.0.0': { bin: 'old.js' }, // This will be normalized to { 'test-pkg': 'old.js' }
@@ -109,9 +130,13 @@ describe('NewBinMarshall', () => {
     packageRepoUtilsMock.getPackageInfo.mockResolvedValue(mockPackageInfo('test-pkg', versions))
     packageRepoUtilsMock.getSemVer.mockImplementation(async (name, version) => version)
 
-    await expect(newBinMarshall.validate(pkg)).rejects.toThrow('New binaries detected for test-pkg@1.0.1')
+    await expect(newBinMarshall.validate(pkg)).rejects.toThrow(
+      'New binaries detected for test-pkg@1.0.1'
+    )
     expect(newBinMarshall.ctx.marshalls.newBin.warnings).toHaveLength(1)
-    expect(newBinMarshall.ctx.marshalls.newBin.warnings[0].message).toContain("introduces a new binary 'new-cli'")
+    expect(newBinMarshall.ctx.marshalls.newBin.warnings[0].message).toContain(
+      "introduces a new binary 'new-cli'"
+    )
   })
 
   it('should warn if a new binary is introduced (string format for both, new name)', async () => {
@@ -121,7 +146,11 @@ describe('NewBinMarshall', () => {
     // However, if `bin` was a string `old-bin-name.js` and becomes `new-bin-name.js`,
     // and assuming the package name (key) remains the same, this is not a *new* binary key.
     // This test will check introduction of a string bin when there was none.
-    const pkg = { packageName: 'test-pkg', packageVersion: '1.0.1', packageString: 'test-pkg@1.0.1' }
+    const pkg = {
+      packageName: 'test-pkg',
+      packageVersion: '1.0.1',
+      packageString: 'test-pkg@1.0.1'
+    }
     const versions = {
       '1.0.0': { bin: null }, // No bin before
       '1.0.1': { bin: 'new.js' } // New bin (string)
@@ -129,15 +158,22 @@ describe('NewBinMarshall', () => {
     packageRepoUtilsMock.getPackageInfo.mockResolvedValue(mockPackageInfo('test-pkg', versions))
     packageRepoUtilsMock.getSemVer.mockImplementation(async (name, version) => version)
 
-    await expect(newBinMarshall.validate(pkg)).rejects.toThrow('New binaries detected for test-pkg@1.0.1')
+    await expect(newBinMarshall.validate(pkg)).rejects.toThrow(
+      'New binaries detected for test-pkg@1.0.1'
+    )
     expect(newBinMarshall.ctx.marshalls.newBin.warnings).toHaveLength(1)
-    expect(newBinMarshall.ctx.marshalls.newBin.warnings[0].message).toContain("introduces a new binary 'test-pkg'")
+    expect(newBinMarshall.ctx.marshalls.newBin.warnings[0].message).toContain(
+      "introduces a new binary 'test-pkg'"
+    )
     expect(newBinMarshall.ctx.marshalls.newBin.warnings[0].message).toContain("command: 'new.js'")
   })
 
-
   it('should pass if a binary is removed', async () => {
-    const pkg = { packageName: 'test-pkg', packageVersion: '1.0.1', packageString: 'test-pkg@1.0.1' }
+    const pkg = {
+      packageName: 'test-pkg',
+      packageVersion: '1.0.1',
+      packageString: 'test-pkg@1.0.1'
+    }
     const versions = {
       '1.0.0': { bin: { 'old-cli': 'old.js', 'to-remove': 'remove.js' } },
       '1.0.1': { bin: { 'old-cli': 'old.js' } }
@@ -150,7 +186,11 @@ describe('NewBinMarshall', () => {
   })
 
   it('should pass if bin changes from string to object but represents the same binary', async () => {
-    const pkg = { packageName: 'test-pkg', packageVersion: '1.0.1', packageString: 'test-pkg@1.0.1' }
+    const pkg = {
+      packageName: 'test-pkg',
+      packageVersion: '1.0.1',
+      packageString: 'test-pkg@1.0.1'
+    }
     const versions = {
       '1.0.0': { bin: 'cli.js' }, // Normalized: { 'test-pkg': 'cli.js' }
       '1.0.1': { bin: { 'test-pkg': 'cli.js' } }
@@ -163,7 +203,11 @@ describe('NewBinMarshall', () => {
   })
 
   it('should pass if bin changes from object to string but represents the same binary', async () => {
-    const pkg = { packageName: 'test-pkg', packageVersion: '1.0.1', packageString: 'test-pkg@1.0.1' }
+    const pkg = {
+      packageName: 'test-pkg',
+      packageVersion: '1.0.1',
+      packageString: 'test-pkg@1.0.1'
+    }
     const versions = {
       '1.0.0': { bin: { 'test-pkg': 'cli.js' } },
       '1.0.1': { bin: 'cli.js' } // Normalized: { 'test-pkg': 'cli.js' }
@@ -176,7 +220,11 @@ describe('NewBinMarshall', () => {
   })
 
   it('should handle package version being a dist-tag like "latest"', async () => {
-    const pkg = { packageName: 'test-pkg', packageVersion: 'latest', packageString: 'test-pkg@latest' }
+    const pkg = {
+      packageName: 'test-pkg',
+      packageVersion: 'latest',
+      packageString: 'test-pkg@latest'
+    }
     const versions = {
       '1.0.0': { bin: { 'my-cli': 'cli.js' } },
       '1.0.1': { bin: { 'my-cli': 'cli.js', 'new-cli': 'new.js' } } // latest points to 1.0.1
@@ -189,14 +237,24 @@ describe('NewBinMarshall', () => {
       return version
     })
 
-    await expect(newBinMarshall.validate(pkg)).rejects.toThrow('New binaries detected for test-pkg@latest')
+    await expect(newBinMarshall.validate(pkg)).rejects.toThrow(
+      'New binaries detected for test-pkg@latest'
+    )
     expect(newBinMarshall.ctx.marshalls.newBin.warnings).toHaveLength(1)
-    expect(newBinMarshall.ctx.marshalls.newBin.warnings[0].message).toContain("introduces a new binary 'new-cli'")
-    expect(newBinMarshall.ctx.marshalls.newBin.warnings[0].message).toContain("compared to version '1.0.0'")
+    expect(newBinMarshall.ctx.marshalls.newBin.warnings[0].message).toContain(
+      "introduces a new binary 'new-cli'"
+    )
+    expect(newBinMarshall.ctx.marshalls.newBin.warnings[0].message).toContain(
+      "compared to version '1.0.0'"
+    )
   })
 
   it('should pass if package info cannot be fetched', async () => {
-    const pkg = { packageName: 'test-pkg', packageVersion: '1.0.0', packageString: 'test-pkg@1.0.0' }
+    const pkg = {
+      packageName: 'test-pkg',
+      packageVersion: '1.0.0',
+      packageString: 'test-pkg@1.0.0'
+    }
     packageRepoUtilsMock.getPackageInfo.mockResolvedValue(null) // Simulate failed fetch
     packageRepoUtilsMock.getSemVer.mockImplementation(async (name, version) => version)
 
@@ -205,7 +263,11 @@ describe('NewBinMarshall', () => {
   })
 
   it('should pass if target version string cannot be resolved', async () => {
-    const pkg = { packageName: 'test-pkg', packageVersion: 'nonexistent-tag', packageString: 'test-pkg@nonexistent-tag' }
+    const pkg = {
+      packageName: 'test-pkg',
+      packageVersion: 'nonexistent-tag',
+      packageString: 'test-pkg@nonexistent-tag'
+    }
     const versions = { '1.0.0': { bin: 'cli.js' } }
     packageRepoUtilsMock.getPackageInfo.mockResolvedValue(mockPackageInfo('test-pkg', versions))
     packageRepoUtilsMock.getSemVer.mockResolvedValue(null) // Simulate tag not resolving
@@ -215,7 +277,11 @@ describe('NewBinMarshall', () => {
   })
 
   it('should handle multiple new binaries being introduced', async () => {
-    const pkg = { packageName: 'test-pkg', packageVersion: '1.0.1', packageString: 'test-pkg@1.0.1' }
+    const pkg = {
+      packageName: 'test-pkg',
+      packageVersion: '1.0.1',
+      packageString: 'test-pkg@1.0.1'
+    }
     const versions = {
       '1.0.0': { bin: { 'old-cli': 'old.js' } },
       '1.0.1': { bin: { 'old-cli': 'old.js', 'new-cli-1': 'new1.js', 'new-cli-2': 'new2.js' } }
@@ -223,14 +289,24 @@ describe('NewBinMarshall', () => {
     packageRepoUtilsMock.getPackageInfo.mockResolvedValue(mockPackageInfo('test-pkg', versions))
     packageRepoUtilsMock.getSemVer.mockImplementation(async (name, version) => version)
 
-    await expect(newBinMarshall.validate(pkg)).rejects.toThrow('New binaries detected for test-pkg@1.0.1')
+    await expect(newBinMarshall.validate(pkg)).rejects.toThrow(
+      'New binaries detected for test-pkg@1.0.1'
+    )
     expect(newBinMarshall.ctx.marshalls.newBin.warnings).toHaveLength(2)
-    expect(newBinMarshall.ctx.marshalls.newBin.warnings[0].message).toContain("introduces a new binary 'new-cli-1'")
-    expect(newBinMarshall.ctx.marshalls.newBin.warnings[1].message).toContain("introduces a new binary 'new-cli-2'")
+    expect(newBinMarshall.ctx.marshalls.newBin.warnings[0].message).toContain(
+      "introduces a new binary 'new-cli-1'"
+    )
+    expect(newBinMarshall.ctx.marshalls.newBin.warnings[1].message).toContain(
+      "introduces a new binary 'new-cli-2'"
+    )
   })
 
   it('should pass if the new version has no bin field but old one did', async () => {
-    const pkg = { packageName: 'test-pkg', packageVersion: '1.0.1', packageString: 'test-pkg@1.0.1' }
+    const pkg = {
+      packageName: 'test-pkg',
+      packageVersion: '1.0.1',
+      packageString: 'test-pkg@1.0.1'
+    }
     const versions = {
       '1.0.0': { bin: { 'old-cli': 'old.js' } },
       '1.0.1': { bin: null } // No bin in new version
@@ -245,24 +321,31 @@ describe('NewBinMarshall', () => {
   it('should correctly use package name from version data for string bin normalization', async () => {
     // Scenario: pkg.packageName might be different from the actual name in package.json (e.g. alias)
     // The marshall should use the name from the fetched package.json for normalization.
-    const pkg = { packageName: 'alias-pkg', packageVersion: '1.0.1', packageString: 'alias-pkg@1.0.1' }
+    const pkg = {
+      packageName: 'alias-pkg',
+      packageVersion: '1.0.1',
+      packageString: 'alias-pkg@1.0.1'
+    }
     const actualPackageName = 'actual-pkg-name'
 
     // Mock getPackageInfo to return versions with the actual package name
     const versions = {
       '1.0.0': { bin: null }, // No bin in old version
-      '1.0.1': { bin: 'cli.js' }  // Bin is a string, should be keyed by actualPackageName
+      '1.0.1': { bin: 'cli.js' } // Bin is a string, should be keyed by actualPackageName
     }
     const mockPkgData = mockPackageInfo(actualPackageName, versions) // mockPackageInfo uses the name for versions too
 
     packageRepoUtilsMock.getPackageInfo.mockResolvedValue(mockPkgData)
     packageRepoUtilsMock.getSemVer.mockImplementation(async (name, version) => version)
 
-    await expect(newBinMarshall.validate(pkg)).rejects.toThrow(`New binaries detected for ${pkg.packageString}`)
+    await expect(newBinMarshall.validate(pkg)).rejects.toThrow(
+      `New binaries detected for ${pkg.packageString}`
+    )
     expect(newBinMarshall.ctx.marshalls.newBin.warnings).toHaveLength(1)
     // Check that the binary name used in the warning is the actualPackageName
-    expect(newBinMarshall.ctx.marshalls.newBin.warnings[0].message).toContain(`introduces a new binary '${actualPackageName}'`)
+    expect(newBinMarshall.ctx.marshalls.newBin.warnings[0].message).toContain(
+      `introduces a new binary '${actualPackageName}'`
+    )
     expect(newBinMarshall.ctx.marshalls.newBin.warnings[0].message).toContain(`command: 'cli.js'`)
   })
-
 })
