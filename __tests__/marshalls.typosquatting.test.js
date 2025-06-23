@@ -8,7 +8,7 @@ describe('Typosquatting Marshall', () => {
 
     // Mock the top packages data to include duplicates
     const originalTopPackages = require('../data/top-packages.json')
-    
+
     // Create a test package that would match multiple similar packages
     const pkg = {
       packageName: 'ghtml' // This should match 'html' which appears multiple times in the data
@@ -21,18 +21,20 @@ describe('Typosquatting Marshall', () => {
     } catch (error) {
       // Check that the error message doesn't contain duplicate entries
       const errorMessage = error.message
-      expect(errorMessage).toContain('Package name could be a typosquatting attempt for popular package(s):')
-      
+      expect(errorMessage).toContain(
+        'Package name could be a typosquatting attempt for popular package(s):'
+      )
+
       // Extract the package names from the error message
       const packagesList = errorMessage.split('popular package(s): ')[1]
       const packages = packagesList.split(', ')
-      
+
       // Check that there are no duplicates
       const uniquePackages = [...new Set(packages)]
       expect(packages.length).toBe(uniquePackages.length)
-      
+
       // Verify that 'html' appears only once even though it exists multiple times in the data
-      const htmlCount = packages.filter(pkg => pkg === 'html').length
+      const htmlCount = packages.filter((pkg) => pkg === 'html').length
       expect(htmlCount).toBe(1)
     }
   })
