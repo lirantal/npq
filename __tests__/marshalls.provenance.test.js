@@ -196,7 +196,7 @@ describe('Provenance test suites', () => {
     // We assert that the validate method didn't throw an error,
     // because the keys match the signature
     await expect(testMarshall.validate(pkg)).rejects.toThrow(
-      'the package was published without any attestations.'
+      'Unable to verify provenance: the package was published without any attestations.'
     )
 
     // Assert that the fetch method is called with the correct URL

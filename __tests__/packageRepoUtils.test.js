@@ -157,7 +157,7 @@ test('repo utils returns valid semver for different cases of version asked', asy
   expect(result).toEqual('3.1.0')
 
   await expect(packageRepoUtils.getSemVer(packageName, 'next')).rejects.toThrow(
-    'could not find dist-tag next for package testPackage'
+    'Could not find dist-tag next for package testPackage'
   )
 })
 
@@ -186,12 +186,12 @@ test('repo utils resolves semver ranges by finding the highest satisfying versio
 
   // Test invalid semver range that doesn't match any version
   await expect(packageRepoUtils.getSemVer(packageName, '^10.0.0')).rejects.toThrow(
-    'could not find dist-tag ^10.0.0 for package testPackage'
+    'Could not find dist-tag ^10.0.0 for package testPackage'
   )
 
   // Test invalid semver range with version 2 (no 2.x versions in mock)
   await expect(packageRepoUtils.getSemVer(packageName, '2')).rejects.toThrow(
-    'could not find dist-tag 2 for package testPackage'
+    'Could not find dist-tag 2 for package testPackage'
   )
 })
 
@@ -246,6 +246,6 @@ test('repo utils resolves semver ranges with multiple versions', async () => {
 
   // Test that non-existent major versions still fail appropriately
   await expect(packageRepoUtils.getSemVer(packageName, '10')).rejects.toThrow(
-    'could not find dist-tag 10 for package @astrojs/vue'
+    'Could not find dist-tag 10 for package @astrojs/vue'
   )
 })

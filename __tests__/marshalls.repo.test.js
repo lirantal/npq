@@ -37,7 +37,7 @@ describe('Repo test suites', () => {
 
   test('throws the right error when there is no pkg data available', async () => {
     await expect(testMarshall.validate({ packageName: {} })).rejects.toThrow(
-      'the package has no associated repository or homepage.'
+      'The package has no associated repository or homepage.'
     )
   })
 
@@ -54,7 +54,7 @@ describe('Repo test suites', () => {
     }
 
     await expect(testMarshall.validate(pkgData)).rejects.toThrow(
-      'the package has no associated repository or homepage.'
+      'The package has no associated repository or homepage.'
     )
   })
 
@@ -73,7 +73,7 @@ describe('Repo test suites', () => {
     }
 
     await expect(testMarshall.validate(pkgData)).rejects.toThrow(
-      'the package has no associated repository or homepage.'
+      'The package has no associated repository or homepage.'
     )
   })
 
@@ -81,7 +81,7 @@ describe('Repo test suites', () => {
     global.fetch = jest.fn().mockImplementationOnce(() => Promise.reject(new Error('error')))
 
     await expect(testMarshall.validate(fullPkgData)).rejects.toThrow(
-      'no valid repository is associated with the package'
+      'No valid repository is associated with the package'
     )
   })
 
@@ -91,7 +91,7 @@ describe('Repo test suites', () => {
     fullPkgData.packageName.versions['1.0.0'].repository.url =
       'https://dsfsdfsdfs.abcdeugwecwekjasda.com/'
     await expect(testMarshall.validate(fullPkgData)).rejects.toThrow(
-      'the repository associated with the package (https://dsfsdfsdfs.abcdeugwecwekjasda.com/) does not exist or is unreachable at the moment.'
+      'The repository associated with the package (https://dsfsdfsdfs.abcdeugwecwekjasda.com/) does not exist or is unreachable at the moment.'
     )
   })
 
@@ -113,7 +113,7 @@ describe('Repo test suites', () => {
     }
 
     await expect(testMarshall.validate(pkgData)).rejects.toThrow(
-      'the homepage associated with the package (homepage-url) does not exist or is unreachable at the moment.'
+      'The homepage associated with the package (homepage-url) does not exist or is unreachable at the moment.'
     )
   })
 

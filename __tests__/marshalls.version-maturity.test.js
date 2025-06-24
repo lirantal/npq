@@ -34,7 +34,7 @@ describe('Version Maturity Marshall', () => {
         packageVersion: '1.0.0'
       })
     ).rejects.toThrow(
-      'detected a recently published version (published 2 hours ago) - consider waiting for community review'
+      'Detected a recently published version (published 2 hours ago) - consider waiting for community review'
     )
   })
 
@@ -61,7 +61,7 @@ describe('Version Maturity Marshall', () => {
         packageVersion: '1.0.0'
       })
     ).rejects.toThrow(
-      'detected a recently published version (published 3 days ago) - consider waiting for community review'
+      'Detected a recently published version (published 3 days ago) - consider waiting for community review'
     )
   })
 
@@ -88,7 +88,7 @@ describe('Version Maturity Marshall', () => {
         packageVersion: '1.0.0'
       })
     ).rejects.toThrow(
-      'detected a recently published version (published 1 day ago) - consider waiting for community review'
+      'Detected a recently published version (published 1 day ago) - consider waiting for community review'
     )
   })
 
@@ -135,7 +135,7 @@ describe('Version Maturity Marshall', () => {
         packageName: 'test-package',
         packageVersion: '1.0.0'
       })
-    ).rejects.toThrow('could not determine package version information')
+    ).rejects.toThrow('Could not determine package version information')
   })
 
   test('should throw error when version release date is missing', async () => {
@@ -157,7 +157,7 @@ describe('Version Maturity Marshall', () => {
         packageName: 'test-package',
         packageVersion: '1.0.0'
       })
-    ).rejects.toThrow('could not determine release date for version 1.0.0')
+    ).rejects.toThrow('Could not determine release date for version 1.0.0')
   })
 
   test('should handle version aliases correctly', async () => {
@@ -188,7 +188,7 @@ describe('Version Maturity Marshall', () => {
         packageVersion: 'latest'
       })
     ).rejects.toThrow(
-      'detected a recently published version (published 2 days ago) - consider waiting for community review'
+      'Detected a recently published version (published 2 days ago) - consider waiting for community review'
     )
   })
 })
