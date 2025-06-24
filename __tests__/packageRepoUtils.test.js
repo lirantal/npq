@@ -160,3 +160,92 @@ test('repo utils returns valid semver for different cases of version asked', asy
     'could not find dist-tag next for package testPackage'
   )
 })
+
+test('repo utils resolves semver ranges by finding the highest satisfying version', async () => {
+  const PackageRepoUtils = require('../lib/helpers/packageRepoUtils')
+  global.fetch = jest.fn().mockImplementation(() =>
+    Promise.resolve({
+      json: () => require('./mocks/registryPackageOk.mock.json')
+    })
+  )
+
+  const packageRepoUtils = new PackageRepoUtils()
+  const packageName = 'testPackage'
+
+  // Test major version range - should find highest 3.x version (3.1.0)
+  let result = await packageRepoUtils.getSemVer(packageName, '^3.0.0')
+  expect(result).toEqual('3.1.0')
+
+  // Test simple major version - should find highest 3.x version (3.1.0)
+  result = await packageRepoUtils.getSemVer(packageName, '3')
+  expect(result).toEqual('3.1.0')
+
+  // Test tilde range - should find 3.1.x version (3.1.0)
+  result = await packageRepoUtils.getSemVer(packageName, '~3.1.0')
+  expect(result).toEqual('3.1.0')
+
+  // Test invalid semver range that doesn't match any version
+  await expect(packageRepoUtils.getSemVer(packageName, '^10.0.0')).rejects.toThrow(
+    'could not find dist-tag ^10.0.0 for package testPackage'
+  )
+
+  // Test invalid semver range with version 2 (no 2.x versions in mock)
+  await expect(packageRepoUtils.getSemVer(packageName, '2')).rejects.toThrow(
+    'could not find dist-tag 2 for package testPackage'
+  )
+})
+
+test('repo utils resolves semver ranges with multiple versions', async () => {
+  const PackageRepoUtils = require('../lib/helpers/packageRepoUtils')
+
+  // Create a more comprehensive mock that includes multiple versions
+  const comprehensiveMock = {
+    name: '@astrojs/vue',
+    'dist-tags': {
+      latest: '4.5.0'
+    },
+    versions: {
+      '1.2.0': { name: '@astrojs/vue', version: '1.2.0' },
+      '2.0.0': { name: '@astrojs/vue', version: '2.0.0' },
+      '2.1.0': { name: '@astrojs/vue', version: '2.1.0' },
+      '2.2.1': { name: '@astrojs/vue', version: '2.2.1' },
+      '3.0.0': { name: '@astrojs/vue', version: '3.0.0' },
+      '3.1.0': { name: '@astrojs/vue', version: '3.1.0' },
+      '3.2.2': { name: '@astrojs/vue', version: '3.2.2' },
+      '4.0.0': { name: '@astrojs/vue', version: '4.0.0' },
+      '4.5.0': { name: '@astrojs/vue', version: '4.5.0' }
+    }
+  }
+
+  global.fetch = jest.fn().mockImplementation(() =>
+    Promise.resolve({
+      json: () => comprehensiveMock
+    })
+  )
+
+  const packageRepoUtils = new PackageRepoUtils()
+  const packageName = '@astrojs/vue'
+
+  // Test the problematic case mentioned in the issue: "@astrojs/vue@3"
+  let result = await packageRepoUtils.getSemVer(packageName, '3')
+  expect(result).toEqual('3.2.2') // Should find highest 3.x version
+
+  // Test other major versions
+  result = await packageRepoUtils.getSemVer(packageName, '2')
+  expect(result).toEqual('2.2.1') // Should find highest 2.x version
+
+  result = await packageRepoUtils.getSemVer(packageName, '4')
+  expect(result).toEqual('4.5.0') // Should find highest 4.x version
+
+  // Test caret ranges
+  result = await packageRepoUtils.getSemVer(packageName, '^3.0.0')
+  expect(result).toEqual('3.2.2')
+
+  result = await packageRepoUtils.getSemVer(packageName, '^2.1.0')
+  expect(result).toEqual('2.2.1')
+
+  // Test that non-existent major versions still fail appropriately
+  await expect(packageRepoUtils.getSemVer(packageName, '10')).rejects.toThrow(
+    'could not find dist-tag 10 for package @astrojs/vue'
+  )
+})
