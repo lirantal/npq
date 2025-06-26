@@ -13,19 +13,17 @@ test('running marshall tasks succeeds', async () => {
   })
 
   const config = {
-    pkgs: ['express', 'semver'],
+    pkgs: [{ packageName: 'express' }, { packageName: 'semver' }],
     packageRepoUtils: new PackageRepoUtilsMock()
   }
 
-  const tasks = await marshalls.tasks(config)
-  expect(tasks.pkgs).toEqual(['express', 'semver'])
-  expect(tasks.marshalls).toEqual({
-    'test.marshall': {
-      status: null,
-      errors: [],
-      warnings: [],
-      data: { express: 'mock data check', semver: 'mock data check' }
-    }
+  const results = await marshalls.tasks(config)
+
+  expect(results[0]['test.marshall']).toEqual({
+    status: null,
+    errors: [],
+    warnings: [],
+    data: { express: 'mock data check', semver: 'mock data check' }
   })
 })
 
@@ -35,13 +33,12 @@ test('running marshall tasks fails', async () => {
   })
 
   const config = {
-    pkgs: ['express', 'dockly'],
+    pkgs: [{ packageName: 'express' }, { packageName: 'dockly' }],
     packageRepoUtils: new PackageRepoUtilsMock()
   }
 
-  const context = {
-    pkgs: ['express', 'dockly'],
-    marshalls: {
+  const mockedResults = [
+    {
       'test.marshall': {
         status: null,
         errors: [{ pkg: 'dockly', message: 'simulating mock error' }],
@@ -49,12 +46,12 @@ test('running marshall tasks fails', async () => {
         data: { express: 'mock data check' }
       }
     }
-  }
+  ]
 
-  await expect(marshalls.tasks(config)).resolves.toMatchObject(context)
+  await expect(marshalls.tasks(config)).resolves.toMatchObject(mockedResults)
 })
 
-test('running marshall tasks throws error when single package is not found', async () => {
+test('running marshall tasks includes an error when single package is not found', async () => {
   const PackageRepoUtilsNotFoundMock = class Fake {
     getPackageInfo() {
       return Promise.resolve({ error: 'Not found' })
@@ -70,10 +67,18 @@ test('running marshall tasks throws error when single package is not found', asy
     packageRepoUtils: new PackageRepoUtilsNotFoundMock()
   }
 
-  await expect(marshalls.tasks(config)).resolves.toEqual({
-    error: true,
-    message: 'Package not found: nonexistent-package'
-  })
+  const mockedResults = [
+    {
+      not_found: {
+        status: null,
+        errors: [{ pkg: 'nonexistent-package', message: 'Package not found' }],
+        warnings: [],
+        data: {}
+      }
+    }
+  ]
+
+  await expect(marshalls.tasks(config)).resolves.toMatchObject(mockedResults)
 })
 
 test('running marshall tasks filters out not found packages when multiple packages provided', async () => {
@@ -100,7 +105,18 @@ test('running marshall tasks filters out not found packages when multiple packag
   }
 
   const result = await marshalls.tasks(config)
-  // Should filter out the nonexistent package and keep only express and semver
-  expect(result.pkgs).toHaveLength(2)
-  expect(result.pkgs).toEqual([{ packageName: 'express' }, { packageName: 'semver' }])
+
+  expect(result[0]['not_found']).toEqual({
+    status: null,
+    errors: [{ pkg: 'nonexistent-package', message: 'Package not found' }],
+    warnings: [],
+    data: {}
+  })
+
+  expect(result[1]['test.marshall']).toEqual({
+    status: null,
+    errors: [],
+    warnings: [],
+    data: { express: 'mock data check', semver: 'mock data check' }
+  })
 })

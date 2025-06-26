@@ -23,7 +23,7 @@ test('checkPackage returns validation data if it was a success', async () => {
     }
   }
 
-  const result = await testMarshall.checkPackage('express', ctx, {})
+  const result = await testMarshall.checkPackage({ packageName: 'express' }, ctx, {})
   expect(result).toEqual('validation-result')
 })
 

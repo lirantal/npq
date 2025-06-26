@@ -22,25 +22,24 @@ class TestMarshall extends BaseMarshall {
     return Promise.all(tasks)
   }
 
-  mockCheck(pkg, ctx, task) {
+  mockCheck(pkg, ctx) {
     return this.validateSomething(pkg)
       .then(() => {
         const data = 'mock data check'
-        task.output = `querying ${pkg}...`
-        ctx.marshalls[this.name].data[pkg] = data
+        ctx.marshalls[this.name].data[pkg.packageName] = data
 
         return data
       })
       .catch((err) => {
         this.setMessage({
-          pkg,
+          pkg: pkg.packageName,
           message: err.message
         })
       })
   }
 
   validateSomething(pkg) {
-    if (pkg === 'express' || pkg === 'semver') {
+    if (pkg.packageName === 'express' || pkg.packageName === 'semver') {
       return Promise.resolve()
     } else {
       return Promise.reject(new Error('simulating mock error'))
@@ -48,7 +47,7 @@ class TestMarshall extends BaseMarshall {
   }
 
   validate(pkg) {
-    if (pkg === 'express' || pkg === 'semver') {
+    if (pkg.packageName === 'express' || pkg.packageName === 'semver') {
       return Promise.resolve('validation-result')
     } else {
       return Promise.reject(new Error('simulating mock error'))
