@@ -23,7 +23,8 @@ test('running marshall tasks succeeds', async () => {
     status: null,
     errors: [],
     warnings: [],
-    data: { express: 'mock data check', semver: 'mock data check' }
+    data: { express: 'mock data check', semver: 'mock data check' },
+    marshall: 'test.marshall'
   })
 })
 
@@ -73,7 +74,8 @@ test('running marshall tasks includes an error when single package is not found'
         status: null,
         errors: [{ pkg: 'nonexistent-package', message: 'Package not found' }],
         warnings: [],
-        data: {}
+        data: {},
+        marshall: 'not_found'
       }
     }
   ]
@@ -110,13 +112,15 @@ test('running marshall tasks filters out not found packages when multiple packag
     status: null,
     errors: [{ pkg: 'nonexistent-package', message: 'Package not found' }],
     warnings: [],
-    data: {}
+    data: {},
+    marshall: 'not_found'
   })
 
   expect(result[1]['test.marshall']).toEqual({
     status: null,
     errors: [],
     warnings: [],
-    data: { express: 'mock data check', semver: 'mock data check' }
+    data: { express: 'mock data check', semver: 'mock data check' },
+    marshall: 'test.marshall'
   })
 })
