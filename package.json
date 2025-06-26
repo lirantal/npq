@@ -78,9 +78,13 @@
         "statements": 80
       }
     },
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ],
     "testPathIgnorePatterns": [
       "/__tests__/__fixtures__/*"
     ]
+
   },
   "babel": {
     "presets": [
