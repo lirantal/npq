@@ -76,7 +76,8 @@ test('running marshall tasks includes an error when single package is not found'
         errors: [{ pkg: 'nonexistent-package', message: 'Package not found' }],
         warnings: [],
         data: {},
-        marshall: 'not_found'
+        marshall: 'not_found',
+        categoryId: 'PackageHealth'
       }
     }
   ]
@@ -114,7 +115,8 @@ test('running marshall tasks filters out not found packages when multiple packag
     errors: [{ pkg: 'nonexistent-package', message: 'Package not found' }],
     warnings: [],
     data: {},
-    marshall: 'not_found'
+    marshall: 'not_found',
+    categoryId: 'PackageHealth'
   })
 
   expect(result[1]['test.marshall']).toEqual({
