@@ -10,6 +10,7 @@ const yargs = require('yargs')
 const pkgMgr = require('../lib/packageManager')
 const Marshall = require('../lib/marshall')
 const cliCommons = require('../lib/cliCommons')
+const { reportResults } = require('../lib/helpers/reportResults')
 
 const PACKAGE_MANAGER_TOOL = process.env.NPQ_PKG_MGR
 
@@ -25,6 +26,14 @@ const marshall = new Marshall({
 
 marshall
   .process()
+  .then((marshallResults) => {
+    const { countErrors, countWarnings } = reportResults(marshallResults)
+    return {
+      error: countErrors > 0 || countWarnings > 0,
+      countErrors,
+      countWarnings
+    }
+  })
   .then((result) => {
     if (result && result.error) {
       // eslint-disable-next-line no-console
