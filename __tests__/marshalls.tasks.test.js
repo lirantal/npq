@@ -24,7 +24,8 @@ test('running marshall tasks succeeds', async () => {
     errors: [],
     warnings: [],
     data: { express: 'mock data check', semver: 'mock data check' },
-    marshall: 'test.marshall'
+    marshall: 'test.marshall',
+    categoryId: 'PackageHealth'
   })
 })
 
@@ -121,6 +122,7 @@ test('running marshall tasks filters out not found packages when multiple packag
     errors: [],
     warnings: [],
     data: { express: 'mock data check', semver: 'mock data check' },
-    marshall: 'test.marshall'
+    marshall: 'test.marshall',
+    categoryId: 'PackageHealth'
   })
 })
