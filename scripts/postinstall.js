@@ -1,5 +1,5 @@
 const fs = require('fs')
-const color = require('kleur')
+const { styleText } = require('node:util')
 const inquirer = require('inquirer')
 const semver = require('semver')
 
@@ -45,14 +45,14 @@ const runPostInstall = async () => {
     if (answers.install) {
       // eslint-disable-next-line security/detect-non-literal-fs-filename
       await fs.promises.appendFile(shellConfig.profilePath, shellConfig.aliases)
-      console.log(color.green('✔'), 'Reload your shell profile to use npq!')
+      console.log(styleText('green', '✔'), 'Reload your shell profile to use npq!')
     }
   } catch (err) {
     if (err.isTtyError) {
       // Could not render inquirer prompt; abort auto-install
       return
     }
-    console.error(color.red('Failed to add aliases: '), err)
+    console.error(styleText('red', 'Failed to add aliases: '), err)
   }
 }
 
