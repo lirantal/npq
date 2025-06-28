@@ -24,7 +24,7 @@
     "prepare": "husky install"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20.12.0"
   },
   "author": {
     "name": "Liran Tal",
