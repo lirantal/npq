@@ -5,11 +5,11 @@
 const cliSupport = require('../lib/helpers/cliSupportHandler')
 cliSupport.isEnvSupport() || (cliSupport.noSupportError() && cliSupport.packageManagerPassthrough())
 
-const inquirer = require('inquirer')
 const yargs = require('yargs')
 const pkgMgr = require('../lib/packageManager')
 const Marshall = require('../lib/marshall')
 const cliCommons = require('../lib/cliCommons')
+const cliPrompt = require('../lib/helpers/cliPrompt.js')
 const { reportResults } = require('../lib/helpers/reportResults')
 
 const PACKAGE_MANAGER_TOOL = process.env.NPQ_PKG_MGR
@@ -38,14 +38,11 @@ marshall
     if (result && result.error) {
       // eslint-disable-next-line no-console
       console.log()
-      return inquirer.prompt([
-        {
-          type: 'confirm',
-          name: 'install',
-          message: 'Would you like to continue installing package(s)?',
-          default: false
-        }
-      ])
+      return cliPrompt.prompt({
+        name: 'install',
+        message: 'Continue install ?',
+        default: false
+      })
     }
 
     return { install: true }

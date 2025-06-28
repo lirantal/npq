@@ -1,7 +1,7 @@
 const fs = require('fs')
 const os = require('os')
 const path = require('path')
-const inquirer = require('inquirer')
+const cliPrompt = require('../lib/helpers/cliPrompt.js')
 
 const postinstall = require('../scripts/postinstall').testable
 const preuninstall = require('../scripts/preuninstall').testable
@@ -9,7 +9,7 @@ const helpers = require('../scripts/scriptHelpers')
 
 const TEST_PROFILE_PATH = path.resolve(os.tmpdir(), '.npq_test_profile')
 const TEST_ALIAS = 'alias npm="npq-hero"'
-inquirer.prompt = jest.fn().mockResolvedValue({ install: true })
+cliPrompt.prompt = jest.fn().mockResolvedValue({ install: true })
 
 let mockGetShellConfig
 let mockIsRunningInYarn
