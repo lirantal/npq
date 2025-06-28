@@ -9,6 +9,7 @@ const { CliParser } = require('../lib/cli')
 const pkgMgr = require('../lib/packageManager')
 const Marshall = require('../lib/marshall')
 const cliPrompt = require('../lib/helpers/cliPrompt.js')
+const { reportResults } = require('../lib/helpers/reportResults')
 
 const cliArgs = CliParser.parseArgsFull()
 
@@ -18,6 +19,14 @@ const marshall = new Marshall({
 
 marshall
   .process()
+  .then((marshallResults) => {
+    const { countErrors, countWarnings } = reportResults(marshallResults)
+    return {
+      error: countErrors > 0 || countWarnings > 0,
+      countErrors,
+      countWarnings
+    }
+  })
   .then((result) => {
     if (cliArgs.dryRun) {
       process.exit(0)
