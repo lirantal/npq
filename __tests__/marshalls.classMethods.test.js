@@ -2,29 +2,26 @@ beforeEach(() => {
   jest.resetModules()
 })
 
-jest.mock('glob', () => {
-  return {
-    glob: jest.fn().mockResolvedValue(['file1', 'file2'])
-  }
-})
-
 test('collecting marshalls resolves with files array', async () => {
   const marshalls = require('../lib/marshalls')
 
   const marshallFiles = await marshalls.collectMarshalls()
-  expect(marshallFiles).toEqual(['file1', 'file2'])
+  expect(marshallFiles.length).toBeGreaterThan(0)
+  expect(marshallFiles.every((file) => file.endsWith('.marshall.js'))).toBe(true)
 })
 
-test('collecting marshalls resolves with error if unable to process files', () => {
+test('collecting marshalls handles directory read errors', async () => {
+  const fs = require('node:fs')
   const marshalls = require('../lib/marshalls')
 
-  jest.mock('glob', () => {
-    return {
-      glob: jest.fn().mockRejectedValue(new Error('error'))
-    }
-  })
+  // Mock fs.promises.readdir to throw an error
+  const originalReaddir = fs.promises.readdir
+  fs.promises.readdir = jest.fn().mockRejectedValue(new Error('Directory read error'))
 
-  expect(marshalls.collectMarshalls()).rejects.toEqual(expect.any(Error))
+  await expect(marshalls.collectMarshalls()).rejects.toThrow('Directory read error')
+
+  // Restore original function
+  fs.promises.readdir = originalReaddir
 })
 
 test('build marshalls without any should throw error', () => {

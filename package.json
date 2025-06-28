@@ -41,7 +41,6 @@
   },
   "dependencies": {
     "fast-levenshtein": "^3.0.0",
-    "glob": "^10.3.10",
     "npm-package-arg": "^11.0.1",
     "pacote": "^17.0.4",
     "semver": "^7.5.4",
