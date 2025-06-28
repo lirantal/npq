@@ -39,6 +39,14 @@
     "provenance": true,
     "access": "public"
   },
+  "dependencies": {
+    "fast-levenshtein": "^3.0.0",
+    "glob": "^10.3.10",
+    "npm-package-arg": "^11.0.1",
+    "pacote": "^17.0.4",
+    "semver": "^7.5.4",
+    "validator": "13.11.0"
+  },
   "devDependencies": {
     "@babel/core": "^7.23.0",
     "@babel/plugin-transform-runtime": "^7.22.15",
@@ -171,14 +179,6 @@
         "impliedStrict": true
       }
     }
-  },
-  "dependencies": {
-    "fast-levenshtein": "^3.0.0",
-    "glob": "^10.3.10",
-    "npm-package-arg": "^11.0.1",
-    "pacote": "^17.0.4",
-    "semver": "^7.5.4",
-    "validator": "13.11.0"
   },
   "release": {
     "branches": [
