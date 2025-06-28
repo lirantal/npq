@@ -5,18 +5,21 @@
 const cliSupport = require('../lib/helpers/cliSupportHandler')
 cliSupport.isEnvSupport() || cliSupport.noSupportError(true)
 
-const cli = require('../lib/cli')
+const { CliParser } = require('../lib/cli')
 const pkgMgr = require('../lib/packageManager')
 const Marshall = require('../lib/marshall')
+const cliPrompt = require('../lib/helpers/cliPrompt.js')
+
+const cliArgs = CliParser.parseArgsFull()
 
 const marshall = new Marshall({
-  pkgs: cli.package
+  pkgs: cliArgs.packages
 })
 
 marshall
   .process()
   .then((result) => {
-    if (cli.dryRun) {
+    if (cliArgs.dryRun) {
       process.exit(0)
     }
 
@@ -34,7 +37,7 @@ marshall
   })
   .then((status) => {
     if (status && status.hasOwnProperty('install') && status.install === true) {
-      pkgMgr.process(cli.packageManager)
+      pkgMgr.process(cliArgs.packageManager)
     }
   })
   .catch((error) => {

@@ -5,23 +5,18 @@
 const cliSupport = require('../lib/helpers/cliSupportHandler')
 cliSupport.isEnvSupport() || (cliSupport.noSupportError() && cliSupport.packageManagerPassthrough())
 
-const yargs = require('yargs')
 const pkgMgr = require('../lib/packageManager')
 const Marshall = require('../lib/marshall')
-const cliCommons = require('../lib/cliCommons')
+const { CliParser } = require('../lib/cli')
 const cliPrompt = require('../lib/helpers/cliPrompt.js')
 const { reportResults } = require('../lib/helpers/reportResults')
 
 const PACKAGE_MANAGER_TOOL = process.env.NPQ_PKG_MGR
 
-const cli = yargs
-  .options(cliCommons.getOptions())
-  .command(cliCommons.getInstallCommand())
-  .help(false)
-  .version(false).argv
+const cliArgs = CliParser.parseArgsMinimal()
 
 const marshall = new Marshall({
-  pkgs: cli.package
+  pkgs: cliArgs.packages
 })
 
 marshall

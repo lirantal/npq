@@ -178,8 +178,7 @@
     "npm-package-arg": "^11.0.1",
     "pacote": "^17.0.4",
     "semver": "^7.5.4",
-    "validator": "13.11.0",
-    "yargs": "^17.7.2"
+    "validator": "13.11.0"
   },
   "release": {
     "branches": [
