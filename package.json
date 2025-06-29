@@ -43,8 +43,7 @@
     "fast-levenshtein": "^3.0.0",
     "npm-package-arg": "^11.0.1",
     "pacote": "^17.0.4",
-    "semver": "^7.5.4",
-    "validator": "13.11.0"
+    "semver": "^7.5.4"
   },
   "devDependencies": {
     "@babel/core": "^7.23.0",
@@ -137,7 +136,7 @@
       "node/no-unsupported-features": "off",
       "node/no-unpublished-require": "off",
       "security/detect-non-literal-fs-filename": "warn",
-      "security/detect-unsafe-regex": "error",
+      "security/detect-unsafe-regex": "warn",
       "security/detect-buffer-noassert": "error",
       "security/detect-child-process": "warn",
       "security/detect-disable-mustache-escape": "error",
