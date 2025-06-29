@@ -22,12 +22,16 @@ const marshall = new Marshall({
 marshall
   .process()
   .then((marshallResults) => {
-    const { countErrors, countWarnings } = reportResults(marshallResults)
-    return {
-      error: countErrors > 0 || countWarnings > 0,
-      countErrors,
-      countWarnings
+    const results = reportResults(marshallResults)
+    if (results) {
+      const { countErrors, countWarnings } = results
+      return {
+        error: countErrors > 0 || countWarnings > 0,
+        countErrors,
+        countWarnings
+      }
     }
+    return undefined
   })
   .then((result) => {
     if (result && result.error) {
