@@ -10,16 +10,22 @@ const pkgMgr = require('../lib/packageManager')
 const Marshall = require('../lib/marshall')
 const cliPrompt = require('../lib/helpers/cliPrompt.js')
 const { reportResults } = require('../lib/helpers/reportResults')
+const { Spinner } = require('../lib/helpers/cliSpinner')
 
 const cliArgs = CliParser.parseArgsFull()
+const spinner = new Spinner({ text: 'Initiating...' })
+spinner.start()
 
 const marshall = new Marshall({
-  pkgs: cliArgs.packages
+  pkgs: cliArgs.packages,
+  progressManager: spinner
 })
 
 marshall
   .process()
   .then((marshallResults) => {
+    spinner.stop()
+
     const results = reportResults(marshallResults)
     if (results) {
       const { countErrors, countWarnings } = results
