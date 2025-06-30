@@ -44,6 +44,7 @@ marshall
         console.log('Packages with issues found:')
 
         console.log(results.resultsForPrettyPrint)
+        console.log(results.summaryForPrettyPrint)
       }
 
       return {
