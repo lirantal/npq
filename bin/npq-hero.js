@@ -29,8 +29,21 @@ marshall
     spinner.stop()
 
     const results = reportResults(marshallResults)
-    if (results) {
+    if (
+      results &&
+      Object.hasOwn(results, 'countErrors') &&
+      Object.hasOwn(results, 'countWarnings')
+    ) {
       const { countErrors, countWarnings } = results
+      const isErrors = countErrors > 0 || countWarnings > 0
+
+      if (isErrors) {
+        console.log()
+        console.log('Packages with issues found:')
+
+        console.log(results.resultsForPrettyPrint)
+      }
+
       return {
         error: countErrors > 0 || countWarnings > 0,
         countErrors,
