@@ -11,6 +11,7 @@ const { CliParser } = require('../lib/cli')
 const cliPrompt = require('../lib/helpers/cliPrompt.js')
 const { reportResults } = require('../lib/helpers/reportResults')
 const { Spinner } = require('../lib/helpers/cliSpinner')
+const { promiseThrottleHelper } = require('../lib/helpers/promiseThrottler')
 
 const PACKAGE_MANAGER_TOOL = process.env.NPQ_PKG_MGR
 
@@ -20,7 +21,8 @@ spinner.start()
 
 const marshall = new Marshall({
   pkgs: cliArgs.packages,
-  progressManager: spinner
+  progressManager: spinner,
+  promiseThrottleHelper
 })
 
 marshall
