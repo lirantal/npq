@@ -3,11 +3,12 @@ const TyposquattingMarshall = require('../lib/marshalls/typosquatting.marshall')
 describe('Typosquatting Marshall', () => {
   test('should remove duplicate entries from similar packages', async () => {
     const typosquattingMarshall = new TyposquattingMarshall({
-      packageRepoUtils: null
+      packageRepoUtils: {
+        isPackageInAllowList: jest.fn(() => {
+          return false // Simulate that the package is not in the allow list
+        })
+      }
     })
-
-    // Mock the top packages data to include duplicates
-    const originalTopPackages = require('../data/top-packages.json')
 
     // Create a test package that would match multiple similar packages
     const pkg = {
@@ -39,7 +40,11 @@ describe('Typosquatting Marshall', () => {
 
   test('should not report typosquatting for packages in top packages list', async () => {
     const typosquattingMarshall = new TyposquattingMarshall({
-      packageRepoUtils: null
+      packageRepoUtils: {
+        isPackageInAllowList: jest.fn(() => {
+          return true
+        })
+      }
     })
 
     // Test with a package that exists in the top packages list
@@ -53,7 +58,11 @@ describe('Typosquatting Marshall', () => {
 
   test('should not report typosquatting for packages with no similar matches', async () => {
     const typosquattingMarshall = new TyposquattingMarshall({
-      packageRepoUtils: null
+      packageRepoUtils: {
+        isPackageInAllowList: jest.fn(() => {
+          return false // Simulate that the package is not in the allow list
+        })
+      }
     })
 
     // Test with a package that has no similar matches
