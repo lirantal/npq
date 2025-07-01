@@ -21,9 +21,7 @@ describe('Typosquatting Marshall', () => {
     } catch (error) {
       // Check that the error message doesn't contain duplicate entries
       const errorMessage = error.message
-      expect(errorMessage).toContain(
-        'Package name could be a typosquatting attempt for popular package(s):'
-      )
+      expect(errorMessage).toContain('Potential typosquatting with popular package(s):')
 
       // Extract the package names from the error message
       const packagesList = errorMessage.split('popular package(s): ')[1]
