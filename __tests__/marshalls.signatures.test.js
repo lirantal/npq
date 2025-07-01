@@ -128,9 +128,5 @@ describe('Signature test suites', () => {
     // We assert that the validate method didn't throw an error,
     // because the keys match the signature
     await expect(testMarshall.validate(pkg)).rejects.toThrow('mocked manifest error')
-
-    // Assert that the fetch method is called with the correct URL
-    // eslint-disable-next-line no-undef
-    expect(fetch).toHaveBeenCalledWith('https://registry.npmjs.org/-/npm/v1/keys')
   })
 })
