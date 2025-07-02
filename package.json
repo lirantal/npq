@@ -43,7 +43,7 @@
     "fastest-levenshtein": "^1.0.16",
     "npm-package-arg": "^11.0.1",
     "pacote": "^17.0.4",
-    "semver": "^7.5.4"
+    "semver": "^7.7.2"
   },
   "devDependencies": {
     "@babel/core": "^7.23.0",
