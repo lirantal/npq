@@ -58,7 +58,7 @@ marshall
       process.exit(0)
     }
 
-    if (result && result.error) {
+    if (result && result.countErrors > 0) {
       // eslint-disable-next-line no-console
       console.log()
       return cliPrompt.prompt({
