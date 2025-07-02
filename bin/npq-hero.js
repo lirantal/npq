@@ -48,7 +48,7 @@ marshall
       }
 
       return {
-        error: countErrors > 0 || countWarnings > 0,
+        anyIssues: isErrors,
         countErrors,
         countWarnings
       }
@@ -56,7 +56,7 @@ marshall
     return undefined
   })
   .then((result) => {
-    if (result && result.error) {
+    if (result && result.countErrors > 0) {
       // eslint-disable-next-line no-console
       console.log()
       return cliPrompt.prompt({
@@ -64,6 +64,16 @@ marshall
         message: 'Continue install ?',
         default: false
       })
+    } else {
+      if (result && result.countWarnings > 0) {
+        // eslint-disable-next-line no-console
+        console.log()
+        return cliPrompt.autoContinue({
+          name: 'install',
+          message: 'Auto-continue with install in... ',
+          timeInSeconds: 15
+        })
+      }
     }
 
     return { install: true }

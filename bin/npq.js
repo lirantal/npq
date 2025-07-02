@@ -11,6 +11,7 @@ const Marshall = require('../lib/marshall')
 const cliPrompt = require('../lib/helpers/cliPrompt.js')
 const { reportResults } = require('../lib/helpers/reportResults')
 const { Spinner } = require('../lib/helpers/cliSpinner')
+const { promiseThrottleHelper } = require('../lib/helpers/promiseThrottler')
 
 const cliArgs = CliParser.parseArgsFull()
 const spinner = new Spinner({ text: 'Initiating...' })
@@ -18,7 +19,8 @@ spinner.start()
 
 const marshall = new Marshall({
   pkgs: cliArgs.packages,
-  progressManager: spinner
+  progressManager: spinner,
+  promiseThrottleHelper
 })
 
 marshall
@@ -40,10 +42,11 @@ marshall
         console.log('Packages with issues found:')
 
         console.log(results.resultsForPrettyPrint)
+        console.log(results.summaryForPrettyPrint)
       }
 
       return {
-        error: isErrors,
+        anyIssues: isErrors,
         countErrors,
         countWarnings
       }
@@ -63,6 +66,16 @@ marshall
         message: 'Continue install ?',
         default: false
       })
+    } else {
+      if (result && result.countWarnings > 0) {
+        // eslint-disable-next-line no-console
+        console.log()
+        return cliPrompt.autoContinue({
+          name: 'install',
+          message: 'Auto-continue with install in... ',
+          timeInSeconds: 15
+        })
+      }
     }
 
     return { install: true }
