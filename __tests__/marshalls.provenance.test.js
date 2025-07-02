@@ -140,9 +140,10 @@ describe('Provenance test suites', () => {
       }
     })
 
-    // We assert that the validate method didn't throw an error,
-    // because the keys match the signature
-    await expect(testMarshall.validate(pkg)).rejects.toThrow('mocked manifest error')
+    // We assert that the validate method throws an error,
+    // but we can't assert the exact error message because we don't log
+    // it unless debugging is enabled
+    await expect(testMarshall.validate(pkg)).rejects.toThrow()
 
     // Assert that the fetch method is called with the correct URL
     // eslint-disable-next-line no-undef

@@ -43,7 +43,7 @@ describe('Expired domains test suites', () => {
     }
 
     await expect(testMarshall.validate(pkgData)).rejects.toThrow(
-      /Unable to resolve domain for maintainer e-mail, could be an expired account/
+      /Detected expired domain can be abused for account takeover/
     )
   })
 
@@ -69,7 +69,7 @@ describe('Expired domains test suites', () => {
     }
 
     await expect(testMarshall.validate(pkgData)).rejects.toThrow(
-      /Unable to resolve domain for maintainer e-mail, could be an expired account: <unknown>/
+      /Detected expired domain can be abused for account takeover: <unknown>/
     )
   })
 
