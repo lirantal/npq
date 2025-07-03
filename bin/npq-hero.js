@@ -84,7 +84,9 @@ marshall
     }
   })
   .catch((error) => {
-    // eslint-disable-next-line no-console
-    console.error(error)
-    process.exit(-1)
+    CliParser.exit({
+      errorCode: error.code || -1,
+      message: error.message || 'An error occurred',
+      spinner
+    })
   })

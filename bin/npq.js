@@ -34,8 +34,11 @@ Promise.resolve()
   .then((packages) => {
     if (packages.error) {
       console.log()
-      console.error(packages.message)
-      process.exit(-1)
+      CliParser.exit({
+        errorCode: packages.error.code || -1,
+        message: packages.message,
+        spinner
+      })
     }
 
     const marshall = new Marshall({
@@ -76,7 +79,10 @@ Promise.resolve()
   })
   .then((result) => {
     if (cliArgs.dryRun) {
-      process.exit(0)
+      CliParser.exit({
+        errorCode: 0,
+        spinner
+      })
     }
 
     if (result && result.countErrors > 0) {
@@ -107,7 +113,17 @@ Promise.resolve()
     }
   })
   .catch((error) => {
-    // eslint-disable-next-line no-console
-    console.error(error)
-    process.exit(-1)
+    CliParser.exit({
+      errorCode: error.code || -1,
+      message: error.message || 'An error occurred',
+      spinner
+    })
   })
+
+// attach event handler for CTRL+C
+process.on('SIGINT', () => {
+  CliParser.exit({
+    errorCode: 0,
+    spinner
+  })
+})
