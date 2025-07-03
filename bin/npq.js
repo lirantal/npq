@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 'use strict'
 
+const util = require('node:util')
+
 // Require minimum node version or bail out
 const cliSupport = require('../lib/helpers/cliSupportHandler')
 cliSupport.isEnvSupport() || cliSupport.noSupportError(true)
 
+const { getProjectPackages } = require('../lib/helpers/sourcePackages')
 const { CliParser } = require('../lib/cli')
 const pkgMgr = require('../lib/packageManager')
 const Marshall = require('../lib/marshall')
@@ -13,18 +16,36 @@ const { reportResults } = require('../lib/helpers/reportResults')
 const { Spinner } = require('../lib/helpers/cliSpinner')
 const { promiseThrottleHelper } = require('../lib/helpers/promiseThrottler')
 
+const debug = util.debuglog('npq')
+
 const cliArgs = CliParser.parseArgsFull()
 const spinner = new Spinner({ text: 'Initiating...' })
 spinner.start()
 
-const marshall = new Marshall({
-  pkgs: cliArgs.packages,
-  progressManager: spinner,
-  promiseThrottleHelper
-})
+Promise.resolve()
+  .then(() => {
+    if (cliArgs.packages.length === 0) {
+      debug('\nNo packages specified, using project packages from package.json')
+      return getProjectPackages()
+    }
 
-marshall
-  .process()
+    return cliArgs.packages
+  })
+  .then((packages) => {
+    if (packages.error) {
+      console.log()
+      console.error(packages.message)
+      process.exit(-1)
+    }
+
+    const marshall = new Marshall({
+      pkgs: packages,
+      progressManager: spinner,
+      promiseThrottleHelper
+    })
+
+    return marshall.process()
+  })
   .then((marshallResults) => {
     spinner.stop()
 
