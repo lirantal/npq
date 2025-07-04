@@ -22,7 +22,9 @@ describe('cliPrompt', () => {
 
   afterEach(() => {
     jest.clearAllMocks()
-    console.log.mockRestore()
+    if (console.log.mockRestore) {
+      console.log.mockRestore()
+    }
   })
 
   describe('parameter validation', () => {
@@ -263,5 +265,145 @@ describe('cliPrompt', () => {
 
       expect(result).toEqual({ shouldProceed: false })
     })
+  })
+
+  describe('autoContinue', () => {
+    const { autoContinue } = require('../lib/helpers/cliPrompt')
+    let mockWrite, originalWrite
+
+    beforeEach(() => {
+      // Mock process.stdout.write to capture output
+      originalWrite = process.stdout.write
+      mockWrite = jest.fn()
+      process.stdout.write = mockWrite
+
+      // Mock setTimeout to speed up tests
+      jest.useFakeTimers()
+    })
+
+    afterEach(() => {
+      // Restore original stdout.write
+      process.stdout.write = originalWrite
+      jest.useRealTimers()
+    })
+
+    test('should return object with specified property name', async () => {
+      const promise = autoContinue({
+        name: 'install',
+        message: 'Auto-installing in ',
+        timeInSeconds: 2
+      })
+
+      // Fast-forward all timers
+      jest.runAllTimers()
+
+      const result = await promise
+      expect(result).toEqual({ install: true })
+    })
+
+    test('should handle custom timeInSeconds', async () => {
+      const promise = autoContinue({
+        name: 'proceed',
+        message: 'Proceeding in ',
+        timeInSeconds: 3
+      })
+
+      // Fast-forward all timers
+      jest.runAllTimers()
+
+      const result = await promise
+      expect(result).toEqual({ proceed: true })
+    })
+
+    test('should use default timeInSeconds of 5 when not specified', async () => {
+      const promise = autoContinue({
+        name: 'default',
+        message: 'Starting in '
+      })
+
+      // Fast-forward all timers
+      jest.runAllTimers()
+
+      const result = await promise
+      expect(result).toEqual({ default: true })
+    }, 10000) // 10 second timeout
+
+    test('should write countdown to stdout', async () => {
+      const promise = autoContinue({
+        name: 'test',
+        message: 'Testing in ',
+        timeInSeconds: 3
+      })
+
+      // Fast-forward all timers
+      jest.runAllTimers()
+
+      await promise
+
+      // Should write initial message with starting number
+      expect(mockWrite).toHaveBeenCalledWith('Testing in 3')
+    })
+
+    test('should handle single digit countdown correctly', async () => {
+      const promise = autoContinue({
+        name: 'test',
+        message: 'Starting in ',
+        timeInSeconds: 2
+      })
+
+      // Fast-forward all timers
+      jest.runAllTimers()
+
+      await promise
+
+      // Should write initial message
+      expect(mockWrite).toHaveBeenCalledWith('Starting in 2')
+    })
+
+    test('should handle double digit to single digit countdown with padding', async () => {
+      const promise = autoContinue({
+        name: 'test',
+        message: 'Waiting ',
+        timeInSeconds: 10
+      })
+
+      // Fast-forward all timers
+      jest.runAllTimers()
+
+      await promise
+
+      // Should write initial message with double digit
+      expect(mockWrite).toHaveBeenCalledWith('Waiting 10')
+    }, 15000) // 15 second timeout
+
+    test('should call console.log at the end', async () => {
+      const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation(() => {})
+
+      const promise = autoContinue({
+        name: 'test',
+        message: 'Done in ',
+        timeInSeconds: 1
+      })
+
+      // Fast-forward all timers
+      jest.runAllTimers()
+
+      await promise
+
+      expect(mockConsoleLog).toHaveBeenCalledWith()
+      mockConsoleLog.mockRestore()
+    })
+
+    test('should handle default parameters', async () => {
+      const promise = autoContinue()
+
+      // Fast-forward all timers
+      jest.runAllTimers()
+
+      const result = await promise
+
+      // Should handle undefined name gracefully
+      expect(result).toEqual({ undefined: true })
+    }, 10000) // 10 second timeout
   })
 })

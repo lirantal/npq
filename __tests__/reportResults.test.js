@@ -143,6 +143,192 @@ describe('cliSupportHandler', () => {
       expect(result).toBe(false)
     })
   })
+
+  describe('isEnvSupport', () => {
+    test('should return true for Node.js >= 20.13.0', () => {
+      // Mock semver.satisfies to return true for supported version
+      const semver = require('semver')
+      jest.spyOn(semver, 'satisfies').mockReturnValue(true)
+
+      jest.resetModules()
+      const { isEnvSupport } = require('../lib/helpers/cliSupportHandler')
+
+      const result = isEnvSupport()
+      expect(result).toBe(true)
+
+      semver.satisfies.mockRestore()
+    })
+
+    test('should return false for Node.js < 20.13.0', () => {
+      // Mock semver.satisfies to return false for unsupported version
+      const semver = require('semver')
+      const mockSatisfies = jest.spyOn(semver, 'satisfies').mockReturnValue(false)
+
+      const { isEnvSupport } = require('../lib/helpers/cliSupportHandler')
+
+      const result = isEnvSupport()
+      expect(result).toBe(false)
+
+      mockSatisfies.mockRestore()
+    })
+
+    test('should return true for Node.js > 20.13.0', () => {
+      // Mock semver.satisfies to return true for newer supported version
+      const semver = require('semver')
+      jest.spyOn(semver, 'satisfies').mockReturnValue(true)
+
+      jest.resetModules()
+      const { isEnvSupport } = require('../lib/helpers/cliSupportHandler')
+
+      const result = isEnvSupport()
+      expect(result).toBe(true)
+
+      semver.satisfies.mockRestore()
+    })
+  })
+
+  describe('noSupportError', () => {
+    let consoleSpy
+
+    beforeEach(() => {
+      consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+    })
+
+    afterEach(() => {
+      consoleSpy.mockRestore()
+    })
+
+    test('should output styled error message in interactive terminal', () => {
+      // Set up interactive terminal
+      process.stdout.isTTY = true
+
+      const { noSupportError } = require('../lib/helpers/cliSupportHandler')
+      const result = noSupportError(false)
+
+      expect(result).toBe(true)
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringMatching(/error:/),
+        'npq suppressed due to old node version'
+      )
+    })
+
+    test('should output plain error message in non-interactive terminal', () => {
+      // Set up non-interactive terminal
+      process.stdout.isTTY = false
+
+      const { noSupportError } = require('../lib/helpers/cliSupportHandler')
+      const result = noSupportError(false)
+
+      expect(result).toBe(true)
+      expect(consoleSpy).toHaveBeenCalledWith('error: npq suppressed due to old node version')
+    })
+
+    test('should call process.exit when failFast is true', () => {
+      const mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {})
+      process.stdout.isTTY = true
+
+      const { noSupportError } = require('../lib/helpers/cliSupportHandler')
+      noSupportError(true)
+
+      expect(mockExit).toHaveBeenCalledWith(-1)
+      mockExit.mockRestore()
+    })
+
+    test('should not call process.exit when failFast is false', () => {
+      const mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {})
+      process.stdout.isTTY = true
+
+      const { noSupportError } = require('../lib/helpers/cliSupportHandler')
+      const result = noSupportError(false)
+
+      expect(result).toBe(true)
+      expect(mockExit).not.toHaveBeenCalled()
+      mockExit.mockRestore()
+    })
+  })
+
+  describe('packageManagerPassthrough', () => {
+    test('should spawn package manager with correct arguments and exit with status', () => {
+      const mockSpawnSync = jest.fn().mockReturnValue({ status: 0 })
+      const mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {})
+
+      // Mock child_process
+      jest.doMock('child_process', () => ({
+        spawnSync: mockSpawnSync
+      }))
+
+      // Mock process.argv
+      const originalArgv = process.argv
+      process.argv = ['node', 'npq', 'install', 'package-name']
+
+      const { packageManagerPassthrough } = require('../lib/helpers/cliSupportHandler')
+      packageManagerPassthrough()
+
+      expect(mockSpawnSync).toHaveBeenCalledWith('npm', ['install', 'package-name'], {
+        stdio: 'inherit',
+        shell: true
+      })
+      expect(mockExit).toHaveBeenCalledWith(0)
+
+      // Restore mocks
+      process.argv = originalArgv
+      mockExit.mockRestore()
+      jest.dontMock('child_process')
+    })
+
+    test('should exit with error status when spawn fails', () => {
+      const mockSpawnSync = jest.fn().mockReturnValue({ status: 1 })
+      const mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {})
+
+      // Mock child_process
+      jest.doMock('child_process', () => ({
+        spawnSync: mockSpawnSync
+      }))
+
+      const originalArgv = process.argv
+      process.argv = ['node', 'npq', 'install', 'package-name']
+
+      const { packageManagerPassthrough } = require('../lib/helpers/cliSupportHandler')
+      packageManagerPassthrough()
+
+      expect(mockExit).toHaveBeenCalledWith(1)
+
+      // Restore mocks
+      process.argv = originalArgv
+      mockExit.mockRestore()
+      jest.dontMock('child_process')
+    })
+
+    test('should use custom package manager from environment variable', () => {
+      const mockSpawnSync = jest.fn().mockReturnValue({ status: 0 })
+      const mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {})
+
+      // Set custom package manager
+      process.env.NPQ_PKG_MGR = 'yarn'
+
+      // Mock child_process
+      jest.doMock('child_process', () => ({
+        spawnSync: mockSpawnSync
+      }))
+
+      const originalArgv = process.argv
+      process.argv = ['node', 'npq', 'add', 'package-name']
+
+      const { packageManagerPassthrough } = require('../lib/helpers/cliSupportHandler')
+      packageManagerPassthrough()
+
+      expect(mockSpawnSync).toHaveBeenCalledWith('yarn', ['add', 'package-name'], {
+        stdio: 'inherit',
+        shell: true
+      })
+
+      // Restore mocks and env
+      delete process.env.NPQ_PKG_MGR
+      process.argv = originalArgv
+      mockExit.mockRestore()
+      jest.dontMock('child_process')
+    })
+  })
 })
 
 describe('reportResults', () => {
@@ -368,6 +554,203 @@ describe('reportResults', () => {
     const packageNames = result.resultsForJSON.map((pkg) => pkg.pkg)
     expect(packageNames).toContain('test-package@1.0.0')
     expect(packageNames).toContain('another-package@2.1.0')
+  })
+})
+
+describe('reportResults helper functions', () => {
+  test('should handle getTerminalWidth error cases', () => {
+    // First define getWindowSize if it doesn't exist
+    const originalGetWindowSize = process.stdout.getWindowSize
+    if (!originalGetWindowSize) {
+      process.stdout.getWindowSize = () => [80]
+    }
+
+    // Use jest.spyOn to mock getWindowSize
+    const mockGetWindowSize = jest.spyOn(process.stdout, 'getWindowSize')
+    mockGetWindowSize.mockImplementation(() => {
+      throw new Error('Terminal size detection failed')
+    })
+
+    process.stdout.isTTY = true
+
+    const testResults = {
+      'test-package@1.0.0': [
+        {
+          'supply-chain-security': {
+            categoryId: 'SupplyChainSecurity',
+            marshall: 'supply-chain-security',
+            errors: [{ message: 'Test error', pkg: 'test-package@1.0.0' }],
+            warnings: []
+          }
+        }
+      ]
+    }
+
+    const { reportResults } = require('../lib/helpers/reportResults')
+    const result = reportResults(testResults)
+    expect(result).toBeDefined()
+    expect(result.useRichFormatting).toBeDefined()
+
+    mockGetWindowSize.mockRestore()
+
+    // Restore original if it existed, or delete if we added it
+    if (originalGetWindowSize) {
+      process.stdout.getWindowSize = originalGetWindowSize
+    } else {
+      delete process.stdout.getWindowSize
+    }
+  })
+
+  test('should handle stdout without getWindowSize method', () => {
+    // Mock process.stdout.isTTY to true but don't define getWindowSize
+    const originalGetWindowSize = process.stdout.getWindowSize
+    delete process.stdout.getWindowSize
+    process.stdout.isTTY = true
+
+    const testResults = {
+      'test-package@1.0.0': [
+        {
+          'package-health': {
+            categoryId: 'PackageHealth',
+            marshall: 'package-health',
+            errors: [{ message: 'Test error', pkg: 'test-package@1.0.0' }],
+            warnings: []
+          }
+        }
+      ]
+    }
+
+    const { reportResults } = require('../lib/helpers/reportResults')
+    const result = reportResults(testResults)
+    expect(result).toBeDefined()
+
+    // Restore original getWindowSize
+    if (originalGetWindowSize) {
+      process.stdout.getWindowSize = originalGetWindowSize
+    }
+  })
+
+  test('should handle text wrapping for very long words', () => {
+    // First define getWindowSize if it doesn't exist
+    const originalGetWindowSize = process.stdout.getWindowSize
+    if (!originalGetWindowSize) {
+      process.stdout.getWindowSize = () => [80]
+    }
+
+    // Mock getWindowSize to return small width
+    const mockGetWindowSize = jest.spyOn(process.stdout, 'getWindowSize')
+    mockGetWindowSize.mockReturnValue([40])
+
+    process.stdout.isTTY = true
+
+    const testResults = {
+      'test-package@1.0.0': [
+        {
+          'malware-detection': {
+            categoryId: 'MalwareDetection',
+            marshall: 'malware-detection',
+            errors: [
+              {
+                message:
+                  'This-is-a-very-long-word-that-should-be-broken-when-wrapping-text-because-it-exceeds-terminal-width',
+                pkg: 'test-package@1.0.0'
+              }
+            ],
+            warnings: []
+          }
+        }
+      ]
+    }
+
+    const { reportResults } = require('../lib/helpers/reportResults')
+    const result = reportResults(testResults)
+    expect(result).toBeDefined()
+    expect(result.resultsForPrettyPrint).toContain('This-is-a-very-long-word')
+
+    mockGetWindowSize.mockRestore()
+
+    // Restore original if it existed, or delete if we added it
+    if (originalGetWindowSize) {
+      process.stdout.getWindowSize = originalGetWindowSize
+    } else {
+      delete process.stdout.getWindowSize
+    }
+  })
+
+  test('should handle text wrapping edge cases', () => {
+    process.stdout.isTTY = true
+
+    const testResults = {
+      'test-package@1.0.0': [
+        {
+          'supply-chain-security': {
+            categoryId: 'SupplyChainSecurity',
+            marshall: 'supply-chain-security',
+            errors: [
+              {
+                message: 'Word',
+                pkg: 'test-package@1.0.0'
+              }
+            ],
+            warnings: []
+          }
+        }
+      ]
+    }
+
+    const { reportResults } = require('../lib/helpers/reportResults')
+    const result = reportResults(testResults)
+    expect(result).toBeDefined()
+    expect(result.resultsForPrettyPrint).toContain('Word')
+  })
+
+  test('should handle malicious package detection edge cases', () => {
+    process.stdout.isTTY = true
+
+    const testResults = {
+      'test-package@1.0.0': [
+        {
+          'malware-detection': {
+            categoryId: 'MalwareDetection',
+            marshall: 'malware-detection',
+            errors: [{ message: 'Malicious package found in registry', pkg: 'test-package@1.0.0' }],
+            warnings: []
+          }
+        }
+      ]
+    }
+
+    const { reportResults } = require('../lib/helpers/reportResults')
+    const result = reportResults(testResults)
+    expect(result).toBeDefined()
+    expect(result.countErrors).toBe(1) // Should be 1 for malicious packages
+    expect(result.resultsForPrettyPrint).toContain('Malicious package found')
+  })
+
+  test('should handle multiple error arrays with malicious package in later array', () => {
+    process.stdout.isTTY = true
+
+    const testResults = {
+      'test-package@1.0.0': [
+        {
+          'malware-detection': {
+            categoryId: 'MalwareDetection',
+            marshall: 'malware-detection',
+            errors: [
+              { message: 'Regular error 1', pkg: 'test-package@1.0.0' },
+              { message: 'Malicious package found', pkg: 'test-package@1.0.0' }
+            ],
+            warnings: []
+          }
+        }
+      ]
+    }
+
+    const { reportResults } = require('../lib/helpers/reportResults')
+    const result = reportResults(testResults)
+    expect(result).toBeDefined()
+    expect(result.countErrors).toBe(1) // Malicious packages count as 1 error regardless of count
+    expect(result.resultsForPrettyPrint).toContain('Malicious package found')
   })
 })
 
