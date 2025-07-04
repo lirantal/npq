@@ -19,8 +19,12 @@ const { promiseThrottleHelper } = require('../lib/helpers/promiseThrottler')
 const debug = util.debuglog('npq')
 
 const cliArgs = CliParser.parseArgsFull()
-const spinner = new Spinner({ text: 'Initiating...' })
-spinner.start()
+const isInteractive = cliSupport.isInteractiveTerminal()
+const spinner = isInteractive ? new Spinner({ text: 'Initiating...' }) : null
+
+if (spinner) {
+  spinner.start()
+}
 
 Promise.resolve()
   .then(() => {
@@ -50,7 +54,9 @@ Promise.resolve()
     return marshall.process()
   })
   .then((marshallResults) => {
-    spinner.stop()
+    if (spinner) {
+      spinner.stop()
+    }
 
     const results = reportResults(marshallResults)
     if (
@@ -58,15 +64,20 @@ Promise.resolve()
       Object.hasOwn(results, 'countErrors') &&
       Object.hasOwn(results, 'countWarnings')
     ) {
-      const { countErrors, countWarnings } = results
+      const { countErrors, countWarnings, useRichFormatting } = results
       const isErrors = countErrors > 0 || countWarnings > 0
 
       if (isErrors) {
         console.log()
         console.log('Packages with issues found:')
 
-        console.log(results.resultsForPrettyPrint)
-        console.log(results.summaryForPrettyPrint)
+        if (useRichFormatting) {
+          console.log(results.resultsForPrettyPrint)
+          console.log(results.summaryForPrettyPrint)
+        } else {
+          console.log(results.resultsForPlainTextPrint)
+          console.log(results.summaryForPlainTextPrint)
+        }
       }
 
       return {

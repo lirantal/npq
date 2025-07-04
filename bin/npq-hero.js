@@ -16,8 +16,12 @@ const { promiseThrottleHelper } = require('../lib/helpers/promiseThrottler')
 const PACKAGE_MANAGER_TOOL = process.env.NPQ_PKG_MGR
 
 const cliArgs = CliParser.parseArgsMinimal()
-const spinner = new Spinner({ text: 'Initiating...' })
-spinner.start()
+const isInteractive = cliSupport.isInteractiveTerminal()
+const spinner = isInteractive ? new Spinner({ text: 'Initiating...' }) : null
+
+if (spinner) {
+  spinner.start()
+}
 
 const marshall = new Marshall({
   pkgs: cliArgs.packages,
@@ -28,7 +32,9 @@ const marshall = new Marshall({
 marshall
   .process()
   .then((marshallResults) => {
-    spinner.stop()
+    if (spinner) {
+      spinner.stop()
+    }
 
     const results = reportResults(marshallResults)
     if (
@@ -36,15 +42,20 @@ marshall
       Object.hasOwn(results, 'countErrors') &&
       Object.hasOwn(results, 'countWarnings')
     ) {
-      const { countErrors, countWarnings } = results
+      const { countErrors, countWarnings, useRichFormatting } = results
       const isErrors = countErrors > 0 || countWarnings > 0
 
       if (isErrors) {
         console.log()
         console.log('Packages with issues found:')
 
-        console.log(results.resultsForPrettyPrint)
-        console.log(results.summaryForPrettyPrint)
+        if (useRichFormatting) {
+          console.log(results.resultsForPrettyPrint)
+          console.log(results.summaryForPrettyPrint)
+        } else {
+          console.log(results.resultsForPlainTextPrint)
+          console.log(results.summaryForPlainTextPrint)
+        }
       }
 
       return {
