@@ -58,7 +58,7 @@ Promise.resolve()
       spinner.stop()
     }
 
-    const results = reportResults(marshallResults)
+    const results = reportResults(marshallResults, { plain: cliArgs.plain })
     if (
       results &&
       Object.hasOwn(results, 'countErrors') &&

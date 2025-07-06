@@ -140,6 +140,12 @@ Here are all the available environment variable names for disabling specific mar
 npq install express --dry-run
 ```
 
+### Force non-rich text output:
+
+```sh
+npq install express --plain
+```
+
 ## Learn Node.js Security
 
 <div align="center">

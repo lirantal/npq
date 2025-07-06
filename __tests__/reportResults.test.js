@@ -555,6 +555,13 @@ describe('reportResults', () => {
     expect(packageNames).toContain('test-package@1.0.0')
     expect(packageNames).toContain('another-package@2.1.0')
   })
+
+  test('should set useRichFormatting to false when plain option is true', () => {
+    const { reportResults } = require('../lib/helpers/reportResults')
+    const result = reportResults(mockMarshallResults, { plain: true })
+
+    expect(result.useRichFormatting).toBe(false)
+  })
 })
 
 describe('reportResults helper functions', () => {
