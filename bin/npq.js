@@ -19,7 +19,7 @@ const { promiseThrottleHelper } = require('../lib/helpers/promiseThrottler')
 const debug = util.debuglog('npq')
 
 const cliArgs = CliParser.parseArgsFull()
-const isInteractive = cliSupport.isInteractiveTerminal()
+const isInteractive = cliSupport.isInteractiveTerminal() && !cliArgs.plain
 const spinner = isInteractive ? new Spinner({ text: 'Initiating...' }) : null
 
 if (spinner) {
