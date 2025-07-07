@@ -34,25 +34,25 @@ jobs:
           CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}}
           CI: true
 
-  # release:
-  #   name: do semantic release
-  #   runs-on: 'ubuntu-latest'
-  #   permissions:
-  #     contents: write # to be able to publish a GitHub release
-  #     issues: write # to be able to comment on released issues
-  #     pull-requests: write # to be able to comment on released pull requests
-  #     id-token: write # to enable use of OIDC for npm provenance
-  #   needs: build
-  #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - uses: actions/setup-node@v2
-  #       with:
-  #         node-version: '24'
-  #     - name: install dependencies
-  #       run: npm ci --ignore-engines --ignore-scripts
-  #     - name: release
-  #       run: npx semantic-release
-  #       env:
-  #         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-  #         NPM_TOKEN: ${{secrets.NPM_TOKEN}}
+  release:
+    name: do semantic release
+    runs-on: 'ubuntu-latest'
+    permissions:
+      contents: write # to be able to publish a GitHub release
+      issues: write # to be able to comment on released issues
+      pull-requests: write # to be able to comment on released pull requests
+      id-token: write # to enable use of OIDC for npm provenance
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '24'
+      - name: install dependencies
+        run: npm ci --ignore-engines --ignore-scripts
+      - name: release
+        run: npx semantic-release
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          NPM_TOKEN: ${{secrets.NPM_TOKEN}}
