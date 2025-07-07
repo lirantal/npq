@@ -1,9 +1,5 @@
-<p align="center">
-	<br>
-  <img width="200" src="https://github.com/lirantal/npq/raw/main/.github/Logo%20Horizontal.png">
-	<br>
-	safely* install packages with npm/yarn by auditing them as part of your install process
-</p>
+npq allows you to audit npm packages _before_ you install them
+
 
 [![npm](https://img.shields.io/npm/v/npq.svg)](https://www.npmjs.com/package/npq)
 [![npm](https://img.shields.io/npm/l/npq.svg)](https://www.npmjs.com/package/npq)
@@ -12,8 +8,7 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/lirantal/npq/badge.svg)](https://snyk.io/test/github/lirantal/npq)
 [![Security Responsible Disclosure](https://img.shields.io/badge/Security-Responsible%20Disclosure-yellow.svg)](./SECURITY.md)
 
-![npq-demo-3-final](https://github.com/lirantal/npq/blob/main/.github/npq-demo-1.gif?raw=true)
-
+![npq demo screenshot](https://github.com/user-attachments/assets/a201d041-2ce2-4e2d-b066-1395078a83e3)
 
 Media coverage about npq:
 - As mentioned on [Thomas Gentilhomme](https://github.com/fraxken)'s French book of [Become a Node.js Developer](https://docs.google.com/document/d/1JHgmEFkc8Py4XSuCB8_DQ5FFEJoogyeninFK6ucTd4o/edit#) 
@@ -44,7 +39,11 @@ npq install express
 
 If npq is prompted to continue with the install, it simply hands over the actual package install job to the package manager (npm by default).
 
-safely* - there's no guaranteed safety; a malicious or vulnerable package could still exist that has no security vulnerabilities publicly disclosed and passes npq's checks.
+DISCLAIMER: there's no guaranteed absolute safety; a malicious or vulnerable package could still exist that has no security vulnerabilities publicly disclosed and passes npq's checks.
+
+## Demo
+
+https://github.com/user-attachments/assets/619ab3f6-aa3f-483c-9560-0f18e033e6bf
 
 ## Install
 
