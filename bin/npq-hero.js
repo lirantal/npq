@@ -16,7 +16,10 @@ const { promiseThrottleHelper } = require('../lib/helpers/promiseThrottler')
 const PACKAGE_MANAGER_TOOL = process.env.NPQ_PKG_MGR
 
 const cliArgs = CliParser.parseArgsMinimal()
-const isInteractive = cliSupport.isInteractiveTerminal()
+
+const silentModeNoPackages = !cliArgs || !cliArgs.packages || cliArgs.packages.length === 0
+
+const isInteractive = cliSupport.isInteractiveTerminal() && !silentModeNoPackages
 const spinner = isInteractive ? new Spinner({ text: 'Initiating...' }) : null
 
 if (spinner) {
