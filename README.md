@@ -37,7 +37,7 @@ npq install express
 * Package has a LICENSE file
 * Package has pre/post install scripts
 
-If npq is prompted to continue with the install, it simply hands over the actual package install job to the package manager (npm by default, or as specified via the `NPQ_PKG_MGR` environment variable).
+If npq is prompted to continue with the install, it simply hands over the actual package install job to the package manager (npm by default, or as specified via the `NPQ_PKG_MGR` environment variable). Note that if a package manager is specified via command-line options, it will override the `NPQ_PKG_MGR` environment variable.
 
 DISCLAIMER: there's no guaranteed absolute safety; a malicious or vulnerable package could still exist that has no security vulnerabilities publicly disclosed and passes npq's checks.
 
