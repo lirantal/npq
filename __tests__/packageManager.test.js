@@ -77,3 +77,25 @@ test("package manager spawns successfully and ignore npq's own internal commands
   expect(childProcess.spawn.mock.calls[0][1]).toEqual(['install', 'semver', 'express'])
   childProcess.spawn.mockReset()
 })
+
+test('package manager spawns with yarn when provided as parameter', async () => {
+  process.argv = ['node', 'script name', 'install', 'express']
+  await packageManager.process('yarn')
+  expect(childProcess.spawn).toHaveBeenCalled()
+  expect(childProcess.spawn.mock.calls.length).toBe(1)
+  expect(childProcess.spawn.mock.calls[0][0]).toBe('yarn')
+
+  expect(childProcess.spawn.mock.calls[0][1]).toEqual(['install', 'express'])
+  childProcess.spawn.mockReset()
+})
+
+test('package manager spawns with pnpm when provided as parameter', async () => {
+  process.argv = ['node', 'script name', 'install', 'lodash']
+  await packageManager.process('pnpm')
+  expect(childProcess.spawn).toHaveBeenCalled()
+  expect(childProcess.spawn.mock.calls.length).toBe(1)
+  expect(childProcess.spawn.mock.calls[0][0]).toBe('pnpm')
+
+  expect(childProcess.spawn.mock.calls[0][1]).toEqual(['install', 'lodash'])
+  childProcess.spawn.mockReset()
+})
