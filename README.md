@@ -37,7 +37,7 @@ npq install express
 * Package has a LICENSE file
 * Package has pre/post install scripts
 
-If npq is prompted to continue with the install, it simply hands over the actual package install job to the package manager (npm by default).
+If npq is prompted to continue with the install, it simply hands over the actual package install job to the package manager (npm by default, or as specified via the `NPQ_PKG_MGR` environment variable).
 
 DISCLAIMER: there's no guaranteed absolute safety; a malicious or vulnerable package could still exist that has no security vulnerabilities publicly disclosed and passes npq's checks.
 
@@ -71,15 +71,26 @@ alias npm='npq-hero'
 
 ### Offload to package managers
 
-If you're using `yarn`, or generally want to explicitly tell npq which package manager to use you can specify an environment variable: `NPQ_PKG_MGR=yarn`
+If you're using `yarn`, `pnpm`, or generally want to explicitly tell npq which package manager to use you can specify an environment variable: `NPQ_PKG_MGR=<package-manager>`
 
-Example: create an alias with yarn as the package manager:
+Examples:
 
+**Using yarn:**
 ```bash
 alias yarn="NPQ_PKG_MGR=yarn npq-hero"
 ```
 
-Note: `npq` by default will offload all commands and their arguments to the `npm` package manager after it finished its due-diligence for the respective packages.
+**Using pnpm:**
+```bash
+NPQ_PKG_MGR=pnpm npx npq install fastify
+```
+
+**Using pnpm with alias:**
+```bash
+alias pnpm="NPQ_PKG_MGR=pnpm npq-hero"
+```
+
+Note: `npq` by default will offload all commands and their arguments to the `npm` (or other package manager as specified) after it finished its due-diligence checks for the respective packages.
 
 ## Marshalls
 
