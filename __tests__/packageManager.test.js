@@ -53,9 +53,7 @@ test('package manager spawns successfully when provided array of packages to han
   await packageManager.process('npm')
   expect(childProcess.spawn).toHaveBeenCalled()
   expect(childProcess.spawn.mock.calls.length).toBe(1)
-  expect(childProcess.spawn.mock.calls[0][0]).toBe('npm')
-
-  expect(childProcess.spawn.mock.calls[0][1]).toEqual(['install', 'semver', 'express'])
+  expect(childProcess.spawn.mock.calls[0][0]).toEqual('npm install semver express')
   childProcess.spawn.mockReset()
 })
 
@@ -72,9 +70,7 @@ test("package manager spawns successfully and ignore npq's own internal commands
   await packageManager.process('npm')
   expect(childProcess.spawn).toHaveBeenCalled()
   expect(childProcess.spawn.mock.calls.length).toBe(1)
-  expect(childProcess.spawn.mock.calls[0][0]).toBe('npm')
-
-  expect(childProcess.spawn.mock.calls[0][1]).toEqual(['install', 'semver', 'express'])
+  expect(childProcess.spawn.mock.calls[0][0]).toEqual('npm install semver express')
   childProcess.spawn.mockReset()
 })
 
@@ -83,9 +79,7 @@ test('package manager spawns with yarn when provided as parameter', async () => 
   await packageManager.process('yarn')
   expect(childProcess.spawn).toHaveBeenCalled()
   expect(childProcess.spawn.mock.calls.length).toBe(1)
-  expect(childProcess.spawn.mock.calls[0][0]).toBe('yarn')
-
-  expect(childProcess.spawn.mock.calls[0][1]).toEqual(['install', 'express'])
+  expect(childProcess.spawn.mock.calls[0][0]).toEqual('yarn install express')
   childProcess.spawn.mockReset()
 })
 
@@ -94,8 +88,6 @@ test('package manager spawns with pnpm when provided as parameter', async () => 
   await packageManager.process('pnpm')
   expect(childProcess.spawn).toHaveBeenCalled()
   expect(childProcess.spawn.mock.calls.length).toBe(1)
-  expect(childProcess.spawn.mock.calls[0][0]).toBe('pnpm')
-
-  expect(childProcess.spawn.mock.calls[0][1]).toEqual(['install', 'lodash'])
+  expect(childProcess.spawn.mock.calls[0][0]).toEqual('pnpm install lodash')
   childProcess.spawn.mockReset()
 })

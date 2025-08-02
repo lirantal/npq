@@ -9,7 +9,7 @@ const childProcess = require('child_process')
 
 jest.mock('child_process', () => {
   return {
-    spawn: jest.fn((cmd, args, options) => {
+    spawn: jest.fn((cmd, options) => {
       return { pid: 12345 }
     })
   }
@@ -38,7 +38,7 @@ describe('NPQ_PKG_MGR Environment Variable Integration', () => {
     // Test that the package manager can spawn pnpm (which would be passed from CLI parsing)
     await packageManager.process('pnpm')
 
-    expect(childProcess.spawn).toHaveBeenCalledWith('pnpm', ['install', 'fastify'], {
+    expect(childProcess.spawn).toHaveBeenCalledWith('pnpm install fastify', {
       stdio: 'inherit',
       shell: true
     })
@@ -49,7 +49,7 @@ describe('NPQ_PKG_MGR Environment Variable Integration', () => {
 
     await packageManager.process('yarn')
 
-    expect(childProcess.spawn).toHaveBeenCalledWith('yarn', ['install', 'express', 'lodash'], {
+    expect(childProcess.spawn).toHaveBeenCalledWith('yarn install express lodash', {
       stdio: 'inherit',
       shell: true
     })
@@ -63,7 +63,7 @@ describe('NPQ_PKG_MGR Environment Variable Integration', () => {
 
       await packageManager.process(pm)
 
-      expect(childProcess.spawn).toHaveBeenCalledWith(pm, ['install', 'test-package'], {
+      expect(childProcess.spawn).toHaveBeenCalledWith(`${pm} install test-package`, {
         stdio: 'inherit',
         shell: true
       })
