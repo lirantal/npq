@@ -1,10 +1,8 @@
 'use strict'
 
-const Marshall = require('../lib/marshalls/snyk.marshall.js')
-const { marshallCategories } = require('../lib/marshalls/constants')
-
 const fs = require('fs')
 const os = require('os')
+const Marshall = require('../lib/marshalls/snyk.marshall.js')
 
 jest.mock('fs')
 jest.mock('os')

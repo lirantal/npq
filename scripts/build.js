@@ -18,7 +18,6 @@ async function saveTopPackagesToFile() {
 }
 
 async function main() {
-  const topPackages = await downloadTopPackages()
   await saveTopPackagesToFile()
 }
 
