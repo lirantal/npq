@@ -1,10 +1,20 @@
 name: CI
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+env:
+  FORCE_COLOR: 2
+
+permissions:
+  contents: read
 
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         platform: [ubuntu-latest]
         node: ['20', '22', '24']
@@ -12,27 +22,26 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
+          cache: npm
       - name: install dependencies
         run: npm ci --ignore-engines --ignore-scripts
       - name: lint code
         run: npm run lint
-        env:
-          CI: true
       - name: run tests
         run: npm run test
-        env:
-          CI: true
       - name: coverage
         uses: codecov/codecov-action@v5
+        if: github.repository == 'lirantal/npq'
         with:
           fail_ci_if_error: true
           verbose: false
         env:
           CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}}
-          CI: true
 
   release:
     name: do semantic release
@@ -43,12 +52,15 @@ jobs:
       pull-requests: write # to be able to comment on released pull requests
       id-token: write # to enable use of OIDC for npm provenance
     needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.repository == 'lirantal/npq' && github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+          cache: npm
       - name: install dependencies
         run: npm ci --ignore-engines --ignore-scripts
       - name: release
