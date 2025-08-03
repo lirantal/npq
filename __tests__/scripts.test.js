@@ -15,6 +15,8 @@ let mockGetShellConfig
 let mockIsRunningInYarn
 let mockGetNpmVersion
 
+const describeIf = (condition, ...args) => (condition ? describe(...args) : describe.skip(...args))
+
 beforeEach(() => {
   mockGetShellConfig = jest.spyOn(helpers, 'getShellConfig').mockImplementation(() => ({
     name: 'testShell',
@@ -129,7 +131,7 @@ test('uninstall handles empty profile', async () => {
   expect(profileExists).toBe(false)
 })
 
-describe('getShellConfig', () => {
+describeIf(process.platform !== 'win32', 'getShellConfig', () => {
   test('detects bash', () => {
     mockGetShellConfig.mockRestore()
     process.env.SHELL = '/bin/bash'
