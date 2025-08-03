@@ -11,8 +11,8 @@ jobs:
     name: Node ${{ matrix.node }} (${{ matrix.platform }})
     runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
       - name: install dependencies
@@ -26,7 +26,7 @@ jobs:
         env:
           CI: true
       - name: coverage
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v5
         with:
           fail_ci_if_error: true
           verbose: false
@@ -45,8 +45,8 @@ jobs:
     needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '24'
       - name: install dependencies
