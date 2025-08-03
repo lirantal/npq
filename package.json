@@ -7,7 +7,7 @@
     "npq-hero": "./bin/npq-hero.js"
   },
   "scripts": {
-    "lint": "eslint . --ignore-path .gitignore && npm run lint:lockfile",
+    "lint": "eslint && npm run lint:lockfile",
     "lint:lockfile": "lockfile-lint --path package-lock.json --type npm --validate-https --allowed-hosts npm npm",
     "test": "cross-env NODE_OPTIONS=\"--experimental-vm-modules\" jest",
     "build": "node scripts/build.js",
@@ -64,7 +64,6 @@
     "cz-conventional-changelog": "^3.3.0",
     "eslint": "^9.32.0",
     "eslint-plugin-import": "^2.32.0",
-    "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-security": "^3.0.1",
     "husky": "^9.1.7",
     "jest": "^30.0.5",
