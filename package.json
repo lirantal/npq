@@ -26,6 +26,12 @@
   "engines": {
     "node": ">=20.13.0"
   },
+  "files": [
+    "bin/",
+    "data/",
+    "lib/",
+    "scripts/"
+  ],
   "author": {
     "name": "Liran Tal",
     "email": "liran.tal@gmail.com"
