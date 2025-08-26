@@ -77,7 +77,7 @@ describe('NewBinMarshall', () => {
       '1.0.0': { bin: { 'my-cli': 'cli.js' } }
     }
     packageRepoUtilsMock.getPackageInfo.mockResolvedValue(mockPackageInfo('test-pkg', versions))
-    packageRepoUtilsMock.getSemVer.mockImplementation(async (name, version) => version)
+    packageRepoUtilsMock.parsePackageVersion.mockImplementation((version) => ({ version }))
 
     await expect(newBinMarshall.validate(pkg)).resolves.toBeUndefined()
     expect(newBinMarshall.ctx.marshalls.newBin.warnings).toHaveLength(0)
@@ -94,7 +94,7 @@ describe('NewBinMarshall', () => {
       '1.0.1': { bin: { 'my-cli': 'cli.js' } }
     }
     packageRepoUtilsMock.getPackageInfo.mockResolvedValue(mockPackageInfo('test-pkg', versions))
-    packageRepoUtilsMock.getSemVer.mockImplementation(async (name, version) => version)
+    packageRepoUtilsMock.parsePackageVersion.mockImplementation((version) => ({ version }))
 
     await expect(newBinMarshall.validate(pkg)).resolves.toBeUndefined()
     expect(newBinMarshall.ctx.marshalls.newBin.warnings).toHaveLength(0)
@@ -111,7 +111,7 @@ describe('NewBinMarshall', () => {
       '1.0.1': { bin: { 'old-cli': 'old.js', 'new-cli': 'new.js' } }
     }
     packageRepoUtilsMock.getPackageInfo.mockResolvedValue(mockPackageInfo('test-pkg', versions))
-    packageRepoUtilsMock.getSemVer.mockImplementation(async (name, version) => version)
+    packageRepoUtilsMock.parsePackageVersion.mockImplementation((version) => ({ version }))
 
     await expect(newBinMarshall.validate(pkg)).rejects.toThrow(
       'New binaries detected for test-pkg@1.0.1'
@@ -137,7 +137,7 @@ describe('NewBinMarshall', () => {
       '1.0.1': { bin: { 'test-pkg': 'old.js', 'new-cli': 'new.js' } }
     }
     packageRepoUtilsMock.getPackageInfo.mockResolvedValue(mockPackageInfo('test-pkg', versions))
-    packageRepoUtilsMock.getSemVer.mockImplementation(async (name, version) => version)
+    packageRepoUtilsMock.parsePackageVersion.mockImplementation((version) => ({ version }))
 
     await expect(newBinMarshall.validate(pkg)).rejects.toThrow(
       'New binaries detected for test-pkg@1.0.1'
@@ -165,7 +165,7 @@ describe('NewBinMarshall', () => {
       '1.0.1': { bin: 'new.js' } // New bin (string)
     }
     packageRepoUtilsMock.getPackageInfo.mockResolvedValue(mockPackageInfo('test-pkg', versions))
-    packageRepoUtilsMock.getSemVer.mockImplementation(async (name, version) => version)
+    packageRepoUtilsMock.parsePackageVersion.mockImplementation((version) => ({ version }))
 
     await expect(newBinMarshall.validate(pkg)).rejects.toThrow(
       'New binaries detected for test-pkg@1.0.1'
@@ -188,7 +188,7 @@ describe('NewBinMarshall', () => {
       '1.0.1': { bin: { 'old-cli': 'old.js' } }
     }
     packageRepoUtilsMock.getPackageInfo.mockResolvedValue(mockPackageInfo('test-pkg', versions))
-    packageRepoUtilsMock.getSemVer.mockImplementation(async (name, version) => version)
+    packageRepoUtilsMock.parsePackageVersion.mockImplementation((version) => ({ version }))
 
     await expect(newBinMarshall.validate(pkg)).resolves.toBeUndefined()
     expect(newBinMarshall.ctx.marshalls.newBin.warnings).toHaveLength(0)
@@ -205,7 +205,7 @@ describe('NewBinMarshall', () => {
       '1.0.1': { bin: { 'test-pkg': 'cli.js' } }
     }
     packageRepoUtilsMock.getPackageInfo.mockResolvedValue(mockPackageInfo('test-pkg', versions))
-    packageRepoUtilsMock.getSemVer.mockImplementation(async (name, version) => version)
+    packageRepoUtilsMock.parsePackageVersion.mockImplementation((version) => ({ version }))
 
     await expect(newBinMarshall.validate(pkg)).resolves.toBeUndefined()
     expect(newBinMarshall.ctx.marshalls.newBin.warnings).toHaveLength(0)
@@ -222,7 +222,7 @@ describe('NewBinMarshall', () => {
       '1.0.1': { bin: 'cli.js' } // Normalized: { 'test-pkg': 'cli.js' }
     }
     packageRepoUtilsMock.getPackageInfo.mockResolvedValue(mockPackageInfo('test-pkg', versions))
-    packageRepoUtilsMock.getSemVer.mockImplementation(async (name, version) => version)
+    packageRepoUtilsMock.parsePackageVersion.mockImplementation((version) => ({ version }))
 
     await expect(newBinMarshall.validate(pkg)).resolves.toBeUndefined()
     expect(newBinMarshall.ctx.marshalls.newBin.warnings).toHaveLength(0)
@@ -240,11 +240,7 @@ describe('NewBinMarshall', () => {
     }
     const mockPkgInfo = mockPackageInfo('test-pkg', versions)
     packageRepoUtilsMock.getPackageInfo.mockResolvedValue(mockPkgInfo)
-    // Mock getSemVer to resolve 'latest' to '1.0.1'
-    packageRepoUtilsMock.getSemVer.mockImplementation(async (name, version) => {
-      if (version === 'latest') return '1.0.1'
-      return version
-    })
+    // The 'latest' tag will be resolved using dist-tags in the mock data
 
     await expect(newBinMarshall.validate(pkg)).rejects.toThrow(
       'New binaries detected for test-pkg@latest'
@@ -265,7 +261,7 @@ describe('NewBinMarshall', () => {
       packageString: 'test-pkg@1.0.0'
     }
     packageRepoUtilsMock.getPackageInfo.mockResolvedValue(null) // Simulate failed fetch
-    packageRepoUtilsMock.getSemVer.mockImplementation(async (name, version) => version)
+    packageRepoUtilsMock.parsePackageVersion.mockImplementation((version) => ({ version }))
 
     await expect(newBinMarshall.validate(pkg)).resolves.toBeUndefined()
     expect(newBinMarshall.ctx.marshalls.newBin.warnings).toHaveLength(0)
@@ -279,7 +275,7 @@ describe('NewBinMarshall', () => {
     }
     const versions = { '1.0.0': { bin: 'cli.js' } }
     packageRepoUtilsMock.getPackageInfo.mockResolvedValue(mockPackageInfo('test-pkg', versions))
-    packageRepoUtilsMock.getSemVer.mockResolvedValue(null) // Simulate tag not resolving
+    packageRepoUtilsMock.parsePackageVersion.mockReturnValue(null) // Simulate version not resolving
 
     await expect(newBinMarshall.validate(pkg)).resolves.toBeUndefined()
     expect(newBinMarshall.ctx.marshalls.newBin.warnings).toHaveLength(0)
@@ -296,7 +292,7 @@ describe('NewBinMarshall', () => {
       '1.0.1': { bin: { 'old-cli': 'old.js', 'new-cli-1': 'new1.js', 'new-cli-2': 'new2.js' } }
     }
     packageRepoUtilsMock.getPackageInfo.mockResolvedValue(mockPackageInfo('test-pkg', versions))
-    packageRepoUtilsMock.getSemVer.mockImplementation(async (name, version) => version)
+    packageRepoUtilsMock.parsePackageVersion.mockImplementation((version) => ({ version }))
 
     await expect(newBinMarshall.validate(pkg)).rejects.toThrow(
       'New binaries detected for test-pkg@1.0.1'
@@ -321,7 +317,7 @@ describe('NewBinMarshall', () => {
       '1.0.1': { bin: null } // No bin in new version
     }
     packageRepoUtilsMock.getPackageInfo.mockResolvedValue(mockPackageInfo('test-pkg', versions))
-    packageRepoUtilsMock.getSemVer.mockImplementation(async (name, version) => version)
+    packageRepoUtilsMock.parsePackageVersion.mockImplementation((version) => ({ version }))
 
     await expect(newBinMarshall.validate(pkg)).resolves.toBeUndefined()
     expect(newBinMarshall.ctx.marshalls.newBin.warnings).toHaveLength(0)
@@ -345,7 +341,7 @@ describe('NewBinMarshall', () => {
     const mockPkgData = mockPackageInfo(actualPackageName, versions) // mockPackageInfo uses the name for versions too
 
     packageRepoUtilsMock.getPackageInfo.mockResolvedValue(mockPkgData)
-    packageRepoUtilsMock.getSemVer.mockImplementation(async (name, version) => version)
+    packageRepoUtilsMock.parsePackageVersion.mockImplementation((version) => ({ version }))
 
     await expect(newBinMarshall.validate(pkg)).rejects.toThrow(
       `New binaries detected for ${pkg.packageString}`
@@ -373,7 +369,7 @@ describe('NewBinMarshall', () => {
     mockPkgData.versions['1.0.1'].name = ''
 
     packageRepoUtilsMock.getPackageInfo.mockResolvedValue(mockPkgData)
-    packageRepoUtilsMock.getSemVer.mockImplementation(async (name, version) => version)
+    packageRepoUtilsMock.parsePackageVersion.mockImplementation((version) => ({ version }))
 
     await expect(newBinMarshall.validate(pkg)).rejects.toThrow(
       'New binaries detected for fallback-pkg@1.0.1'
@@ -400,7 +396,7 @@ describe('NewBinMarshall', () => {
     mockPkgData.versions['1.0.0'].name = undefined
 
     packageRepoUtilsMock.getPackageInfo.mockResolvedValue(mockPkgData)
-    packageRepoUtilsMock.getSemVer.mockImplementation(async (name, version) => version)
+    packageRepoUtilsMock.parsePackageVersion.mockImplementation((version) => ({ version }))
 
     await expect(newBinMarshall.validate(pkg)).rejects.toThrow(
       'New binaries detected for fallback-pkg@1.0.1'
@@ -427,7 +423,7 @@ describe('NewBinMarshall', () => {
     mockPkgData.versions['1.0.1'].name = ''
 
     packageRepoUtilsMock.getPackageInfo.mockResolvedValue(mockPkgData)
-    packageRepoUtilsMock.getSemVer.mockImplementation(async (name, version) => version)
+    packageRepoUtilsMock.parsePackageVersion.mockImplementation((version) => ({ version }))
 
     await expect(newBinMarshall.validate(pkg)).rejects.toThrow(
       'New binaries detected for double-fallback-pkg@1.0.1'

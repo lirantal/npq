@@ -19,12 +19,15 @@ describe('Version Maturity Marshall', () => {
       packageRepoUtils: {
         getPackageInfo: () => {
           return Promise.resolve({
+            'dist-tags': {
+              latest: '1.0.0'
+            },
             time: {
               '1.0.0': hoursAgo.toISOString()
             }
           })
         },
-        getSemVer: () => Promise.resolve('1.0.0')
+        parsePackageVersion: (version) => ({ version })
       }
     })
 
@@ -46,12 +49,15 @@ describe('Version Maturity Marshall', () => {
       packageRepoUtils: {
         getPackageInfo: () => {
           return Promise.resolve({
+            'dist-tags': {
+              latest: '1.0.0'
+            },
             time: {
               '1.0.0': daysAgo.toISOString()
             }
           })
         },
-        getSemVer: () => Promise.resolve('1.0.0')
+        parsePackageVersion: (version) => ({ version })
       }
     })
 
@@ -73,12 +79,15 @@ describe('Version Maturity Marshall', () => {
       packageRepoUtils: {
         getPackageInfo: () => {
           return Promise.resolve({
+            'dist-tags': {
+              latest: '1.0.0'
+            },
             time: {
               '1.0.0': oneDayAgo.toISOString()
             }
           })
         },
-        getSemVer: () => Promise.resolve('1.0.0')
+        parsePackageVersion: (version) => ({ version })
       }
     })
 
@@ -100,12 +109,15 @@ describe('Version Maturity Marshall', () => {
       packageRepoUtils: {
         getPackageInfo: () => {
           return Promise.resolve({
+            'dist-tags': {
+              latest: '1.0.0'
+            },
             time: {
               '1.0.0': weekAgo.toISOString()
             }
           })
         },
-        getSemVer: () => Promise.resolve('1.0.0')
+        parsePackageVersion: (version) => ({ version })
       }
     })
 
@@ -143,12 +155,15 @@ describe('Version Maturity Marshall', () => {
       packageRepoUtils: {
         getPackageInfo: () => {
           return Promise.resolve({
+            'dist-tags': {
+              latest: '1.0.0'
+            },
             time: {
               '2.0.0': new Date().toISOString()
             }
           })
         },
-        getSemVer: () => Promise.resolve('1.0.0')
+        parsePackageVersion: (version) => ({ version })
       }
     })
 
@@ -168,17 +183,15 @@ describe('Version Maturity Marshall', () => {
       packageRepoUtils: {
         getPackageInfo: () => {
           return Promise.resolve({
+            'dist-tags': {
+              latest: '1.2.3'
+            },
             time: {
               '1.2.3': daysAgo.toISOString()
             }
           })
         },
-        getSemVer: (packageName, packageVersion) => {
-          if (packageVersion === 'latest') {
-            return Promise.resolve('1.2.3')
-          }
-          return Promise.resolve(packageVersion)
-        }
+        parsePackageVersion: (version) => ({ version })
       }
     })
 
