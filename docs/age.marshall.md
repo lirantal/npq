@@ -108,9 +108,10 @@ The marshall handles several edge cases:
 - **AC3**: Packages created more than 22 days ago MUST NOT trigger an error
 
 #### ✅ Threshold Boundary Testing  
-- **AC4**: Packages created 21 days, 23 hours, 59 minutes, 59 seconds ago MUST trigger an error
+- **AC4**: Packages created just within the threshold (22 days - 1 second) MUST trigger an error
 - **AC5**: Packages created exactly at 22-day boundary MUST NOT trigger an error
 - **AC6**: Date calculations MUST use millisecond precision to prevent off-by-one errors
+- **AC7**: Boundary tests MUST use deterministic timing (mocked Date.now) to prevent CI flakiness
 
 #### ✅ Abandoned Package Detection
 - **AC7**: Packages with versions older than 365 days MUST trigger a warning
@@ -200,6 +201,17 @@ The test suite covers:
 ### Test Coverage: 96.87%
 
 The comprehensive test suite ensures robust behavior across all scenarios and prevents regression of the critical date calculation bug.
+
+### CI Test Reliability
+
+**Issue**: Initial boundary tests failed intermittently in CI due to microsecond-level timing differences between test execution and marshall validation.
+
+**Solution**: Implemented deterministic testing using:
+1. **Mocked Date.now()** for precise boundary tests
+2. **Larger time margins** (1 second vs 1 millisecond) to avoid race conditions  
+3. **Fixed reference times** to eliminate timing variability
+
+This ensures tests are reliable across different CI environments and execution speeds.
 
 ## Security Implications
 
