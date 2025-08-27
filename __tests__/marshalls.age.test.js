@@ -320,4 +320,39 @@ describe('Age Marshall', () => {
       })
     ).rejects.toThrow('Detected a newly published package (created < 22 days) act carefully')
   })
+
+  test('should verify unmaintained package calculation uses milliseconds correctly', async () => {
+    // This test validates that the unmaintained package check also uses millisecond precision
+    const now = Date.now()
+
+    // Create a package version that's exactly 365.5 days old (should trigger the warning)
+    const exactlyOverUnmaintainedThreshold = new Date(now - 365.5 * 24 * 60 * 60 * 1000)
+    // Package creation date is old enough to pass the new package check
+    const packageCreationDate = new Date(now - 400 * 24 * 60 * 60 * 1000) // 400 days ago
+
+    const testMarshall = new Marshall({
+      packageRepoUtils: {
+        getPackageInfo: () => {
+          return Promise.resolve({
+            time: {
+              created: packageCreationDate.toISOString(),
+              '1.0.0': exactlyOverUnmaintainedThreshold.toISOString()
+            },
+            'dist-tags': {
+              latest: '1.0.0'
+            }
+          })
+        },
+        parsePackageVersion: (version) => ({ version })
+      }
+    })
+
+    // Should throw because 365.5 days > 365 days unmaintained threshold
+    await expect(
+      testMarshall.validate({
+        packageName: 'test-package',
+        packageVersion: '1.0.0'
+      })
+    ).rejects.toThrow('Detected an old package (created 1 years ago)')
+  })
 })

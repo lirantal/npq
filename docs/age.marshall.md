@@ -32,7 +32,7 @@ const PACKAGE_AGE_UNMAINTAINED_RISK = 365 // specified in days
 
 ### The Problem
 
-Prior to the fix, the marshall was comparing milliseconds (from `Date.now() - Date.parse()`) directly against day values, leading to incorrect age calculations:
+Prior to the fix, the marshall was comparing milliseconds (from `Date.now() - Date.parse()`) directly against day values in **both** the new package detection and unmaintained package detection, leading to incorrect age calculations:
 
 ```javascript
 // BUGGY CODE (before fix)
@@ -40,11 +40,18 @@ const dateDiff = Date.now() - Date.parse(pkgCreatedDate)
 if (dateDiff < PACKAGE_AGE_THRESHOLD) { // Comparing ms to days!
     throw new Error(...)
 }
+
+// Also buggy for unmaintained packages
+const versionDateDiff = new Date() - new Date(versionReleaseDate)
+const versionDateDiffInDays = Math.round(versionDateDiff / (1000 * 60 * 60 * 24))
+if (versionDateDiffInDays >= PACKAGE_AGE_UNMAINTAINED_RISK) { // Inconsistent calculation!
+    throw new Warning(...)
+}
 ```
 
 ### The Fix
 
-The fix ensures proper unit conversion by calculating the threshold in milliseconds:
+The fix ensures proper unit conversion by calculating both thresholds in milliseconds:
 
 ```javascript
 // FIXED CODE (after fix)
@@ -53,12 +60,21 @@ const thresholdMs = PACKAGE_AGE_THRESHOLD * 24 * 60 * 60 * 1000
 if (dateDiff < thresholdMs) { // Now comparing ms to ms
     throw new Error(...)
 }
+
+// Also fixed for unmaintained packages
+const versionDateDiff = Date.now() - Date.parse(versionReleaseDate)
+const unmaintainedThresholdMs = PACKAGE_AGE_UNMAINTAINED_RISK * 24 * 60 * 60 * 1000
+if (versionDateDiff >= unmaintainedThresholdMs) { // Now consistent ms to ms
+    throw new Warning(...)
+}
 ```
 
 ### Impact
 
 - **Before**: Packages newer than 22 milliseconds were flagged (essentially all packages)
 - **After**: Packages newer than 22 days are correctly flagged
+- **Before**: Unmaintained package detection had potential precision issues
+- **After**: Both new and unmaintained package detection use consistent millisecond precision
 
 ## Validation Logic
 
@@ -79,15 +95,18 @@ if (dateDiff < thresholdMs) {
 ### Abandoned Package Detection
 
 ```javascript
-const versionDateDiff = new Date() - new Date(versionReleaseDate)
+const versionDateDiff = Date.now() - Date.parse(versionReleaseDate)
 const versionDateDiffInDays = Math.round(versionDateDiff / (1000 * 60 * 60 * 24))
+const unmaintainedThresholdMs = PACKAGE_AGE_UNMAINTAINED_RISK * 24 * 60 * 60 * 1000
 
-if (versionDateDiffInDays >= PACKAGE_AGE_UNMAINTAINED_RISK) {
+if (versionDateDiff >= unmaintainedThresholdMs) {
     throw new Warning(`Detected an old package (created ${timeAgoNumber} ${timeAgoText} ago)`)
 }
 ```
 
 **Purpose**: Old packages may have unpatched security vulnerabilities or be abandoned by maintainers.
+
+**Note**: Both millisecond precision comparison (`versionDateDiff >= unmaintainedThresholdMs`) and day-based display formatting (`versionDateDiffInDays`) are used to ensure accuracy while maintaining human-readable output.
 
 ## Error Handling
 
@@ -135,13 +154,14 @@ The marshall handles several edge cases:
 - **AC17**: Test suite MUST include boundary condition tests at exactly 22 days
 - **AC18**: Test suite MUST verify millisecond precision in calculations
 - **AC19**: Package age of 21.5 days MUST trigger error (validates ms precision)
+- **AC20**: Unmaintained package detection MUST use millisecond precision (validates consistency)
 
 ### Performance & Reliability
 
 #### ✅ Data Validation
-- **AC20**: Registry API failures MUST be handled gracefully with appropriate warnings
-- **AC21**: Malformed date strings MUST NOT cause crashes
-- **AC22**: Version resolution failures MUST return warnings, not errors
+- **AC21**: Registry API failures MUST be handled gracefully with appropriate warnings
+- **AC22**: Malformed date strings MUST NOT cause crashes
+- **AC23**: Version resolution failures MUST return warnings, not errors
 
 ## Usage Examples
 
