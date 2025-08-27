@@ -1,8 +1,17 @@
 'use strict'
 
 const Marshall = require('../lib/marshalls/age.marshall')
+const FIXED_NOW = new Date('2025-01-01T00:00:00.000Z')
 
 describe('Age Marshall', () => {
+  beforeAll(() => {
+    jest.useFakeTimers().setSystemTime(FIXED_NOW)
+  })
+
+  afterAll(() => {
+    jest.useRealTimers()
+  })
+
   test('should have the correct title', () => {
     const testMarshall = new Marshall({
       packageRepoUtils: null
