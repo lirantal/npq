@@ -342,8 +342,8 @@ describe('cliPrompt', () => {
 
       await promise
 
-      // Should write initial message with starting number
-      expect(mockWrite).toHaveBeenCalledWith('Testing in 3')
+      // Should write initial message with starting number and instruction
+      expect(mockWrite).toHaveBeenCalledWith("Testing in 3 (press 'y' to proceed)")
     })
 
     test('should handle single digit countdown correctly', async () => {
@@ -358,8 +358,8 @@ describe('cliPrompt', () => {
 
       await promise
 
-      // Should write initial message
-      expect(mockWrite).toHaveBeenCalledWith('Starting in 2')
+      // Should write initial message with instruction
+      expect(mockWrite).toHaveBeenCalledWith("Starting in 2 (press 'y' to proceed)")
     })
 
     test('should handle double digit to single digit countdown with padding', async () => {
@@ -374,8 +374,8 @@ describe('cliPrompt', () => {
 
       await promise
 
-      // Should write initial message with double digit
-      expect(mockWrite).toHaveBeenCalledWith('Waiting 10')
+      // Should write initial message with double digit and instruction
+      expect(mockWrite).toHaveBeenCalledWith("Waiting 10 (press 'y' to proceed)")
     }, 15000) // 15 second timeout
 
     test('should call console.log at the end', async () => {
@@ -392,7 +392,8 @@ describe('cliPrompt', () => {
 
       await promise
 
-      expect(mockConsoleLog).toHaveBeenCalledWith()
+      // Should only call console.log at the end with empty line (no separate instruction line)
+      expect(mockConsoleLog).toHaveBeenCalledWith('')
       mockConsoleLog.mockRestore()
     })
 
@@ -450,6 +451,61 @@ describe('cliPrompt', () => {
         jest.runAllTimers()
 
         await expect(promise).rejects.toThrow('Operation aborted by user')
+      } finally {
+        // Restore timers and original methods
+        jest.useRealTimers()
+        process.stdin.isTTY = originalIsTTY
+        process.stdin.setRawMode = originalSetRawMode
+        process.stdin.resume = originalResume
+        process.stdin.pause = originalPause
+        process.stdin.on = originalOn
+        process.stdin.removeListener = originalRemoveListener
+      }
+    }, 10000)
+
+    test('should handle "y" key to proceed immediately during countdown', async () => {
+      // Use fake timers for this test
+      jest.useFakeTimers()
+
+      // Mock process.stdin for this test
+      const originalIsTTY = process.stdin.isTTY
+      const originalSetRawMode = process.stdin.setRawMode
+      const originalResume = process.stdin.resume
+      const originalPause = process.stdin.pause
+      const originalOn = process.stdin.on
+      const originalRemoveListener = process.stdin.removeListener
+
+      let dataListener = null
+
+      process.stdin.isTTY = true
+      process.stdin.setRawMode = jest.fn()
+      process.stdin.resume = jest.fn()
+      process.stdin.pause = jest.fn()
+      process.stdin.on = jest.fn((event, listener) => {
+        if (event === 'data') {
+          dataListener = listener
+        }
+      })
+      process.stdin.removeListener = jest.fn()
+
+      try {
+        const promise = autoContinue({ name: 'test', message: 'Testing... ', timeInSeconds: 10 })
+
+        // Advance timers a bit to let the function start
+        jest.advanceTimersByTime(100)
+
+        // Simulate "y" keypress (ASCII 121)
+        if (dataListener) {
+          const yKey = Buffer.from([121])
+          dataListener(yKey)
+        }
+
+        // Fast-forward remaining timers
+        jest.runAllTimers()
+
+        const result = await promise
+
+        expect(result).toEqual({ test: true })
       } finally {
         // Restore timers and original methods
         jest.useRealTimers()
