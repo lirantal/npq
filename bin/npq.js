@@ -126,8 +126,18 @@ Promise.resolve()
     }
   })
   .catch((error) => {
+    // Ensure errorCode is always a number
+    let errorCode = -1
+    if (typeof error.code === 'number') {
+      errorCode = error.code
+    } else if (error.code === 'ABORT_ERR') {
+      errorCode = 1
+    } else if (error.code === 'USER_ABORT') {
+      errorCode = error.exitCode || 1
+    }
+
     CliParser.exit({
-      errorCode: error.code || -1,
+      errorCode,
       message: error.message || 'An error occurred',
       spinner
     })
