@@ -407,6 +407,60 @@ describe('cliPrompt', () => {
       // Should handle undefined name gracefully
       expect(result).toEqual({ undefined: true })
     }, 10000) // 10 second timeout
+
+    test('should handle Ctrl+C during autoContinue countdown', async () => {
+      // Use fake timers for this test
+      jest.useFakeTimers()
+
+      // Mock process.stdin for this test
+      const originalIsTTY = process.stdin.isTTY
+      const originalSetRawMode = process.stdin.setRawMode
+      const originalResume = process.stdin.resume
+      const originalPause = process.stdin.pause
+      const originalOn = process.stdin.on
+      const originalRemoveListener = process.stdin.removeListener
+
+      let dataListener = null
+
+      process.stdin.isTTY = true
+      process.stdin.setRawMode = jest.fn()
+      process.stdin.resume = jest.fn()
+      process.stdin.pause = jest.fn()
+      process.stdin.on = jest.fn((event, listener) => {
+        if (event === 'data') {
+          dataListener = listener
+        }
+      })
+      process.stdin.removeListener = jest.fn()
+
+      try {
+        const promise = autoContinue({ name: 'test', message: 'Testing... ', timeInSeconds: 3 })
+
+        // Advance timers a bit to let the function start
+        jest.advanceTimersByTime(100)
+
+        // Simulate Ctrl+C keypress
+        if (dataListener) {
+          // Simulate Ctrl+C (ASCII 3)
+          const ctrlC = Buffer.from([3])
+          dataListener(ctrlC)
+        }
+
+        // Fast-forward remaining timers
+        jest.runAllTimers()
+
+        await expect(promise).rejects.toThrow('Operation aborted by user')
+      } finally {
+        // Restore timers and original methods
+        jest.useRealTimers()
+        process.stdin.isTTY = originalIsTTY
+        process.stdin.setRawMode = originalSetRawMode
+        process.stdin.resume = originalResume
+        process.stdin.pause = originalPause
+        process.stdin.on = originalOn
+        process.stdin.removeListener = originalRemoveListener
+      }
+    }, 10000)
   })
 
   describe('error handling', () => {
