@@ -411,8 +411,6 @@ describe('cliPrompt', () => {
 
   describe('error handling', () => {
     test('should handle ABORT_ERR gracefully when user presses Ctrl+C', async () => {
-      const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation(() => {})
-
       // Simulate the ABORT_ERR that readline throws on Ctrl+C
       const abortError = new Error('The operation was aborted')
       abortError.code = 'ABORT_ERR'
@@ -427,9 +425,7 @@ describe('cliPrompt', () => {
         expect(error.exitCode).toBe(1)
       }
 
-      expect(mockConsoleLog).toHaveBeenCalledWith('\nOperation aborted.')
-
-      mockConsoleLog.mockRestore()
+      // No longer expecting console.log since message handling moved to CLI layer
     })
 
     test('should re-throw non-ABORT_ERR errors', async () => {
