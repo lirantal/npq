@@ -53,6 +53,12 @@ npm install -g npq
 
 *Note: we recommend installing with `npm` rather than `yarn`. That way, `npq` can automatically install shell aliases for you.*
 
+You can also install `npq` via [Homebrew](https://brew.sh) on macOS or Linux:
+
+```bash
+brew install npq
+```
+
 ## Usage
 
 ### Install packages with npq
