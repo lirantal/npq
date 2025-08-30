@@ -37,7 +37,7 @@ describe('Version Maturity Marshall', () => {
         packageVersion: '1.0.0'
       })
     ).rejects.toThrow(
-      'Detected a recently published version (published 2 hours ago) - consider waiting for community review'
+      'Detected a recently published version: published 2 hours ago. Consider waiting for community review.'
     )
   })
 
@@ -67,7 +67,7 @@ describe('Version Maturity Marshall', () => {
         packageVersion: '1.0.0'
       })
     ).rejects.toThrow(
-      'Detected a recently published version (published 3 days ago) - consider waiting for community review'
+      'Detected a recently published version: published 3 days ago. Consider waiting for community review.'
     )
   })
 
@@ -97,7 +97,7 @@ describe('Version Maturity Marshall', () => {
         packageVersion: '1.0.0'
       })
     ).rejects.toThrow(
-      'Detected a recently published version (published 1 day ago) - consider waiting for community review'
+      'Detected a recently published version: published 1 day ago. Consider waiting for community review.'
     )
   })
 
@@ -201,7 +201,7 @@ describe('Version Maturity Marshall', () => {
         packageVersion: 'latest'
       })
     ).rejects.toThrow(
-      'Detected a recently published version (published 2 days ago) - consider waiting for community review'
+      'Detected a recently published version: published 2 days ago. Consider waiting for community review.'
     )
   })
 })

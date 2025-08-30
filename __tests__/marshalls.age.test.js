@@ -46,7 +46,7 @@ describe('Age Marshall', () => {
         packageName: 'test-package',
         packageVersion: '1.0.0'
       })
-    ).rejects.toThrow('Detected a newly published package (created < 22 days) act carefully')
+    ).rejects.toThrow('Detected a newly published package: created < 22 days. Act carefully')
   })
 
   test('should throw error for package created just within threshold boundary (22 days - 1 second)', async () => {
@@ -76,7 +76,7 @@ describe('Age Marshall', () => {
         packageName: 'test-package',
         packageVersion: '1.0.0'
       })
-    ).rejects.toThrow('Detected a newly published package (created < 22 days) act carefully')
+    ).rejects.toThrow('Detected a newly published package: created < 22 days. Act carefully')
   })
 
   test('should handle exact millisecond boundary calculation correctly', async () => {
@@ -132,7 +132,7 @@ describe('Age Marshall', () => {
           packageName: 'test-package-under',
           packageVersion: '1.0.0'
         })
-      ).rejects.toThrow('Detected a newly published package (created < 22 days) act carefully')
+      ).rejects.toThrow('Detected a newly published package: created < 22 days. Act carefully')
     } finally {
       // Restore original Date.now
       Date.now = originalNow
@@ -225,7 +225,7 @@ describe('Age Marshall', () => {
         packageName: 'test-package',
         packageVersion: '1.0.0'
       })
-    ).rejects.toThrow('Detected an old package (created 1 years ago)')
+    ).rejects.toThrow('Detected an old package: created 1 years ago')
   })
 
   test('should throw warning when package data is missing time.created', async () => {
@@ -297,7 +297,7 @@ describe('Age Marshall', () => {
         packageName: 'test-package',
         packageVersion: '1.0.0'
       })
-    ).rejects.toThrow('Detected a newly published package (created < 22 days) act carefully')
+    ).rejects.toThrow('Detected a newly published package: created < 22 days. Act carefully')
   })
 
   test('should handle edge case of package created in the future (clock skew)', async () => {
@@ -327,7 +327,7 @@ describe('Age Marshall', () => {
         packageName: 'test-package',
         packageVersion: '1.0.0'
       })
-    ).rejects.toThrow('Detected a newly published package (created < 22 days) act carefully')
+    ).rejects.toThrow('Detected a newly published package: created < 22 days. Act carefully')
   })
 
   test('should verify unmaintained package calculation uses milliseconds correctly', async () => {
@@ -362,6 +362,6 @@ describe('Age Marshall', () => {
         packageName: 'test-package',
         packageVersion: '1.0.0'
       })
-    ).rejects.toThrow('Detected an old package (created 1 years ago)')
+    ).rejects.toThrow('Detected an old package: created 1 years ago')
   })
 })
