@@ -11,7 +11,8 @@ describe('Downloads Marshall', () => {
     const marshall = new Marshall({ packageRepoUtils: mockPackageRepoUtils })
     const pkg = { packageName: 'test-package' }
 
-    await expect(marshall.validate(pkg)).rejects.toThrow(Warning)
-    await expect(marshall.validate(pkg)).rejects.toThrow('8,354 downloads last month')
+    const p = marshall.validate(pkg)
+    await expect(p).rejects.toThrow(Warning)
+    await expect(p).rejects.toThrow('8,354 downloads last month')
   })
 })
