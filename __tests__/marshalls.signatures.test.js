@@ -1,12 +1,9 @@
 'use strict'
 
-// Mock npm-registry-fetch instead of pacote
-jest.mock('npm-registry-fetch', () => {
-  return jest.fn()
-})
+// Mock fetch for testing
+global.fetch = jest.fn()
 
 const SignaturesMarshall = require('../lib/marshalls/signatures.marshall')
-const fetch = require('npm-registry-fetch')
 
 describe('Signature test suites', () => {
   beforeEach(() => {
@@ -31,6 +28,7 @@ describe('Signature test suites', () => {
   test('should successfully validate a package with correct signature', async () => {
     // Mock the response from fetch for registry keys
     const mockKeysResponse = {
+      ok: true,
       json: jest.fn().mockResolvedValue({
         keys: [
           {
@@ -45,6 +43,7 @@ describe('Signature test suites', () => {
 
     // Mock package manifest response
     const mockPackageResponse = {
+      ok: true,
       json: jest.fn().mockResolvedValue({
         'dist-tags': { latest: '1.0.0' },
         time: { '1.0.0': '2023-01-01T00:00:00.000Z' },
@@ -69,9 +68,10 @@ describe('Signature test suites', () => {
       })
     }
 
-    global.fetch = jest.fn().mockResolvedValueOnce(mockKeysResponse) // First call for registry keys
-
-    fetch.mockResolvedValueOnce(mockPackageResponse) // Second call for package manifest
+    global.fetch = jest
+      .fn()
+      .mockResolvedValueOnce(mockKeysResponse) // First call for registry keys
+      .mockResolvedValueOnce(mockPackageResponse) // Second call for package manifest
 
     const testMarshall = new SignaturesMarshall({
       packageRepoUtils: {
@@ -101,13 +101,17 @@ describe('Signature test suites', () => {
     // Assert that the fetch method is called with the correct URL for keys
     expect(global.fetch).toHaveBeenCalledWith('https://registry.npmjs.org/-/npm/v1/keys')
 
-    // Assert that npm-registry-fetch is called for the package manifest
-    expect(fetch).toHaveBeenCalledWith('https://registry.npmjs.org/packageName', expect.any(Object))
+    // Assert that fetch is called for the package manifest
+    expect(global.fetch).toHaveBeenCalledWith(
+      'https://registry.npmjs.org/packageName',
+      expect.any(Object)
+    )
   })
 
   test('should throw an error if keys dont match and manifest() throws an error', async () => {
     // Mock the response from fetch for keys
     const mockKeysResponse = {
+      ok: true,
       json: jest.fn().mockResolvedValue({
         keys: [
           {
@@ -119,10 +123,10 @@ describe('Signature test suites', () => {
       })
     }
 
-    global.fetch = jest.fn().mockResolvedValueOnce(mockKeysResponse)
-
-    // Mock npm-registry-fetch to throw an error
-    fetch.mockRejectedValue(new Error('mocked manifest error'))
+    global.fetch = jest
+      .fn()
+      .mockResolvedValueOnce(mockKeysResponse)
+      .mockRejectedValueOnce(new Error('Failed to fetch package manifest: 404 Not Found'))
 
     const testMarshall = new SignaturesMarshall({
       packageRepoUtils: {
@@ -140,7 +144,9 @@ describe('Signature test suites', () => {
       packageVersion: '1.0.0'
     }
 
-    // We assert that the validate method throws an error containing the mocked error
-    await expect(testMarshall.validate(pkg)).rejects.toThrow('mocked manifest error')
+    // We assert that the validate method throws an error
+    await expect(testMarshall.validate(pkg)).rejects.toThrow(
+      'Unable to verify package signature on registry'
+    )
   })
 })

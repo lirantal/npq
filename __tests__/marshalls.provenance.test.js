@@ -1,12 +1,9 @@
 'use strict'
 
-// Mock npm-registry-fetch instead of pacote
-jest.mock('npm-registry-fetch', () => {
-  return jest.fn()
-})
+// Mock fetch for testing
+global.fetch = jest.fn()
 
 const ProvenanceMarshall = require('../lib/marshalls/provenance.marshall')
-const fetch = require('npm-registry-fetch')
 
 describe('Provenance test suites', () => {
   beforeEach(() => {
@@ -31,6 +28,7 @@ describe('Provenance test suites', () => {
   test('should successfully validate a package with verified attestations', async () => {
     // Mock the response from fetch for registry keys
     const mockKeysResponse = {
+      ok: true,
       json: jest.fn().mockResolvedValue({
         keys: [
           {
@@ -44,6 +42,7 @@ describe('Provenance test suites', () => {
 
     // Mock package manifest response with attestations
     const mockPackageResponse = {
+      ok: true,
       json: jest.fn().mockResolvedValue({
         'dist-tags': { latest: '1.0.0' },
         time: { '1.0.0': '2023-01-01T00:00:00.000Z' },
@@ -65,11 +64,12 @@ describe('Provenance test suites', () => {
       })
     }
 
-    global.fetch = jest.fn().mockResolvedValueOnce(mockKeysResponse) // First call for registry keys
-
-    fetch
+    global.fetch = jest
+      .fn()
+      .mockResolvedValueOnce(mockKeysResponse) // First call for registry keys
       .mockResolvedValueOnce(mockPackageResponse) // Second call for package manifest
       .mockResolvedValueOnce({
+        ok: true,
         // Third call for attestations
         json: jest.fn().mockResolvedValue({
           attestations: []
@@ -107,13 +107,17 @@ describe('Provenance test suites', () => {
     // Assert that the fetch method is called with the correct URL for keys
     expect(global.fetch).toHaveBeenCalledWith('https://registry.npmjs.org/-/npm/v1/keys')
 
-    // Assert that npm-registry-fetch is called for the package manifest
-    expect(fetch).toHaveBeenCalledWith('https://registry.npmjs.org/packageName', expect.any(Object))
+    // Assert that fetch is called for the package manifest
+    expect(global.fetch).toHaveBeenCalledWith(
+      'https://registry.npmjs.org/packageName',
+      expect.any(Object)
+    )
   })
 
   test('should throw an error if attestation verification fails and manifest() throws an error', async () => {
     // Mock the response from fetch for keys
     const mockKeysResponse = {
+      ok: true,
       json: jest.fn().mockResolvedValue({
         keys: [
           {
@@ -125,10 +129,10 @@ describe('Provenance test suites', () => {
       })
     }
 
-    global.fetch = jest.fn().mockResolvedValueOnce(mockKeysResponse)
-
-    // Mock npm-registry-fetch to throw an error
-    fetch.mockRejectedValue(new Error('mocked manifest error'))
+    global.fetch = jest
+      .fn()
+      .mockResolvedValueOnce(mockKeysResponse)
+      .mockRejectedValue(new Error('mocked manifest error'))
 
     const testMarshall = new ProvenanceMarshall({
       packageRepoUtils: {
@@ -156,6 +160,7 @@ describe('Provenance test suites', () => {
   test('should throw a warning if attestations cant be found for the package', async () => {
     // Mock the response from fetch for registry keys
     const mockKeysResponse = {
+      ok: true,
       json: jest.fn().mockResolvedValue({
         keys: [
           {
@@ -169,6 +174,7 @@ describe('Provenance test suites', () => {
 
     // Mock package manifest response without attestations
     const mockPackageResponse = {
+      ok: true,
       json: jest.fn().mockResolvedValue({
         'dist-tags': { latest: '1.0.0' },
         time: { '1.0.0': '2023-01-01T00:00:00.000Z' },
@@ -187,8 +193,10 @@ describe('Provenance test suites', () => {
       })
     }
 
-    global.fetch = jest.fn().mockResolvedValueOnce(mockKeysResponse)
-    fetch.mockResolvedValueOnce(mockPackageResponse)
+    global.fetch = jest
+      .fn()
+      .mockResolvedValueOnce(mockKeysResponse)
+      .mockResolvedValueOnce(mockPackageResponse)
 
     const testMarshall = new ProvenanceMarshall({
       packageRepoUtils: {
