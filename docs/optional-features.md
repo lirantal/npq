@@ -18,7 +18,7 @@ export MARSHALL_DISABLE_PROVENANCE=true
 npq install express
 ```
 
-### Disable Both (Minimal Installation)
+### Disable Both Features
 ```bash
 export MARSHALL_DISABLE_SIGNATURES=true
 export MARSHALL_DISABLE_PROVENANCE=true

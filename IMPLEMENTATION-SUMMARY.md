@@ -21,7 +21,7 @@ This implementation successfully addresses the feature request to "explore dropp
 # Full security (default, no change)
 npq install express
 
-# Reduced dependencies (new capability)
+# Disable security features if needed
 export MARSHALL_DISABLE_SIGNATURES=true
 export MARSHALL_DISABLE_PROVENANCE=true
 npq install express
