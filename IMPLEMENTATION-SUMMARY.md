@@ -60,11 +60,7 @@ npq install express
 
 ## 🎉 Benefits Delivered
 
-### For Size-Conscious Users
-- **Smaller installation**: Save ~2.2 MiB
-- **Fewer dependencies**: Save ~128 transitive packages  
-- **Faster installs**: Reduced download time
-- **Simpler audit**: Fewer packages to security scan
+
 
 ### For Security-Conscious Users
 - **No changes**: Full security by default

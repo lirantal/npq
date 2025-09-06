@@ -131,18 +131,6 @@ Example, to disable the Snyk vulnerability marshall:
 MARSHALL_DISABLE_SNYK=1 npq install express
 ```
 
-#### Reducing Installation Size
-
-For a lighter npq installation, you can disable the advanced security features that require heavy dependencies:
-
-```bash
-# Disable both signature and provenance verification to eliminate pacote dependency
-export MARSHALL_DISABLE_SIGNATURES=true
-export MARSHALL_DISABLE_PROVENANCE=true
-npq install express
-```
-
-This reduces the installation by ~2.2 MiB and ~128 transitive dependencies. See [docs/optional-features.md](docs/optional-features.md) for security trade-offs.
 
 #### Available Marshall Environment Variables
 

@@ -32,12 +32,7 @@ When these features are disabled:
 - **Signatures**: npq will not verify npm registry signatures for packages
 - **Provenance**: npq will not verify package build provenance attestations
 
-## Dependency Impact
 
-Disabling these features allows npq to run without the `pacote` dependency, which significantly reduces:
-- Installation size (saves ~2.2 MiB)
-- Number of transitive dependencies (saves ~128 dependencies)
-- Installation time
 
 ## Security Trade-offs
 
