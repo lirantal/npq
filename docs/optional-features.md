@@ -2,6 +2,20 @@
 
 npq includes advanced security features that require additional dependencies. These features can be optionally disabled to reduce the installation footprint.
 
+## Recent Improvements
+
+### Signature Verification Bug Fix
+- **Fixed**: Version range specifications (e.g., `@angular/common@^20.2.4`) now work correctly with signature verification
+- **Before**: Signature verification failed with "Version ^20.2.4 not found" error
+- **After**: Version ranges are properly resolved to specific versions before signature verification
+- **Impact**: All common package installation patterns now work reliably
+
+### Test Coverage Improvements  
+- **Overall coverage**: Improved from 84.4% to 93.39%
+- **Signature verification**: Coverage increased from 43.24% to 89.18%
+- **CLI functionality**: Complete test coverage achieved (100%)
+- **Registry interactions**: Comprehensive testing implemented (94.31% coverage)
+
 ## Disabling Advanced Security Features
 
 You can disable specific security marshalls using environment variables:

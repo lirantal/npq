@@ -68,6 +68,30 @@ describe('Signature test suites', () => {
       })
     }
 
+    // Mock the full package data that getPackageInfo will return
+    const mockPackageData = {
+      'dist-tags': { latest: '1.0.0' },
+      time: { '1.0.0': '2023-01-01T00:00:00.000Z' },
+      versions: {
+        '1.0.0': {
+          name: 'packageName',
+          version: '1.0.0',
+          _id: 'packageName@1.0.0',
+          _time: '2023-01-01T00:00:00.000Z',
+          dist: {
+            integrity: 'sha512-test123',
+            tarball: 'https://registry.npmjs.org/packageName/-/packageName-1.0.0.tgz',
+            signatures: [
+              {
+                keyid: 'SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA',
+                sig: 'MEUCIBVRSfI...'
+              }
+            ]
+          }
+        }
+      }
+    }
+
     global.fetch = jest
       .fn()
       .mockResolvedValueOnce(mockKeysResponse) // First call for registry keys
@@ -75,11 +99,8 @@ describe('Signature test suites', () => {
 
     const testMarshall = new SignaturesMarshall({
       packageRepoUtils: {
-        getPackageInfo: (pkgInfo) => {
-          return new Promise((resolve) => {
-            resolve(pkgInfo)
-          })
-        }
+        getPackageInfo: jest.fn().mockResolvedValue(mockPackageData),
+        parsePackageVersion: jest.fn().mockReturnValue('1.0.0')
       }
     })
 
@@ -97,6 +118,9 @@ describe('Signature test suites', () => {
       // We expect crypto verification to fail with mock data, but not network errors
       expect(error.message).not.toContain('Version 1.0.0 not found')
     }
+
+    // Assert that getPackageInfo is called for version resolution
+    expect(testMarshall.packageRepoUtils.getPackageInfo).toHaveBeenCalledWith('packageName')
 
     // Assert that the fetch method is called with the correct URL for keys
     expect(global.fetch).toHaveBeenCalledWith('https://registry.npmjs.org/-/npm/v1/keys')
@@ -130,11 +154,11 @@ describe('Signature test suites', () => {
 
     const testMarshall = new SignaturesMarshall({
       packageRepoUtils: {
-        getPackageInfo: (pkgInfo) => {
-          return new Promise((resolve) => {
-            resolve(pkgInfo)
-          })
-        }
+        getPackageInfo: jest.fn().mockResolvedValue({
+          'dist-tags': { latest: '1.0.0' },
+          versions: { '1.0.0': {} }
+        }),
+        parsePackageVersion: jest.fn().mockReturnValue('1.0.0')
       }
     })
 
