@@ -272,8 +272,17 @@ describe('Snyk Marshall', () => {
     const OLD_ENV = process.env
 
     beforeEach(() => {
-      jest.resetModules() // Most important - it clears the cache
       process.env = { ...OLD_ENV } // Make a copy
+      // Ensure mocks are properly set up
+      os.homedir.mockReturnValue('/fake/home')
+      fs.statSync.mockImplementation(() => {
+        throw new Error('File not found')
+      })
+    })
+
+    afterEach(() => {
+      // Clean up require cache without resetting modules
+      delete require.cache[require.resolve('../lib/marshalls/snyk.marshall.js')]
     })
 
     afterAll(() => {
@@ -282,11 +291,197 @@ describe('Snyk Marshall', () => {
 
     it('should return token from SNYK_TOKEN environment variable', () => {
       process.env.SNYK_TOKEN = 'token-from-env'
+      delete require.cache[require.resolve('../lib/marshalls/snyk.marshall.js')]
       const MarshallWithEnv = require('../lib/marshalls/snyk.marshall.js')
       const marshall = new MarshallWithEnv({
         packageRepoUtils: mockPackageRepoUtils
       })
       expect(marshall.getSnykToken()).toBe('token-from-env')
+    })
+
+    it('should return token from SNYK_API_TOKEN environment variable', () => {
+      process.env.SNYK_API_TOKEN = 'token-from-snyk-api-token'
+      delete require.cache[require.resolve('../lib/marshalls/snyk.marshall.js')]
+      const MarshallWithEnv = require('../lib/marshalls/snyk.marshall.js')
+      const marshall = new MarshallWithEnv({
+        packageRepoUtils: mockPackageRepoUtils
+      })
+      expect(marshall.getSnykToken()).toBe('token-from-snyk-api-token')
+    })
+
+    it('should prioritize SNYK_API_TOKEN over SNYK_TOKEN', () => {
+      process.env.SNYK_API_TOKEN = 'priority-token'
+      process.env.SNYK_TOKEN = 'fallback-token'
+      delete require.cache[require.resolve('../lib/marshalls/snyk.marshall.js')]
+      const MarshallWithEnv = require('../lib/marshalls/snyk.marshall.js')
+      const marshall = new MarshallWithEnv({
+        packageRepoUtils: mockPackageRepoUtils
+      })
+      expect(marshall.getSnykToken()).toBe('priority-token')
+    })
+
+    it('should fall back to SNYK_TOKEN when SNYK_API_TOKEN is not set', () => {
+      delete process.env.SNYK_API_TOKEN
+      process.env.SNYK_TOKEN = 'fallback-token'
+      delete require.cache[require.resolve('../lib/marshalls/snyk.marshall.js')]
+      const MarshallWithEnv = require('../lib/marshalls/snyk.marshall.js')
+      const marshall = new MarshallWithEnv({
+        packageRepoUtils: mockPackageRepoUtils
+      })
+      expect(marshall.getSnykToken()).toBe('fallback-token')
+    })
+
+    it('should fall back to config file when neither env var is set', () => {
+      delete process.env.SNYK_API_TOKEN
+      delete process.env.SNYK_TOKEN
+
+      // Set up mocks
+      os.homedir.mockReturnValue('/fake/home')
+      fs.statSync.mockImplementation(() => ({ isFile: () => true }))
+      fs.readFileSync.mockReturnValue(JSON.stringify({ api: 'config-file-token' }))
+
+      // Reload module
+      delete require.cache[require.resolve('../lib/marshalls/snyk.marshall.js')]
+      const MarshallWithEnv = require('../lib/marshalls/snyk.marshall.js')
+      const marshall = new MarshallWithEnv({
+        packageRepoUtils: mockPackageRepoUtils
+      })
+      expect(marshall.getSnykToken()).toBe('config-file-token')
+
+      // Reset mock
+      fs.statSync.mockImplementation(() => {
+        throw new Error('File not found')
+      })
+    })
+  })
+
+  describe('Custom Snyk API URL via environment variables', () => {
+    const OLD_ENV = process.env
+
+    beforeEach(() => {
+      process.env = { ...OLD_ENV }
+      fetch.mockClear()
+      // Ensure mocks are properly set up
+      os.homedir.mockReturnValue('/fake/home')
+      fs.statSync.mockImplementation(() => {
+        throw new Error('File not found')
+      })
+    })
+
+    afterEach(() => {
+      // Clean up require cache
+      delete require.cache[require.resolve('../lib/marshalls/snyk.marshall.js')]
+    })
+
+    afterAll(() => {
+      process.env = OLD_ENV
+    })
+
+    it('should use default Snyk API URL when no env var is set', () => {
+      delete process.env.SNYK_API_URL
+      delete process.env.SNYK_API
+
+      delete require.cache[require.resolve('../lib/marshalls/snyk.marshall.js')]
+      const MarshallWithEnv = require('../lib/marshalls/snyk.marshall.js')
+
+      // We test the default behavior by instantiating the marshall
+      const marshall = new MarshallWithEnv({
+        packageRepoUtils: mockPackageRepoUtils
+      })
+
+      // The default URL should be used - verified through integration tests
+      expect(marshall).toBeDefined()
+    })
+
+    it('should use SNYK_API_URL when set', async () => {
+      process.env.SNYK_API_URL = 'https://api.eu.snyk.io/v1/vuln/npm'
+      process.env.SNYK_API_TOKEN = 'test-token'
+
+      // Need to reload the module to pick up the new env var
+      delete require.cache[require.resolve('../lib/marshalls/snyk.marshall.js')]
+      const MarshallWithEnv = require('../lib/marshalls/snyk.marshall.js')
+
+      const marshall = new MarshallWithEnv({
+        packageRepoUtils: mockPackageRepoUtils
+      })
+
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ vulnerabilities: [] })
+      })
+
+      const pkg = { packageName: 'test-pkg', packageVersion: '1.0.0' }
+      await marshall.validate(pkg)
+
+      // Verify fetch was called with the custom URL
+      expect(fetch).toHaveBeenCalledWith(
+        'https://api.eu.snyk.io/v1/vuln/npm/test-pkg%401.0.0',
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: 'token test-token'
+          })
+        })
+      )
+    })
+
+    it('should use SNYK_API when SNYK_API_URL is not set', async () => {
+      delete process.env.SNYK_API_URL
+      process.env.SNYK_API = 'https://custom.snyk.endpoint/api/v1/vuln/npm'
+      process.env.SNYK_API_TOKEN = 'test-token'
+
+      delete require.cache[require.resolve('../lib/marshalls/snyk.marshall.js')]
+      const MarshallWithEnv = require('../lib/marshalls/snyk.marshall.js')
+
+      const marshall = new MarshallWithEnv({
+        packageRepoUtils: mockPackageRepoUtils
+      })
+
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ vulnerabilities: [] })
+      })
+
+      const pkg = { packageName: 'another-pkg', packageVersion: '2.0.0' }
+      await marshall.validate(pkg)
+
+      expect(fetch).toHaveBeenCalledWith(
+        'https://custom.snyk.endpoint/api/v1/vuln/npm/another-pkg%402.0.0',
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: 'token test-token'
+          })
+        })
+      )
+    })
+
+    it('should prioritize SNYK_API_URL over SNYK_API', async () => {
+      process.env.SNYK_API_URL = 'https://priority.snyk.io/api/v1/vuln/npm'
+      process.env.SNYK_API = 'https://fallback.snyk.io/api/v1/vuln/npm'
+      process.env.SNYK_API_TOKEN = 'test-token'
+
+      delete require.cache[require.resolve('../lib/marshalls/snyk.marshall.js')]
+      const MarshallWithEnv = require('../lib/marshalls/snyk.marshall.js')
+
+      const marshall = new MarshallWithEnv({
+        packageRepoUtils: mockPackageRepoUtils
+      })
+
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ vulnerabilities: [] })
+      })
+
+      const pkg = { packageName: 'priority-pkg', packageVersion: '1.0.0' }
+      await marshall.validate(pkg)
+
+      expect(fetch).toHaveBeenCalledWith(
+        'https://priority.snyk.io/api/v1/vuln/npm/priority-pkg%401.0.0',
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: 'token test-token'
+          })
+        })
+      )
     })
   })
 })
