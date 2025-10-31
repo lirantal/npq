@@ -44,7 +44,7 @@
   },
   "dependencies": {
     "fastest-levenshtein": "^1.0.16",
-    "npm-package-arg": "^13.0.0",
+    "npm-package-arg": "^13.0.1",
     "semver": "^7.7.2",
     "sigstore": "^3.1.0",
     "ssri": "^12.0.0"
