@@ -106,6 +106,14 @@ Promise.resolve()
     } else {
       if (result && result.countWarnings > 0) {
         console.log()
+        // Check if auto-continue is disabled via CLI flag or environment variable
+        if (cliArgs.disableAutoContinue) {
+          return cliPrompt.prompt({
+            name: 'install',
+            message: 'Continue install ?',
+            default: false
+          })
+        }
         return cliPrompt.autoContinue({
           name: 'install',
           message: 'Auto-continue with install in... ',
