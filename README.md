@@ -37,9 +37,11 @@ npq install express
 * Package has a LICENSE file
 * Package has pre/post install scripts
 
-If npq is prompted to continue with the install, it simply hands over the actual package install job to the package manager (npm by default, or as specified via the `NPQ_PKG_MGR` environment variable). Note that if a package manager is specified via command-line options, it will override the `NPQ_PKG_MGR` environment variable.
+**IMPORTANT**: npq by default uses an auto-continue mode when warnings are detected (no errors), waiting 15 seconds before proceeding with the installation. You can disable this behavior via the `--disable-auto-continue` CLI flag or the `NPQ_DISABLE_AUTO_CONTINUE=true` environment variable to enforce a strict review and security hardened installs. See [the auto-continue documentation](docs/feature/auto-continue.md) for more details.
 
-DISCLAIMER: there's no guaranteed absolute safety; a malicious or vulnerable package could still exist that has no security vulnerabilities publicly disclosed and passes npq's checks.
+When npq completes its signal checks it hands over the actual package install job to the package manager (npm by default, or as specified via the `NPQ_PKG_MGR` environment variable).
+
+**DISCLAIMER**: there's no guaranteed absolute safety; a malicious or vulnerable package could still exist that has no security vulnerabilities publicly disclosed and passes npq's checks.
 
 ## Demo
 
@@ -164,6 +166,31 @@ npq install express --dry-run
 ```sh
 npq install express --plain
 ```
+
+### Disable auto-continue countdown
+
+By default, when npq detects only warnings (no errors), it automatically proceeds with installation after a 15-second countdown. To disable this behavior and always require explicit confirmation:
+
+**Using the CLI flag:**
+
+```sh
+npq install express --disable-auto-continue
+```
+
+**Using the environment variable:**
+
+```sh
+export NPQ_DISABLE_AUTO_CONTINUE=true
+npq install express
+```
+
+Or set it permanently in your shell profile (`.bashrc`, `.zshrc`, etc.):
+
+```sh
+export NPQ_DISABLE_AUTO_CONTINUE=true
+```
+
+When auto-continue is disabled, npq will always prompt for explicit confirmation before proceeding with installation, even when only warnings are detected.
 
 ## Learn Node.js Security
 

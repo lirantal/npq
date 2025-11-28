@@ -12,7 +12,40 @@ The auto-continue feature activates when:
 
 1. **Security audit completes** with warnings but **no errors**
 2. **At least one warning** is found (if no warnings, installation proceeds immediately)
-3. User has **not explicitly chosen** to always prompt for confirmation
+3. User has **not explicitly disabled** auto-continue via configuration
+
+## Disabling Auto-Continue
+
+To disable the auto-continue countdown and always require explicit confirmation:
+
+### Using the CLI Flag
+
+```bash
+npq install express --disable-auto-continue
+```
+
+### Using the Environment Variable
+
+```bash
+export NPQ_DISABLE_AUTO_CONTINUE=true
+npq install express
+```
+
+Or for a single command:
+
+```bash
+NPQ_DISABLE_AUTO_CONTINUE=true npq install express
+```
+
+### Permanent Configuration
+
+Add to your shell profile (`.bashrc`, `.zshrc`, etc.) to make the setting permanent:
+
+```bash
+export NPQ_DISABLE_AUTO_CONTINUE=true
+```
+
+When auto-continue is disabled, npq will prompt with a standard yes/no confirmation instead of the countdown timer, giving you full control over when packages are installed.
 
 ## User Experience
 

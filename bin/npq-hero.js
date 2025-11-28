@@ -14,6 +14,7 @@ const { Spinner } = require('../lib/helpers/cliSpinner')
 const { promiseThrottleHelper } = require('../lib/helpers/promiseThrottler')
 
 const PACKAGE_MANAGER_TOOL = process.env.NPQ_PKG_MGR
+const DISABLE_AUTO_CONTINUE = process.env.NPQ_DISABLE_AUTO_CONTINUE === 'true'
 
 const cliArgs = CliParser.parseArgsMinimal()
 
@@ -80,6 +81,14 @@ marshall
     } else {
       if (result && result.countWarnings > 0) {
         console.log()
+        // Check if auto-continue is disabled via environment variable
+        if (DISABLE_AUTO_CONTINUE) {
+          return cliPrompt.prompt({
+            name: 'install',
+            message: 'Continue install ?',
+            default: false
+          })
+        }
         return cliPrompt.autoContinue({
           name: 'install',
           message: 'Auto-continue with install in... ',

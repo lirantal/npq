@@ -227,7 +227,8 @@ describe('CliParser', () => {
         packages: ['express@latest', 'lodash@latest'],
         packageManager: 'yarn',
         dryRun: true,
-        plain: true
+        plain: true,
+        disableAutoContinue: false
       })
     })
 
@@ -293,6 +294,66 @@ describe('CliParser', () => {
 
       expect(result.dryRun).toBe(false)
       expect(result.plain).toBe(false)
+      expect(result.disableAutoContinue).toBe(false)
+    })
+
+    test('should set disableAutoContinue to true when --disable-auto-continue flag is provided', () => {
+      mockParseArgs.mockReturnValue({
+        values: { 'disable-auto-continue': true },
+        positionals: ['install', 'express']
+      })
+
+      const result = CliParser.parseArgsFull()
+
+      expect(result.disableAutoContinue).toBe(true)
+    })
+
+    test('should set disableAutoContinue to true when NPQ_DISABLE_AUTO_CONTINUE env var is true', () => {
+      process.env.NPQ_DISABLE_AUTO_CONTINUE = 'true'
+
+      mockParseArgs.mockReturnValue({
+        values: {},
+        positionals: ['install', 'express']
+      })
+
+      const result = CliParser.parseArgsFull()
+
+      expect(result.disableAutoContinue).toBe(true)
+
+      // Cleanup
+      delete process.env.NPQ_DISABLE_AUTO_CONTINUE
+    })
+
+    test('should not set disableAutoContinue when NPQ_DISABLE_AUTO_CONTINUE is not "true"', () => {
+      process.env.NPQ_DISABLE_AUTO_CONTINUE = 'false'
+
+      mockParseArgs.mockReturnValue({
+        values: {},
+        positionals: ['install', 'express']
+      })
+
+      const result = CliParser.parseArgsFull()
+
+      expect(result.disableAutoContinue).toBe(false)
+
+      // Cleanup
+      delete process.env.NPQ_DISABLE_AUTO_CONTINUE
+    })
+
+    test('should prefer CLI flag over environment variable for disableAutoContinue', () => {
+      process.env.NPQ_DISABLE_AUTO_CONTINUE = 'false'
+
+      mockParseArgs.mockReturnValue({
+        values: { 'disable-auto-continue': true },
+        positionals: ['install', 'express']
+      })
+
+      const result = CliParser.parseArgsFull()
+
+      expect(result.disableAutoContinue).toBe(true)
+
+      // Cleanup
+      delete process.env.NPQ_DISABLE_AUTO_CONTINUE
     })
   })
 
@@ -376,7 +437,30 @@ describe('CliParser', () => {
         packages: ['express@latest'],
         packageManager: 'yarn',
         dryRun: true,
-        plain: true
+        plain: true,
+        disableAutoContinue: false
+      })
+    })
+
+    test('should handle all command line flags together including disable-auto-continue', () => {
+      mockParseArgs.mockReturnValue({
+        values: {
+          'dry-run': true,
+          plain: true,
+          packageManager: 'yarn',
+          'disable-auto-continue': true
+        },
+        positionals: ['install', 'express']
+      })
+
+      const result = CliParser.parseArgsFull()
+
+      expect(result).toEqual({
+        packages: ['express@latest'],
+        packageManager: 'yarn',
+        dryRun: true,
+        plain: true,
+        disableAutoContinue: true
       })
     })
   })
