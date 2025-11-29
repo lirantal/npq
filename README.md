@@ -83,10 +83,22 @@ If you're using `yarn`, `pnpm`, or generally want to explicitly tell npq which p
 
 Examples:
 
-**Using yarn:**
+**Using yarn 1.x:**
 
 ```bash
 alias yarn="NPQ_PKG_MGR=yarn npq-hero"
+```
+
+**Using yarn 4.x:**
+
+```bash
+NPQ_PKG_MGR=yarn yarn run npq-hero
+```
+
+or 
+
+```bash
+NPQ_PKG_MGR=yarn yarn exec npq-hero
 ```
 
 **Using pnpm:**
@@ -212,17 +224,21 @@ When auto-continue is disabled, npq will always prompt for explicit confirmation
 
 ## FAQ
 
-1. **Can I use NPQ without having npm or yarn?**
+1. **What is the difference between `npq` and `npq-hero`?**
+
+* `npq` is meant to be its own stand-alone CLI so it has command line flags like `--dry-run` and others (see `npq --help`). However, when you want to alias the `npm` CLI to NPQ you should use `npq-hero` as the executable of the alias to npm (e.g: `alias npm=npq`), which means `npq-hero` can't have its own command-line flags because they could conflict with the `npm` executable.
+
+2. **Can I use NPQ without having npm or yarn?**
 
 * NPQ will audit a package for possible security issues, but it isn't a replacement for npm or yarn. When you choose to continue installing the package, it will offload the installation process to your choice of either npm or yarn.
 
-2. **How is NPQ different from npm audit?**
+3. **How is NPQ different from npm audit?**
 
 * `npm install` will install a module even if it has vulnerabilities; NPQ will display the issues detected, and prompt the user for confirmation on whether to proceed installing it.
 * NPQ will run synthetic checks, called [marshalls](https://github.com/lirantal/npq#marshalls), on the characteristics of a module, such as whether the module you are going to install has a `pre-install` script which can be potentially harmful for your system and prompt you whether to install it. Whereas `npm audit` will not perform any such checks, and only consults a vulnerability database for known security issues.
 * `npm audit` is closer in functionality to what Snyk does, rather than what NPQ does.
 
-3. **Do I require a Snyk API key in order to use NPQ?**
+4. **Do I require a Snyk API key in order to use NPQ?**
 
 * It's not required. If NPQ is unable to detect a Snyk API key for the user running NPQ, then it will skip the database vulnerabilities check. We do, however, greatly encourage you to use Snyk, and connect it with NPQ for broader security.
 
