@@ -7,6 +7,16 @@ npq allows you to audit npm packages _before_ you install them
 [![Known Vulnerabilities](https://snyk.io/test/github/lirantal/npq/badge.svg)](https://snyk.io/test/github/lirantal/npq)
 [![Security Responsible Disclosure](https://img.shields.io/badge/Security-Responsible%20Disclosure-yellow)](SECURITY.md)
 
+TL;DR how to use npq:
+
+```sh
+$ npx npq install express --dry-run
+```
+
+_What it does: the `npx` tool downloads and execute `npq` package, runs an install check for the `express` package and `--dry-run` means npq exists regardless of success/errors_.
+
+Here's a screenshot of npq in action:
+
 ![npq demo screenshot](.github/npq.png)
 
 Media coverage about npq:
