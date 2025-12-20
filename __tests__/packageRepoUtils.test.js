@@ -394,7 +394,7 @@ describe('isGitHubRepoArchived', () => {
     )
 
     await expect(packageRepoUtils.isGitHubRepoArchived('owner', 'repo')).rejects.toThrow(
-      'GitHub API rate limit exceeded - deprecation marshall could not evaluate repository archive status'
+      'GitHub API rate limit exceeded - deprecation marshall could not evaluate repository archive status. Set GITHUB_TOKEN environment variable for higher rate limits.'
     )
   })
 
