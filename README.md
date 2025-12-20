@@ -133,7 +133,7 @@ Note: `npq` by default will offload all commands and their arguments to the `npm
 | version-maturity | Will show a warning if the specific version being installed was published less than 7 days ago | Helps identify recently published versions that may not have been reviewed by the community yet
 | newBin | Will show a warning if the package version being installed introduces a new command-line binary (via the `bin` field in `package.json`) that was not present in its previous version. | Helps identify potentially unexpected new executables being added to your `node_modules/.bin/` directory.
 | typosquatting | Will show a warning if the package name is similar to a popular package name, which could indicate a potential typosquatting attack. | Helps identify packages that may be trying to trick users into installing them by mimicking popular package names.
-| deprecation | Will show a warning if the package version being installed is deprecated. | Helps identify packages that are no longer maintained or recommended for use.
+| deprecation | Will show a warning if the package version is deprecated on npm or if its GitHub repository has been archived. | Helps identify packages that are no longer maintained or recommended for use. Set `GITHUB_TOKEN` environment variable for higher GitHub API rate limits.
 
 ### Disabling Marshalls
 

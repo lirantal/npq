@@ -251,3 +251,200 @@ test('repo utils resolves semver ranges with multiple versions', async () => {
     'Could not find dist-tag 10 for package @astrojs/vue'
   )
 })
+
+describe('extractGitHubRepoFromUrl', () => {
+  const packageRepoUtils = new PackageRepoUtils()
+
+  test('extracts owner and repo from git+https URL', () => {
+    const result = packageRepoUtils.extractGitHubRepoFromUrl(
+      'git+https://github.com/lirantal/npq.git'
+    )
+    expect(result).toEqual({ owner: 'lirantal', repo: 'npq' })
+  })
+
+  test('extracts owner and repo from https URL with .git', () => {
+    const result = packageRepoUtils.extractGitHubRepoFromUrl('https://github.com/owner/repo.git')
+    expect(result).toEqual({ owner: 'owner', repo: 'repo' })
+  })
+
+  test('extracts owner and repo from https URL without .git', () => {
+    const result = packageRepoUtils.extractGitHubRepoFromUrl('https://github.com/owner/repo')
+    expect(result).toEqual({ owner: 'owner', repo: 'repo' })
+  })
+
+  test('extracts owner and repo from git:// URL', () => {
+    const result = packageRepoUtils.extractGitHubRepoFromUrl('git://github.com/owner/repo.git')
+    expect(result).toEqual({ owner: 'owner', repo: 'repo' })
+  })
+
+  test('extracts owner and repo from git@ SSH URL', () => {
+    const result = packageRepoUtils.extractGitHubRepoFromUrl('git@github.com:owner/repo.git')
+    expect(result).toEqual({ owner: 'owner', repo: 'repo' })
+  })
+
+  test('handles owner/repo names with dots and hyphens', () => {
+    const result = packageRepoUtils.extractGitHubRepoFromUrl(
+      'git+https://github.com/some-org/my-package.js.git'
+    )
+    expect(result).toEqual({ owner: 'some-org', repo: 'my-package.js' })
+  })
+
+  test('returns null for GitLab URLs', () => {
+    const result = packageRepoUtils.extractGitHubRepoFromUrl(
+      'git+https://gitlab.com/owner/repo.git'
+    )
+    expect(result).toBeNull()
+  })
+
+  test('returns null for Bitbucket URLs', () => {
+    const result = packageRepoUtils.extractGitHubRepoFromUrl(
+      'git+https://bitbucket.org/owner/repo.git'
+    )
+    expect(result).toBeNull()
+  })
+
+  test('returns null for null input', () => {
+    const result = packageRepoUtils.extractGitHubRepoFromUrl(null)
+    expect(result).toBeNull()
+  })
+
+  test('returns null for undefined input', () => {
+    const result = packageRepoUtils.extractGitHubRepoFromUrl(undefined)
+    expect(result).toBeNull()
+  })
+
+  test('returns null for empty string', () => {
+    const result = packageRepoUtils.extractGitHubRepoFromUrl('')
+    expect(result).toBeNull()
+  })
+
+  test('returns null for non-string input', () => {
+    const result = packageRepoUtils.extractGitHubRepoFromUrl({ url: 'github.com/owner/repo' })
+    expect(result).toBeNull()
+  })
+})
+
+describe('isGitHubRepoArchived', () => {
+  const packageRepoUtils = new PackageRepoUtils()
+  const originalEnv = process.env
+
+  beforeEach(() => {
+    jest.resetModules()
+    process.env = { ...originalEnv }
+    delete process.env.GITHUB_TOKEN
+  })
+
+  afterEach(() => {
+    process.env = originalEnv
+  })
+
+  test('returns true when repository is archived', async () => {
+    fetch.mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ archived: true })
+      })
+    )
+
+    const result = await packageRepoUtils.isGitHubRepoArchived('owner', 'repo')
+    expect(result).toBe(true)
+    expect(fetch).toHaveBeenCalledWith('https://api.github.com/repos/owner/repo', {
+      headers: {
+        Accept: 'application/vnd.github.v3+json',
+        'User-Agent': 'npq-package-checker'
+      }
+    })
+  })
+
+  test('returns false when repository is not archived', async () => {
+    fetch.mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ archived: false })
+      })
+    )
+
+    const result = await packageRepoUtils.isGitHubRepoArchived('owner', 'repo')
+    expect(result).toBe(false)
+  })
+
+  test('returns false when repository is not found (404)', async () => {
+    fetch.mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: false,
+        status: 404
+      })
+    )
+
+    const result = await packageRepoUtils.isGitHubRepoArchived('owner', 'nonexistent')
+    expect(result).toBe(false)
+  })
+
+  test('throws error on rate limit (403 with x-ratelimit-remaining: 0)', async () => {
+    fetch.mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: false,
+        status: 403,
+        headers: {
+          get: (name) => (name === 'x-ratelimit-remaining' ? '0' : null)
+        }
+      })
+    )
+
+    await expect(packageRepoUtils.isGitHubRepoArchived('owner', 'repo')).rejects.toThrow(
+      'GitHub API rate limit exceeded - deprecation marshall could not evaluate repository archive status'
+    )
+  })
+
+  test('throws error on 403 without rate limit', async () => {
+    fetch.mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: false,
+        status: 403,
+        headers: {
+          get: () => null
+        }
+      })
+    )
+
+    await expect(packageRepoUtils.isGitHubRepoArchived('owner', 'repo')).rejects.toThrow(
+      'GitHub API access forbidden for owner/repo - deprecation marshall could not evaluate repository archive status'
+    )
+  })
+
+  test('throws error on other API errors', async () => {
+    fetch.mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: false,
+        status: 500
+      })
+    )
+
+    await expect(packageRepoUtils.isGitHubRepoArchived('owner', 'repo')).rejects.toThrow(
+      'GitHub API error (500) - deprecation marshall could not evaluate repository archive status'
+    )
+  })
+
+  test('uses GITHUB_TOKEN when available', async () => {
+    process.env.GITHUB_TOKEN = 'test-token'
+
+    fetch.mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ archived: false })
+      })
+    )
+
+    await packageRepoUtils.isGitHubRepoArchived('owner', 'repo')
+    expect(fetch).toHaveBeenCalledWith('https://api.github.com/repos/owner/repo', {
+      headers: {
+        Accept: 'application/vnd.github.v3+json',
+        'User-Agent': 'npq-package-checker',
+        Authorization: 'token test-token'
+      }
+    })
+  })
+})
