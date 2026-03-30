@@ -111,22 +111,30 @@ describe('PromiseThrottler', () => {
     })
 
     test('should not add extra delay if promise already took longer than minDelay', async () => {
-      const throttler = new PromiseThrottler()
-      throttler.configure(5, 50) // 50ms delay
+      jest.useFakeTimers({ now: Date.now() })
+      try {
+        const throttler = new PromiseThrottler()
+        throttler.configure(5, 50) // 50ms minDelay; work below takes 100ms fake time — no extra 50ms wait
 
-      const startTime = Date.now()
-      const slowPromise = jest
-        .fn()
-        .mockImplementation(
-          () => new Promise((resolve) => setTimeout(() => resolve('result'), 100))
-        )
+        const slowPromise = jest
+          .fn()
+          .mockImplementation(
+            () => new Promise((resolve) => setTimeout(() => resolve('result'), 100))
+          )
 
-      await throttler.throttle(slowPromise)
-      const endTime = Date.now()
+        const startedAt = jest.now()
+        const finished = throttler.throttle(slowPromise)
 
-      // Should be around 100ms (promise time) not 150ms (promise + delay)
-      expect(endTime - startTime).toBeLessThan(130)
-      expect(endTime - startTime).toBeGreaterThanOrEqual(100)
+        await Promise.resolve()
+        await jest.advanceTimersByTimeAsync(100)
+        await finished
+
+        // Work consumed 100ms fake time; throttler must not add minDelay on top (~150ms)
+        expect(jest.now() - startedAt).toBe(100)
+        expect(slowPromise).toHaveBeenCalledTimes(1)
+      } finally {
+        jest.useRealTimers()
+      }
     })
 
     test('should handle promise rejection', async () => {
