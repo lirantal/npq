@@ -92,16 +92,22 @@ describe('PromiseThrottler', () => {
     })
 
     test('should respect minimum delay between requests', async () => {
-      const throttler = new PromiseThrottler()
-      throttler.configure(5, 100) // 100ms delay
+      jest.useFakeTimers({ now: Date.now() })
+      try {
+        const throttler = new PromiseThrottler()
+        throttler.configure(5, 100) // 100ms minDelay (fake timers: avoids wall-clock flake on some Node versions)
 
-      const startTime = Date.now()
-      const mockPromise = jest.fn().mockResolvedValue('result')
+        const mockPromise = jest.fn().mockResolvedValue('result')
+        const finished = throttler.throttle(mockPromise)
 
-      await throttler.throttle(mockPromise)
-      const endTime = Date.now()
+        await Promise.resolve()
+        await jest.advanceTimersByTimeAsync(100)
+        await finished
 
-      expect(endTime - startTime).toBeGreaterThanOrEqual(100)
+        expect(mockPromise).toHaveBeenCalledTimes(1)
+      } finally {
+        jest.useRealTimers()
+      }
     })
 
     test('should not add extra delay if promise already took longer than minDelay', async () => {
