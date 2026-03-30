@@ -1,0 +1,43 @@
+{
+    "name": "Project Devcontainer",
+    "image": "mcr.microsoft.com/devcontainers/typescript-node:24-trixie",
+    "features": {
+        "ghcr.io/devcontainers/features/python:1": {
+            "version": "3.12",
+            "installPythonDevDependencies": true
+        },
+        "ghcr.io/devcontainer-community/devcontainer-features/astral.sh-uv:1": {
+            "shellautocompletion": true
+        }
+    },
+    "mounts": [
+        "source=${localEnv:HOME}/.gitconfig,target=/home/node/.gitconfig,type=bind,consistency=cached",
+        // mount host user home directories for agents:
+        // "source=${localEnv:HOME}/.claude,target=/home/node/.claude,type=bind,consistency=cached",
+        // "source=${localEnv:HOME}/.gemini,target=/home/node/.claude,type=bind,consistency=cached",
+        // "source=${localEnv:HOME}/.codex,target=/home/node/.codex,type=bind,consistency=cached"
+    ],
+    // Initialize access to 1Password CLI in the container
+	// "initializeCommand": "echo OP_SERVICE_ACCOUNT_TOKEN=$(op read 'op://Private/1Password op CLI Service Account for DevContainers/password') > .env.development",
+	// "runArgs": [
+	// 	"--env-file",
+	// 	"${localWorkspaceFolder}/.env.development"
+	// ],
+    // --
+    "postCreateCommand": {
+        "git-setup": "git config --local commit.gpgsign false; git config --local core.pager \"less -R\";",
+        "pnpm-install": "[ -f package.json ] && pnpm install || true",
+        "post-create": "bash .devcontainer/post-create.sh"
+    },
+    "postStartCommand": {
+        // "rm-env-file": "if [ -n './.env.development' ]; then rm -f './.env.development'; fi;",
+        "start-dev": "[ -f package.json ] && pnpm run dev || true"
+    },
+    "remoteUser": "node",
+    "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+    "containerEnv": {
+        "NODE_ENV": "development",
+        "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}",
+        "SNYK_TOKEN": "${localEnv:SNYK_TOKEN}"
+    }
+}
