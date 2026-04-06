@@ -44,13 +44,13 @@
   },
   "dependencies": {
     "npm-package-arg": "^13.0.2",
-    "semver": "^7.7.3",
-    "sigstore": "^4.0.0",
-    "ssri": "^12.0.0"
+    "semver": "^7.7.4",
+    "sigstore": "^4.1.0",
+    "ssri": "^13.0.1"
   },
   "devDependencies": {
-    "@commitlint/cli": "^19.8.1",
-    "@commitlint/config-angular": "^19.8.1",
+    "@commitlint/cli": "^20.5.0",
+    "@commitlint/config-angular": "^20.5.0",
     "@eslint/js": "^9.32.0",
     "commitizen": "^4.3.1",
     "cz-conventional-changelog": "^3.3.0",
@@ -59,9 +59,9 @@
     "eslint-plugin-security": "^3.0.1",
     "globals": "^16.3.0",
     "husky": "^9.1.7",
-    "jest": "^30.0.5",
-    "lint-staged": "^16.1.4",
-    "lockfile-lint": "^4.14.1",
+    "jest": "^30.3.0",
+    "lint-staged": "^16.4.0",
+    "lockfile-lint": "^5.0.0",
     "prettier": "^3.6.2"
   },
   "config": {
