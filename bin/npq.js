@@ -130,7 +130,12 @@ Promise.resolve()
       Object.prototype.hasOwnProperty.call(status, 'install') &&
       status.install === true
     ) {
-      pkgMgr.process(cliArgs.packageManager)
+      return pkgMgr.process(cliArgs.packageManager)
+    }
+  })
+  .then((exitCode) => {
+    if (typeof exitCode === 'number') {
+      process.exitCode = exitCode
     }
   })
   .catch((error) => {
