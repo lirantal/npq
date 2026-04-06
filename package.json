@@ -13,7 +13,6 @@
     "test": "jest",
     "build": "node scripts/build.js",
     "test:watch": "jest --watch",
-    "commit": "git-cz",
     "format": "prettier --config .prettierrc.js --write \"**/*.js\"",
     "semantic-release": "npx semantic-release",
     "#postinstall": "node scripts/postinstall.js",
@@ -49,11 +48,7 @@
     "ssri": "^13.0.1"
   },
   "devDependencies": {
-    "@commitlint/cli": "^20.5.0",
-    "@commitlint/config-angular": "^20.5.0",
     "@eslint/js": "^9.32.0",
-    "commitizen": "^4.3.1",
-    "cz-conventional-changelog": "^3.3.0",
     "eslint": "^9.32.0",
     "eslint-plugin-n": "^17.21.3",
     "eslint-plugin-security": "^3.0.1",
@@ -63,16 +58,6 @@
     "lint-staged": "^16.4.0",
     "lockfile-lint": "^5.0.0",
     "prettier": "^3.6.2"
-  },
-  "config": {
-    "commitizen": {
-      "path": "./node_modules/cz-conventional-changelog"
-    }
-  },
-  "commitlint": {
-    "extends": [
-      "@commitlint/config-angular"
-    ]
   },
   "lint-staged": {
     "**/*.js": [
