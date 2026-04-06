@@ -43,15 +43,18 @@ jest.mock('../lib/packageManager', () => ({
   process: jest.fn(() => Promise.resolve(mockPkgMgrProcessResolvedValue))
 }))
 
+const mockNpqCliArgs = {
+  packages: ['express'],
+  packageManager: 'npm',
+  dryRun: false,
+  plain: false,
+  disableAutoContinue: false,
+  installSubcommandExplicit: true
+}
+
 jest.mock('../lib/cli', () => ({
   CliParser: {
-    parseArgsFull: jest.fn().mockReturnValue({
-      packages: ['express'],
-      packageManager: 'npm',
-      dryRun: false,
-      plain: false,
-      disableAutoContinue: false
-    }),
+    parseArgsFull: jest.fn(),
     parseArgsMinimal: jest.fn().mockReturnValue({
       packages: []
     }),
@@ -71,14 +74,8 @@ describe('npq-hero exit code propagation', () => {
     process.exitCode = undefined
     mockPkgMgrProcessResolvedValue = 0
 
-    jest.mock('../lib/cli', () => ({
-      CliParser: {
-        parseArgsMinimal: jest.fn().mockReturnValue({
-          packages: []
-        }),
-        exit: jest.fn()
-      }
-    }))
+    const { CliParser } = require('../lib/cli')
+    CliParser.parseArgsMinimal.mockReturnValue({ packages: [] })
   })
 
   test('sets process.exitCode to 1 when package manager exits with code 1', async () => {
@@ -100,15 +97,6 @@ describe('npq-hero exit code propagation', () => {
   test('propagates non-zero exit code for non-install commands (silent mode)', async () => {
     mockPkgMgrProcessResolvedValue = 1
 
-    jest.mock('../lib/cli', () => ({
-      CliParser: {
-        parseArgsMinimal: jest.fn().mockReturnValue({
-          packages: []
-        }),
-        exit: jest.fn()
-      }
-    }))
-
     require('../bin/npq-hero.js')
     await flushPromises()
 
@@ -123,19 +111,11 @@ describe('npq exit code propagation', () => {
     mockProcessExit.mockClear()
     process.exitCode = undefined
     mockPkgMgrProcessResolvedValue = 0
+    mockNpqCliArgs.installSubcommandExplicit = true
+    mockNpqCliArgs.dryRun = false
 
-    jest.mock('../lib/cli', () => ({
-      CliParser: {
-        parseArgsFull: jest.fn().mockReturnValue({
-          packages: ['express'],
-          packageManager: 'npm',
-          dryRun: false,
-          plain: false,
-          disableAutoContinue: false
-        }),
-        exit: jest.fn()
-      }
-    }))
+    const { CliParser } = require('../lib/cli')
+    CliParser.parseArgsFull.mockImplementation(() => ({ ...mockNpqCliArgs }))
   })
 
   test('sets process.exitCode to 1 when package manager exits with code 1', async () => {
@@ -152,5 +132,31 @@ describe('npq exit code propagation', () => {
     await flushPromises()
 
     expect(process.exitCode).toBe(0)
+  })
+
+  test('does not invoke package manager when install subcommand is not explicit', async () => {
+    jest.resetModules()
+    jest.clearAllMocks()
+    mockProcessExit.mockClear()
+    process.exitCode = undefined
+
+    const { CliParser } = require('../lib/cli')
+    CliParser.parseArgsFull.mockImplementation(() => ({
+      packages: ['express'],
+      packageManager: 'npm',
+      dryRun: false,
+      plain: false,
+      disableAutoContinue: false,
+      installSubcommandExplicit: false
+    }))
+
+    const pkgMgr = require('../lib/packageManager')
+    pkgMgr.process.mockClear()
+
+    require('../bin/npq.js')
+    await flushPromises()
+
+    expect(pkgMgr.process).not.toHaveBeenCalled()
+    expect(CliParser.exit).toHaveBeenCalledWith(expect.objectContaining({ errorCode: 0 }))
   })
 })

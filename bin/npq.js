@@ -19,6 +19,7 @@ const { promiseThrottleHelper } = require('../lib/helpers/promiseThrottler')
 const debug = util.debuglog('npq')
 
 const cliArgs = CliParser.parseArgsFull()
+const auditOnly = cliArgs.dryRun || !cliArgs.installSubcommandExplicit
 const isInteractive = cliSupport.isInteractiveTerminal() && !cliArgs.plain
 const spinner = isInteractive ? new Spinner({ text: 'Initiating...' }) : null
 
@@ -89,11 +90,12 @@ Promise.resolve()
     return undefined
   })
   .then((result) => {
-    if (cliArgs.dryRun) {
+    if (auditOnly) {
       CliParser.exit({
         errorCode: 0,
         spinner
       })
+      return undefined
     }
 
     if (result && result.countErrors > 0) {
