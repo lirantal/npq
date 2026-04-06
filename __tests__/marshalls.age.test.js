@@ -1,11 +1,11 @@
 'use strict'
 
 const Marshall = require('../lib/marshalls/age.marshall')
-const FIXED_NOW = new Date('2025-01-01T00:00:00.000Z')
+const FIXED_NOW_MS = new Date('2025-01-01T00:00:00.000Z').getTime()
 
 describe('Age Marshall', () => {
   beforeAll(() => {
-    jest.useFakeTimers().setSystemTime(FIXED_NOW)
+    jest.useFakeTimers().setSystemTime(FIXED_NOW_MS)
   })
 
   afterAll(() => {
