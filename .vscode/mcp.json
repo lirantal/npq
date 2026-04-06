@@ -1,0 +1,28 @@
+{
+  "servers": {
+    "Snyk Security": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "snyk@latest",
+        "mcp",
+        "-t",
+        "stdio"
+      ]
+    },
+    "Node.js API Docs": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-nodejs-api-docs"
+      ]
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    }
+  }
+}
