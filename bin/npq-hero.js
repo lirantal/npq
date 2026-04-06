@@ -105,7 +105,12 @@ marshall
       Object.prototype.hasOwnProperty.call(status, 'install') &&
       status.install === true
     ) {
-      pkgMgr.process(PACKAGE_MANAGER_TOOL)
+      return pkgMgr.process(PACKAGE_MANAGER_TOOL)
+    }
+  })
+  .then((exitCode) => {
+    if (typeof exitCode === 'number') {
+      process.exitCode = exitCode
     }
   })
   .catch((error) => {

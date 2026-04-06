@@ -11,7 +11,11 @@ const childProcess = require('child_process')
 jest.mock('child_process', () => {
   return {
     spawn: jest.fn(() => {
-      return { pid: 12345 }
+      const { EventEmitter } = require('node:events')
+      const child = new EventEmitter()
+      child.pid = 12345
+      process.nextTick(() => child.emit('close', 0))
+      return child
     })
   }
 })
