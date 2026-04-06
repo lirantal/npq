@@ -179,6 +179,8 @@ Here are all the available environment variable names for disabling specific mar
 
 ### Run checks on package without installing it
 
+Running `npq` without an `install` / `i` / `add` subcommand (for example from a project directory with a `package.json`) audits dependencies only and does not run the package manager. The same applies to `npq <package>`: checks only, no install passthrough. Use `npq install …` when you want npq to hand off to npm (or `NPQ_PKG_MGR`) after the checks.
+
 ```sh
 npq install express --dry-run
 ```

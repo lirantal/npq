@@ -104,6 +104,20 @@ describe('CliParser', () => {
     })
   })
 
+  describe('isInstallSubcommand', () => {
+    test('returns true for install aliases', () => {
+      expect(CliParser.isInstallSubcommand('install')).toBe(true)
+      expect(CliParser.isInstallSubcommand('i')).toBe(true)
+      expect(CliParser.isInstallSubcommand('add')).toBe(true)
+      expect(CliParser.isInstallSubcommand('isntall')).toBe(true)
+    })
+
+    test('returns false for package names and other tokens', () => {
+      expect(CliParser.isInstallSubcommand('express')).toBe(false)
+      expect(CliParser.isInstallSubcommand('build')).toBe(false)
+    })
+  })
+
   describe('_extractPackagesFromPositionals', () => {
     test('should extract packages from install command', () => {
       const positionals = ['install', 'express', 'lodash@4.17.21']
@@ -228,7 +242,8 @@ describe('CliParser', () => {
         packageManager: 'yarn',
         dryRun: true,
         plain: true,
-        disableAutoContinue: false
+        disableAutoContinue: false,
+        installSubcommandExplicit: true
       })
     })
 
@@ -355,6 +370,42 @@ describe('CliParser', () => {
       // Cleanup
       delete process.env.NPQ_DISABLE_AUTO_CONTINUE
     })
+
+    test('should set installSubcommandExplicit false when no positionals', () => {
+      mockParseArgs.mockReturnValue({
+        values: {},
+        positionals: []
+      })
+
+      const result = CliParser.parseArgsFull()
+
+      expect(result.installSubcommandExplicit).toBe(false)
+    })
+
+    test('should set installSubcommandExplicit false when first token is a package name', () => {
+      mockParseArgs.mockReturnValue({
+        values: {},
+        positionals: ['express']
+      })
+
+      const result = CliParser.parseArgsFull()
+
+      expect(result.installSubcommandExplicit).toBe(false)
+    })
+
+    test('should set installSubcommandExplicit true when first token is install or i', () => {
+      mockParseArgs.mockReturnValue({
+        values: {},
+        positionals: ['install']
+      })
+      expect(CliParser.parseArgsFull().installSubcommandExplicit).toBe(true)
+
+      mockParseArgs.mockReturnValue({
+        values: {},
+        positionals: ['i', 'lodash']
+      })
+      expect(CliParser.parseArgsFull().installSubcommandExplicit).toBe(true)
+    })
   })
 
   describe('parseArgsMinimal', () => {
@@ -438,7 +489,8 @@ describe('CliParser', () => {
         packageManager: 'yarn',
         dryRun: true,
         plain: true,
-        disableAutoContinue: false
+        disableAutoContinue: false,
+        installSubcommandExplicit: true
       })
     })
 
@@ -460,7 +512,8 @@ describe('CliParser', () => {
         packageManager: 'yarn',
         dryRun: true,
         plain: true,
-        disableAutoContinue: true
+        disableAutoContinue: true,
+        installSubcommandExplicit: true
       })
     })
   })
