@@ -9,7 +9,7 @@
   "scripts": {
     "lint": "eslint && npm run lint:lockfile",
     "lint:lockfile": "lockfile-lint --path package-lock.json --type npm --validate-https --allowed-hosts npm npm",
-    "fix": "eslint --fix",
+    "lint:fix": "eslint --fix",
     "test": "jest",
     "build": "node scripts/build.js",
     "test:watch": "jest --watch",
