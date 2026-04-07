@@ -59,7 +59,7 @@ Infrastructure failures (for example, failing to fetch the packument or registry
 - **Provenance regression** and other hard failures that use **`Error`** contribute to **error** counts. In `npq install`, that typically means you are prompted to continue with **default “no”**.
 - Packages that **never** had provenance metadata on older versions still produce a **warning** when the target has no verifiable attestations (so benign packages are not escalated to the same severity).
 
-Malformed Sigstore checkpoints that npm acknowledges as false positives are still handled per [issue #329](https://github.com/lirantal/npq/issues/329).
+Malformed Sigstore checkpoints that npm acknowledges as false positives are still handled per [issue #329](https://github.com/lirantal/npq/issues/329): verification failure with that pattern causes `validate()` to **fulfill** with an empty result (no thrown warning), so installs are not blocked by that false positive.
 
 ## Disabling provenance checks
 
