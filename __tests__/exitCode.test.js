@@ -116,6 +116,9 @@ describe('npq exit code propagation', () => {
 
     const { CliParser } = require('../lib/cli')
     CliParser.parseArgsFull.mockImplementation(() => ({ ...mockNpqCliArgs }))
+
+    const { reportResults } = require('../lib/helpers/reportResults')
+    reportResults.mockReturnValue({ countErrors: 0, countWarnings: 0 })
   })
 
   test('sets process.exitCode to 1 when package manager exits with code 1', async () => {
@@ -158,5 +161,95 @@ describe('npq exit code propagation', () => {
 
     expect(pkgMgr.process).not.toHaveBeenCalled()
     expect(CliParser.exit).toHaveBeenCalledWith(expect.objectContaining({ errorCode: 0 }))
+  })
+
+  test('audit-only exits with code 1 when marshall reported errors', async () => {
+    jest.resetModules()
+    jest.clearAllMocks()
+    mockProcessExit.mockClear()
+    process.exitCode = undefined
+
+    const { CliParser } = require('../lib/cli')
+    CliParser.parseArgsFull.mockImplementation(() => ({
+      packages: ['express'],
+      packageManager: 'npm',
+      dryRun: false,
+      plain: false,
+      disableAutoContinue: false,
+      installSubcommandExplicit: false
+    }))
+
+    const { reportResults } = require('../lib/helpers/reportResults')
+    reportResults.mockReturnValue({
+      countErrors: 2,
+      countWarnings: 0,
+      resultsForPlainTextPrint: '',
+      summaryForPlainTextPrint: ''
+    })
+
+    require('../bin/npq.js')
+    await flushPromises()
+
+    expect(CliParser.exit).toHaveBeenCalledWith(expect.objectContaining({ errorCode: 1 }))
+  })
+
+  test('audit-only exits with code 1 when marshall reported warnings only', async () => {
+    jest.resetModules()
+    jest.clearAllMocks()
+    mockProcessExit.mockClear()
+    process.exitCode = undefined
+
+    const { CliParser } = require('../lib/cli')
+    CliParser.parseArgsFull.mockImplementation(() => ({
+      packages: ['express'],
+      packageManager: 'npm',
+      dryRun: false,
+      plain: false,
+      disableAutoContinue: false,
+      installSubcommandExplicit: false
+    }))
+
+    const { reportResults } = require('../lib/helpers/reportResults')
+    reportResults.mockReturnValue({
+      countErrors: 0,
+      countWarnings: 3,
+      resultsForPlainTextPrint: '',
+      summaryForPlainTextPrint: ''
+    })
+
+    require('../bin/npq.js')
+    await flushPromises()
+
+    expect(CliParser.exit).toHaveBeenCalledWith(expect.objectContaining({ errorCode: 1 }))
+  })
+
+  test('audit-only with --dry-run exits with code 1 when issues found', async () => {
+    jest.resetModules()
+    jest.clearAllMocks()
+    mockProcessExit.mockClear()
+    process.exitCode = undefined
+
+    const { CliParser } = require('../lib/cli')
+    CliParser.parseArgsFull.mockImplementation(() => ({
+      packages: ['express'],
+      packageManager: 'npm',
+      dryRun: true,
+      plain: false,
+      disableAutoContinue: false,
+      installSubcommandExplicit: true
+    }))
+
+    const { reportResults } = require('../lib/helpers/reportResults')
+    reportResults.mockReturnValue({
+      countErrors: 1,
+      countWarnings: 0,
+      resultsForPlainTextPrint: '',
+      summaryForPlainTextPrint: ''
+    })
+
+    require('../bin/npq.js')
+    await flushPromises()
+
+    expect(CliParser.exit).toHaveBeenCalledWith(expect.objectContaining({ errorCode: 1 }))
   })
 })

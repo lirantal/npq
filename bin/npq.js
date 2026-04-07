@@ -91,8 +91,9 @@ Promise.resolve()
   })
   .then((result) => {
     if (auditOnly) {
+      const auditFailed = result && (result.countErrors > 0 || result.countWarnings > 0)
       CliParser.exit({
-        errorCode: 0,
+        errorCode: auditFailed ? 1 : 0,
         spinner
       })
       return undefined
