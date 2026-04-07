@@ -3,12 +3,75 @@
 // Mock fetch for testing
 global.fetch = jest.fn()
 
+const NpmRegistry = require('../lib/helpers/npmRegistry')
 const ProvenanceMarshall = require('../lib/marshalls/provenance.marshall')
+const Warning = require('../lib/helpers/warning')
 
 describe('Provenance test suites', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     jest.resetAllMocks()
+    jest.restoreAllMocks()
+  })
+
+  test('returns _attestations when verifyAttestations resolves successfully', async () => {
+    const mockKeysResponse = {
+      ok: true,
+      json: jest.fn().mockResolvedValue({
+        keys: [
+          {
+            keyid: 'SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA',
+            key: 'publicKey1',
+            pemkey: '-----BEGIN PUBLIC KEY-----\npublicKey1\n-----END PUBLIC KEY-----'
+          }
+        ]
+      })
+    }
+
+    const packument = {
+      name: 'okProv',
+      'dist-tags': { latest: '1.0.0' },
+      versions: {
+        '1.0.0': {
+          name: 'okProv',
+          version: '1.0.0',
+          dist: {
+            integrity: 'sha512-x',
+            tarball: 'https://registry.npmjs.org/okProv/-/okProv-1.0.0.tgz',
+            attestations: {
+              url: 'https://registry.npmjs.org/-/npm/v1/attestations/okProv@1.0.0',
+              provenance: { predicateType: 'https://slsa.dev/provenance/v1' }
+            }
+          }
+        }
+      }
+    }
+
+    global.fetch = jest
+      .fn()
+      .mockResolvedValueOnce(mockKeysResponse)
+      .mockResolvedValueOnce({ ok: true, json: jest.fn().mockResolvedValue(packument) })
+
+    jest.spyOn(NpmRegistry.prototype, 'verifyAttestations').mockResolvedValue({
+      name: 'okProv',
+      version: '1.0.0',
+      dist: packument.versions['1.0.0'].dist,
+      _attestations: packument.versions['1.0.0'].dist.attestations
+    })
+
+    const testMarshall = new ProvenanceMarshall({
+      packageRepoUtils: {
+        getPackageInfo: () => Promise.resolve(packument),
+        parsePackageVersion: (version) => ({ version })
+      }
+    })
+
+    const result = await testMarshall.validate({
+      packageName: 'okProv',
+      packageVersion: '1.0.0'
+    })
+
+    expect(result).toEqual(packument.versions['1.0.0'].dist.attestations)
   })
 
   test('has the right title', async () => {
@@ -217,9 +280,647 @@ describe('Provenance test suites', () => {
       packageVersion: '1.0.0'
     }
 
-    await expect(testMarshall.validate(pkg)).rejects.toThrow('Unable to verify provenance')
+    const err = await testMarshall.validate(pkg).catch((e) => e)
+    expect(err).toBeInstanceOf(Warning)
+    expect(err.message).toContain('Unable to verify provenance')
 
     // Assert that the fetch method is called with the correct URL for keys
     expect(global.fetch).toHaveBeenCalledWith('https://registry.npmjs.org/-/npm/v1/keys')
+  })
+
+  test('throws Error (provenance regression) when an older semver had dist.attestations but the target does not', async () => {
+    const mockKeysResponse = {
+      ok: true,
+      json: jest.fn().mockResolvedValue({
+        keys: [
+          {
+            keyid: 'SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA',
+            key: 'publicKey1',
+            pemkey: '-----BEGIN PUBLIC KEY-----\npublicKey1\n-----END PUBLIC KEY-----'
+          }
+        ]
+      })
+    }
+
+    const packument = {
+      name: 'regressionPkg',
+      'dist-tags': { latest: '2.0.0' },
+      time: {
+        '1.0.0': '2023-01-01T00:00:00.000Z',
+        '2.0.0': '2023-06-01T00:00:00.000Z'
+      },
+      versions: {
+        '1.0.0': {
+          name: 'regressionPkg',
+          version: '1.0.0',
+          _id: 'regressionPkg@1.0.0',
+          dist: {
+            integrity: 'sha512-old',
+            tarball: 'https://registry.npmjs.org/regressionPkg/-/regressionPkg-1.0.0.tgz',
+            attestations: {
+              url: 'https://registry.npmjs.org/-/npm/v1/attestations/regressionPkg@1.0.0',
+              provenance: { predicateType: 'https://slsa.dev/provenance/v1' }
+            }
+          }
+        },
+        '2.0.0': {
+          name: 'regressionPkg',
+          version: '2.0.0',
+          _id: 'regressionPkg@2.0.0',
+          dist: {
+            integrity: 'sha512-new',
+            tarball: 'https://registry.npmjs.org/regressionPkg/-/regressionPkg-2.0.0.tgz'
+          }
+        }
+      }
+    }
+
+    const mockPackageResponse = {
+      ok: true,
+      json: jest.fn().mockResolvedValue(packument)
+    }
+
+    global.fetch = jest
+      .fn()
+      .mockResolvedValueOnce(mockKeysResponse)
+      .mockResolvedValueOnce(mockPackageResponse)
+
+    const testMarshall = new ProvenanceMarshall({
+      packageRepoUtils: {
+        getPackageInfo: () => Promise.resolve(packument),
+        parsePackageVersion: (version) => ({ version })
+      }
+    })
+
+    const pkg = {
+      packageName: 'regressionPkg',
+      packageVersion: '2.0.0'
+    }
+
+    const err = await testMarshall.validate(pkg).catch((e) => e)
+    expect(err).not.toBeInstanceOf(Warning)
+    expect(err.message).toContain('Provenance regression detected')
+    expect(err.message).toContain('1.0.0')
+    expect(err.message).toContain('regressionPkg@2.0.0')
+  })
+
+  test('prior scan returns null when older semvers exist but none have dist.attestations', async () => {
+    const mockKeysResponse = {
+      ok: true,
+      json: jest.fn().mockResolvedValue({
+        keys: [
+          {
+            keyid: 'SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA',
+            key: 'publicKey1',
+            pemkey: '-----BEGIN PUBLIC KEY-----\npublicKey1\n-----END PUBLIC KEY-----'
+          }
+        ]
+      })
+    }
+
+    const packument = {
+      name: 'noPriorProv',
+      'dist-tags': { latest: '2.0.0' },
+      versions: {
+        '1.0.0': {
+          name: 'noPriorProv',
+          version: '1.0.0',
+          _id: 'noPriorProv@1.0.0',
+          dist: {
+            integrity: 'sha512-a',
+            tarball: 'https://registry.npmjs.org/noPriorProv/-/noPriorProv-1.0.0.tgz'
+          }
+        },
+        '2.0.0': {
+          name: 'noPriorProv',
+          version: '2.0.0',
+          _id: 'noPriorProv@2.0.0',
+          dist: {
+            integrity: 'sha512-b',
+            tarball: 'https://registry.npmjs.org/noPriorProv/-/noPriorProv-2.0.0.tgz'
+          }
+        }
+      }
+    }
+
+    global.fetch = jest
+      .fn()
+      .mockResolvedValueOnce(mockKeysResponse)
+      .mockResolvedValueOnce({ ok: true, json: jest.fn().mockResolvedValue(packument) })
+
+    const testMarshall = new ProvenanceMarshall({
+      packageRepoUtils: {
+        getPackageInfo: () => Promise.resolve(packument),
+        parsePackageVersion: (version) => ({ version })
+      }
+    })
+
+    const err = await testMarshall
+      .validate({ packageName: 'noPriorProv', packageVersion: '2.0.0' })
+      .catch((e) => e)
+
+    expect(err).toBeInstanceOf(Warning)
+    expect(err.message).toContain('Unable to verify provenance')
+  })
+
+  test('resolves to empty array on malformed checkpoint (#329) when verifyAttestations rejects', async () => {
+    const mockKeysResponse = {
+      ok: true,
+      json: jest.fn().mockResolvedValue({
+        keys: [
+          {
+            keyid: 'SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA',
+            key: 'publicKey1',
+            pemkey: '-----BEGIN PUBLIC KEY-----\npublicKey1\n-----END PUBLIC KEY-----'
+          }
+        ]
+      })
+    }
+
+    const packument = {
+      name: 'malformedPkg',
+      'dist-tags': { latest: '1.0.0' },
+      versions: {
+        '1.0.0': {
+          name: 'malformedPkg',
+          version: '1.0.0',
+          _id: 'malformedPkg@1.0.0',
+          dist: {
+            integrity: 'sha512-x',
+            tarball: 'https://registry.npmjs.org/malformedPkg/-/malformedPkg-1.0.0.tgz',
+            attestations: {
+              url: 'https://registry.npmjs.org/-/npm/v1/attestations/malformedPkg@1.0.0',
+              provenance: { predicateType: 'https://slsa.dev/provenance/v1' }
+            }
+          }
+        }
+      }
+    }
+
+    global.fetch = jest
+      .fn()
+      .mockResolvedValueOnce(mockKeysResponse)
+      .mockResolvedValueOnce({ ok: true, json: jest.fn().mockResolvedValue(packument) })
+
+    jest.spyOn(NpmRegistry.prototype, 'verifyAttestations').mockRejectedValue(
+      Object.assign(new Error('malformed checkpoint in transparency log'), {
+        code: 'EATTESTATIONVERIFY'
+      })
+    )
+
+    const testMarshall = new ProvenanceMarshall({
+      packageRepoUtils: {
+        getPackageInfo: () => Promise.resolve(packument),
+        parsePackageVersion: (version) => ({ version })
+      }
+    })
+
+    const result = await testMarshall.validate({
+      packageName: 'malformedPkg',
+      packageVersion: '1.0.0'
+    })
+
+    expect(result).toEqual([])
+  })
+
+  test('rethrows Warning when registry keys fetch fails', async () => {
+    global.fetch = jest.fn().mockRejectedValue(new Error('network down'))
+
+    const testMarshall = new ProvenanceMarshall({
+      packageRepoUtils: {
+        getPackageInfo: () =>
+          Promise.resolve({
+            name: 'keysFail',
+            'dist-tags': { latest: '1.0.0' },
+            versions: {
+              '1.0.0': {
+                name: 'keysFail',
+                version: '1.0.0',
+                dist: { integrity: 'sha512-x', tarball: 'https://r/k.tgz' }
+              }
+            }
+          }),
+        parsePackageVersion: (version) => ({ version })
+      }
+    })
+
+    const err = await testMarshall
+      .validate({ packageName: 'keysFail', packageVersion: '1.0.0' })
+      .catch((e) => e)
+
+    expect(err).toBeInstanceOf(Warning)
+    expect(err.message).toContain('Error fetching registry keys')
+  })
+
+  test('throws Error when version cannot be resolved', async () => {
+    global.fetch = jest.fn()
+
+    const testMarshall = new ProvenanceMarshall({
+      packageRepoUtils: {
+        getPackageInfo: () =>
+          Promise.resolve({
+            name: 'badRange',
+            'dist-tags': { latest: '1.0.0' },
+            versions: { '1.0.0': { version: '1.0.0' } }
+          }),
+        parsePackageVersion: () => null
+      }
+    })
+
+    await expect(
+      testMarshall.validate({ packageName: 'badRange', packageVersion: 'not-in-packument' })
+    ).rejects.toThrow('Unable to find version or dist-tag for package')
+  })
+
+  test('throws Warning when verify succeeds but result has no _attestations', async () => {
+    const mockKeysResponse = {
+      ok: true,
+      json: jest.fn().mockResolvedValue({
+        keys: [
+          {
+            keyid: 'SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA',
+            key: 'publicKey1',
+            pemkey: '-----BEGIN PUBLIC KEY-----\npublicKey1\n-----END PUBLIC KEY-----'
+          }
+        ]
+      })
+    }
+
+    const packument = {
+      name: 'noAttestField',
+      'dist-tags': { latest: '1.0.0' },
+      versions: {
+        '1.0.0': {
+          name: 'noAttestField',
+          version: '1.0.0',
+          dist: {
+            integrity: 'sha512-x',
+            tarball: 'https://registry.npmjs.org/noAttestField/-/noAttestField-1.0.0.tgz',
+            attestations: {
+              url: 'https://registry.npmjs.org/-/npm/v1/attestations/noAttestField@1.0.0',
+              provenance: { predicateType: 'https://slsa.dev/provenance/v1' }
+            }
+          }
+        }
+      }
+    }
+
+    global.fetch = jest
+      .fn()
+      .mockResolvedValueOnce(mockKeysResponse)
+      .mockResolvedValueOnce({ ok: true, json: jest.fn().mockResolvedValue(packument) })
+
+    jest.spyOn(NpmRegistry.prototype, 'verifyAttestations').mockResolvedValue({
+      name: 'noAttestField',
+      version: '1.0.0',
+      dist: {}
+    })
+
+    const testMarshall = new ProvenanceMarshall({
+      packageRepoUtils: {
+        getPackageInfo: () => Promise.resolve(packument),
+        parsePackageVersion: (version) => ({ version })
+      }
+    })
+
+    const err = await testMarshall
+      .validate({ packageName: 'noAttestField', packageVersion: '1.0.0' })
+      .catch((e) => e)
+
+    expect(err).toBeInstanceOf(Warning)
+    expect(err.message).toContain('the package was published without any attestations')
+  })
+
+  test('provenance regression when verifyAttestations fails with EATTESTATIONVERIFY (verify failure)', async () => {
+    const mockKeysResponse = {
+      ok: true,
+      json: jest.fn().mockResolvedValue({
+        keys: [
+          {
+            keyid: 'SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA',
+            key: 'publicKey1',
+            pemkey: '-----BEGIN PUBLIC KEY-----\npublicKey1\n-----END PUBLIC KEY-----'
+          }
+        ]
+      })
+    }
+
+    const packument = {
+      name: 'verifyFailReg',
+      'dist-tags': { latest: '2.0.0' },
+      versions: {
+        '1.0.0': {
+          name: 'verifyFailReg',
+          version: '1.0.0',
+          _id: 'verifyFailReg@1.0.0',
+          dist: {
+            integrity: 'sha512-old',
+            tarball: 'https://registry.npmjs.org/verifyFailReg/-/verifyFailReg-1.0.0.tgz',
+            attestations: {
+              url: 'https://registry.npmjs.org/-/npm/v1/attestations/verifyFailReg@1.0.0',
+              provenance: { predicateType: 'https://slsa.dev/provenance/v1' }
+            }
+          }
+        },
+        '2.0.0': {
+          name: 'verifyFailReg',
+          version: '2.0.0',
+          _id: 'verifyFailReg@2.0.0',
+          dist: {
+            integrity: 'sha512-new',
+            tarball: 'https://registry.npmjs.org/verifyFailReg/-/verifyFailReg-2.0.0.tgz',
+            attestations: {
+              url: 'https://registry.npmjs.org/-/npm/v1/attestations/verifyFailReg@2.0.0',
+              provenance: { predicateType: 'https://slsa.dev/provenance/v1' }
+            }
+          }
+        }
+      }
+    }
+
+    global.fetch = jest
+      .fn()
+      .mockResolvedValueOnce(mockKeysResponse)
+      .mockResolvedValueOnce({ ok: true, json: jest.fn().mockResolvedValue(packument) })
+
+    jest
+      .spyOn(NpmRegistry.prototype, 'verifyAttestations')
+      .mockRejectedValue(
+        Object.assign(new Error('verifyFailReg@2.0.0 failed to verify attestation: sig invalid'), {
+          code: 'EATTESTATIONVERIFY'
+        })
+      )
+
+    const testMarshall = new ProvenanceMarshall({
+      packageRepoUtils: {
+        getPackageInfo: () => Promise.resolve(packument),
+        parsePackageVersion: (version) => ({ version })
+      }
+    })
+
+    const err = await testMarshall
+      .validate({ packageName: 'verifyFailReg', packageVersion: '2.0.0' })
+      .catch((e) => e)
+
+    expect(err).not.toBeInstanceOf(Warning)
+    expect(err.message).toContain('Provenance regression detected')
+    expect(err.message).toContain('1.0.0')
+  })
+
+  test('provenance regression when verifyAttestations fails with EMISSINGSIGNATUREKEY', async () => {
+    const mockKeysResponse = {
+      ok: true,
+      json: jest.fn().mockResolvedValue({
+        keys: [
+          {
+            keyid: 'SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA',
+            key: 'publicKey1',
+            pemkey: '-----BEGIN PUBLIC KEY-----\npublicKey1\n-----END PUBLIC KEY-----'
+          }
+        ]
+      })
+    }
+
+    const packument = {
+      name: 'missKeyReg',
+      'dist-tags': { latest: '2.0.0' },
+      versions: {
+        '1.0.0': {
+          name: 'missKeyReg',
+          version: '1.0.0',
+          dist: {
+            integrity: 'sha512-old',
+            tarball: 'https://registry.npmjs.org/missKeyReg/-/missKeyReg-1.0.0.tgz',
+            attestations: {
+              url: 'https://registry.npmjs.org/-/npm/v1/attestations/missKeyReg@1.0.0',
+              provenance: { predicateType: 'https://slsa.dev/provenance/v1' }
+            }
+          }
+        },
+        '2.0.0': {
+          name: 'missKeyReg',
+          version: '2.0.0',
+          dist: {
+            integrity: 'sha512-new',
+            tarball: 'https://registry.npmjs.org/missKeyReg/-/missKeyReg-2.0.0.tgz',
+            attestations: {
+              url: 'https://registry.npmjs.org/-/npm/v1/attestations/missKeyReg@2.0.0',
+              provenance: { predicateType: 'https://slsa.dev/provenance/v1' }
+            }
+          }
+        }
+      }
+    }
+
+    global.fetch = jest
+      .fn()
+      .mockResolvedValueOnce(mockKeysResponse)
+      .mockResolvedValueOnce({ ok: true, json: jest.fn().mockResolvedValue(packument) })
+
+    jest.spyOn(NpmRegistry.prototype, 'verifyAttestations').mockRejectedValue(
+      Object.assign(
+        new Error('missKeyReg@2.0.0 has attestations but no corresponding public key'),
+        {
+          code: 'EMISSINGSIGNATUREKEY'
+        }
+      )
+    )
+
+    const testMarshall = new ProvenanceMarshall({
+      packageRepoUtils: {
+        getPackageInfo: () => Promise.resolve(packument),
+        parsePackageVersion: (version) => ({ version })
+      }
+    })
+
+    const err = await testMarshall
+      .validate({ packageName: 'missKeyReg', packageVersion: '2.0.0' })
+      .catch((e) => e)
+
+    expect(err).not.toBeInstanceOf(Warning)
+    expect(err.message).toContain('Provenance regression detected')
+  })
+
+  test('provenance regression when error message includes failed to verify attestation (non-EATTESTATIONVERIFY code)', async () => {
+    const mockKeysResponse = {
+      ok: true,
+      json: jest.fn().mockResolvedValue({
+        keys: [
+          {
+            keyid: 'SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA',
+            key: 'publicKey1',
+            pemkey: '-----BEGIN PUBLIC KEY-----\npublicKey1\n-----END PUBLIC KEY-----'
+          }
+        ]
+      })
+    }
+
+    const packument = {
+      name: 'failMsgReg',
+      'dist-tags': { latest: '2.0.0' },
+      versions: {
+        '1.0.0': {
+          name: 'failMsgReg',
+          version: '1.0.0',
+          dist: {
+            integrity: 'sha512-o',
+            tarball: 'https://registry.npmjs.org/failMsgReg/-/failMsgReg-1.0.0.tgz',
+            attestations: {
+              url: 'https://registry.npmjs.org/-/npm/v1/attestations/failMsgReg@1.0.0',
+              provenance: { predicateType: 'https://slsa.dev/provenance/v1' }
+            }
+          }
+        },
+        '2.0.0': {
+          name: 'failMsgReg',
+          version: '2.0.0',
+          dist: {
+            integrity: 'sha512-n',
+            tarball: 'https://registry.npmjs.org/failMsgReg/-/failMsgReg-2.0.0.tgz',
+            attestations: {
+              url: 'https://registry.npmjs.org/-/npm/v1/attestations/failMsgReg@2.0.0',
+              provenance: { predicateType: 'https://slsa.dev/provenance/v1' }
+            }
+          }
+        }
+      }
+    }
+
+    global.fetch = jest
+      .fn()
+      .mockResolvedValueOnce(mockKeysResponse)
+      .mockResolvedValueOnce({ ok: true, json: jest.fn().mockResolvedValue(packument) })
+
+    jest
+      .spyOn(NpmRegistry.prototype, 'verifyAttestations')
+      .mockRejectedValue(new Error('failMsgReg@2.0.0 failed to verify attestation: custom'))
+
+    const testMarshall = new ProvenanceMarshall({
+      packageRepoUtils: {
+        getPackageInfo: () => Promise.resolve(packument),
+        parsePackageVersion: (version) => ({ version })
+      }
+    })
+
+    const err = await testMarshall
+      .validate({ packageName: 'failMsgReg', packageVersion: '2.0.0' })
+      .catch((e) => e)
+
+    expect(err).not.toBeInstanceOf(Warning)
+    expect(err.message).toContain('Provenance regression detected')
+  })
+
+  test('empty error message skips regression consideration (shouldConsiderProvenanceRegression)', async () => {
+    const mockKeysResponse = {
+      ok: true,
+      json: jest.fn().mockResolvedValue({
+        keys: [
+          {
+            keyid: 'SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA',
+            key: 'publicKey1',
+            pemkey: '-----BEGIN PUBLIC KEY-----\npublicKey1\n-----END PUBLIC KEY-----'
+          }
+        ]
+      })
+    }
+
+    const packument = {
+      name: 'emptyMsg',
+      'dist-tags': { latest: '1.0.0' },
+      versions: {
+        '1.0.0': {
+          name: 'emptyMsg',
+          version: '1.0.0',
+          dist: {
+            integrity: 'sha512-x',
+            tarball: 'https://registry.npmjs.org/emptyMsg/-/emptyMsg-1.0.0.tgz',
+            attestations: {
+              url: 'https://registry.npmjs.org/-/npm/v1/attestations/emptyMsg@1.0.0',
+              provenance: { predicateType: 'https://slsa.dev/provenance/v1' }
+            }
+          }
+        }
+      }
+    }
+
+    global.fetch = jest
+      .fn()
+      .mockResolvedValueOnce(mockKeysResponse)
+      .mockResolvedValueOnce({ ok: true, json: jest.fn().mockResolvedValue(packument) })
+
+    jest
+      .spyOn(NpmRegistry.prototype, 'verifyAttestations')
+      .mockRejectedValue(Object.assign(new Error(''), { code: 'EATTESTATIONVERIFY' }))
+
+    const testMarshall = new ProvenanceMarshall({
+      packageRepoUtils: {
+        getPackageInfo: () => Promise.resolve(packument),
+        parsePackageVersion: (version) => ({ version })
+      }
+    })
+
+    const err = await testMarshall
+      .validate({ packageName: 'emptyMsg', packageVersion: '1.0.0' })
+      .catch((e) => e)
+
+    expect(err).toBeInstanceOf(Warning)
+    expect(err.message).toBe('Unable to verify provenance')
+  })
+
+  test('generic verify error without regression signal yields Warning', async () => {
+    const mockKeysResponse = {
+      ok: true,
+      json: jest.fn().mockResolvedValue({
+        keys: [
+          {
+            keyid: 'SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA',
+            key: 'publicKey1',
+            pemkey: '-----BEGIN PUBLIC KEY-----\npublicKey1\n-----END PUBLIC KEY-----'
+          }
+        ]
+      })
+    }
+
+    const packument = {
+      name: 'genericFail',
+      'dist-tags': { latest: '1.0.0' },
+      versions: {
+        '1.0.0': {
+          name: 'genericFail',
+          version: '1.0.0',
+          dist: {
+            integrity: 'sha512-x',
+            tarball: 'https://registry.npmjs.org/genericFail/-/genericFail-1.0.0.tgz',
+            attestations: {
+              url: 'https://registry.npmjs.org/-/npm/v1/attestations/genericFail@1.0.0',
+              provenance: { predicateType: 'https://slsa.dev/provenance/v1' }
+            }
+          }
+        }
+      }
+    }
+
+    global.fetch = jest
+      .fn()
+      .mockResolvedValueOnce(mockKeysResponse)
+      .mockResolvedValueOnce({ ok: true, json: jest.fn().mockResolvedValue(packument) })
+
+    jest
+      .spyOn(NpmRegistry.prototype, 'verifyAttestations')
+      .mockRejectedValue(new Error('unexpected registry client failure'))
+
+    const testMarshall = new ProvenanceMarshall({
+      packageRepoUtils: {
+        getPackageInfo: () => Promise.resolve(packument),
+        parsePackageVersion: (version) => ({ version })
+      }
+    })
+
+    const err = await testMarshall
+      .validate({ packageName: 'genericFail', packageVersion: '1.0.0' })
+      .catch((e) => e)
+
+    expect(err).toBeInstanceOf(Warning)
+    expect(err.message).toBe('Unable to verify provenance')
   })
 })

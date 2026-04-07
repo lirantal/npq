@@ -139,7 +139,7 @@ Note: `npq` by default will offload all commands and their arguments to the `npm
 | license | Will show a warning if a package has been found without a license field | Checks the latest version for a license
 | expired domains | Will show a warning if a package has been found with one of its maintainers having an email address that includes an expired domain | Checks a dependency version for a maintainer with an expired domain
 | signatures | Will compare the package's signature as it shows on the registry's pakument with the keys published on the npmjs.com registry
-| provenance | Will verify the package's attestations of provenance metadata for the published package
+| provenance | Will verify the package's attestations of provenance metadata for the published package, and **error** on [provenance regression](docs/feature/provenance.md) (an older semver had registry provenance metadata but the version you install does not)
 | version-maturity | Will show a warning if the specific version being installed was published less than 7 days ago | Helps identify recently published versions that may not have been reviewed by the community yet
 | newBin | Will show a warning if the package version being installed introduces a new command-line binary (via the `bin` field in `package.json`) that was not present in its previous version. | Helps identify potentially unexpected new executables being added to your `node_modules/.bin/` directory.
 | typosquatting | Will show a warning if the package name is similar to a popular package name, which could indicate a potential typosquatting attack. | Helps identify packages that may be trying to trick users into installing them by mimicking popular package names.
