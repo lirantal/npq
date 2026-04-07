@@ -32,6 +32,8 @@ export MARSHALL_DISABLE_PROVENANCE=true
 npq install express
 ```
 
+Provenance verification also includes **regression detection**: if a **prior published semver** of the same package includes npm provenance metadata on the registry but the **resolved install version** does not (or it fails verification), npq reports that as an **error** (not only a warning). That helps surface releases that may have bypassed trusted publishing. See [provenance.md](feature/provenance.md) for background, the `pino` example, and how this differs from packages that never published with provenance.
+
 ### Disable Both Features
 ```bash
 export MARSHALL_DISABLE_SIGNATURES=true
@@ -44,7 +46,7 @@ npq install express
 When these features are disabled:
 
 - **Signatures**: npq will not verify npm registry signatures for packages
-- **Provenance**: npq will not verify package build provenance attestations
+- **Provenance**: npq will not verify package build provenance attestations or provenance regression checks
 
 
 

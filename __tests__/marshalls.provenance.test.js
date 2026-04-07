@@ -4,6 +4,7 @@
 global.fetch = jest.fn()
 
 const ProvenanceMarshall = require('../lib/marshalls/provenance.marshall')
+const Warning = require('../lib/helpers/warning')
 
 describe('Provenance test suites', () => {
   beforeEach(() => {
@@ -217,9 +218,87 @@ describe('Provenance test suites', () => {
       packageVersion: '1.0.0'
     }
 
-    await expect(testMarshall.validate(pkg)).rejects.toThrow('Unable to verify provenance')
+    const err = await testMarshall.validate(pkg).catch((e) => e)
+    expect(err).toBeInstanceOf(Warning)
+    expect(err.message).toContain('Unable to verify provenance')
 
     // Assert that the fetch method is called with the correct URL for keys
     expect(global.fetch).toHaveBeenCalledWith('https://registry.npmjs.org/-/npm/v1/keys')
+  })
+
+  test('throws Error (provenance regression) when an older semver had dist.attestations but the target does not', async () => {
+    const mockKeysResponse = {
+      ok: true,
+      json: jest.fn().mockResolvedValue({
+        keys: [
+          {
+            keyid: 'SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA',
+            key: 'publicKey1',
+            pemkey: '-----BEGIN PUBLIC KEY-----\npublicKey1\n-----END PUBLIC KEY-----'
+          }
+        ]
+      })
+    }
+
+    const packument = {
+      name: 'regressionPkg',
+      'dist-tags': { latest: '2.0.0' },
+      time: {
+        '1.0.0': '2023-01-01T00:00:00.000Z',
+        '2.0.0': '2023-06-01T00:00:00.000Z'
+      },
+      versions: {
+        '1.0.0': {
+          name: 'regressionPkg',
+          version: '1.0.0',
+          _id: 'regressionPkg@1.0.0',
+          dist: {
+            integrity: 'sha512-old',
+            tarball: 'https://registry.npmjs.org/regressionPkg/-/regressionPkg-1.0.0.tgz',
+            attestations: {
+              url: 'https://registry.npmjs.org/-/npm/v1/attestations/regressionPkg@1.0.0',
+              provenance: { predicateType: 'https://slsa.dev/provenance/v1' }
+            }
+          }
+        },
+        '2.0.0': {
+          name: 'regressionPkg',
+          version: '2.0.0',
+          _id: 'regressionPkg@2.0.0',
+          dist: {
+            integrity: 'sha512-new',
+            tarball: 'https://registry.npmjs.org/regressionPkg/-/regressionPkg-2.0.0.tgz'
+          }
+        }
+      }
+    }
+
+    const mockPackageResponse = {
+      ok: true,
+      json: jest.fn().mockResolvedValue(packument)
+    }
+
+    global.fetch = jest
+      .fn()
+      .mockResolvedValueOnce(mockKeysResponse)
+      .mockResolvedValueOnce(mockPackageResponse)
+
+    const testMarshall = new ProvenanceMarshall({
+      packageRepoUtils: {
+        getPackageInfo: () => Promise.resolve(packument),
+        parsePackageVersion: (version) => ({ version })
+      }
+    })
+
+    const pkg = {
+      packageName: 'regressionPkg',
+      packageVersion: '2.0.0'
+    }
+
+    const err = await testMarshall.validate(pkg).catch((e) => e)
+    expect(err).not.toBeInstanceOf(Warning)
+    expect(err.message).toContain('Provenance regression detected')
+    expect(err.message).toContain('1.0.0')
+    expect(err.message).toContain('regressionPkg@2.0.0')
   })
 })
