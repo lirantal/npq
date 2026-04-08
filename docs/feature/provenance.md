@@ -54,6 +54,42 @@ Infrastructure failures (for example, failing to fetch the packument or registry
 
 **Caveat:** Regression uses **`dist.attestations` on the packument** for older releases. If the registry ever omitted that field on older `versions` entries while provenance still existed, npq would not detect a prior; a bounded manifest fallback could be added later if that proves necessary.
 
+## Alternative approach: pnpm `trustPolicy: no-downgrade` (for future alignment)
+
+[pnpm](https://pnpm.io/) implements a related **install-time** policy that is worth documenting separately: it is **not** what npq does today, but it solves a similar “trust went backwards” problem and applies **automatically to transitive dependencies** because it lives in the package **resolver**.
+
+### Where it runs
+
+With `trustPolicy: no-downgrade` (for example in `pnpm-workspace.yaml` or via `--trust-policy=no-downgrade`), pnpm runs a check **after** it picks a concrete version from the npm registry for **each** resolution. That includes nested dependencies, so a transitive package such as `pino@9.14.0` is checked the same way as a direct dependency. Failures surface as `ERR_PNPM_TRUST_DOWNGRADE` with context such as which parent dependency was being installed.
+
+Implementation reference (pnpm monorepo): the core logic lives in the npm resolver package (e.g. `resolving/npm-resolver/src/trustChecks.ts`), invoked from the resolver after `pickedPackage` is chosen; the installer passes trust options into `requestPackage` for all dependency depths.
+
+### How “prior” and “trust” are defined (differs from npq)
+
+pnpm’s policy is **not semver-based**. It uses **`time`** on the registry packument: for the version being installed, it looks at **every other published version whose publish timestamp is strictly earlier** than that version’s publish time (with optional skipping of prereleases). Among those, it finds the **strongest “trust evidence”** ever present:
+
+| Evidence (strongest first) | Typical packument signal |
+|----------------------------|---------------------------|
+| **Trusted publisher** | `versions[ver]._npmUser.trustedPublisher` (npm’s trusted-publisher flag) |
+| **Provenance** | `versions[ver].dist.attestations.provenance` |
+| **None** | Missing both |
+
+It then compares that historical strongest evidence to the **current** version’s evidence. If the current version has **no** evidence, or **weaker** evidence than something that was already published **earlier in time**, pnpm throws a **trust downgrade** error—even when semver would order versions differently than publish order.
+
+npq’s provenance regression, by contrast, uses **semver-older** siblings and **`dist.attestations`** on the packument, plus **cryptographic verification** of the install target. The two can **disagree** on edge cases (for example, backports or non-linear publish timelines).
+
+### Configuration knobs (pnpm)
+
+pnpm also supports **`trustPolicyExclude`** (per package or `name@version`) and **`trustPolicyIgnoreAfter`** (ignore downgrades for packages published longer than N minutes ago). npq has no direct equivalents today.
+
+### Why consider alignment later
+
+- **Transitive coverage:** pnpm gets it by construction (resolver hook); npq would need an explicit **dependency graph** (lockfile, `npm ls`, or similar) to audit transitive packages.
+- **Single policy surface:** Teams using both tools might want **documented** differences or a **shared mental model** (time-ordered tiered trust vs semver + Sigstore verify).
+- **Complementary use:** Some projects may rely on pnpm for **install blocking** and npq for **pre-install prompts** and other marshalls; spelling out pnpm’s rules here avoids conflating the two behaviors.
+
+No change to npq behavior is implied by this section; it records an **alternative implementation** for future design discussion.
+
 ## Errors vs warnings in the CLI
 
 - **Provenance regression** and other hard failures that use **`Error`** contribute to **error** counts. In `npq install`, that typically means you are prompted to continue with **default “no”**.

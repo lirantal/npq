@@ -151,7 +151,8 @@ describe('Author Marshall', () => {
     })
 
     test('should not apply new-author error when an older version from same email exists first in versions map', async () => {
-      const oldRelease = daysAgo(2000)
+      // Keep inter-release gap < ~6 months so dormant maintainer check does not fire before recency
+      const oldRelease = daysAgo(100)
       const newRelease = daysAgo(5)
       const pakument = {
         versions: {
@@ -170,9 +171,162 @@ describe('Author Marshall', () => {
     })
   })
 
+  describe('dormant maintainer check', () => {
+    test('does not flag when there is no prior publish by the same email', async () => {
+      const published = daysAgo(80)
+      const pakument = {
+        versions: {
+          '1.0.0': { version: '1.0.0', _npmUser: npmUser('Zed', 'zed@example.com') },
+          '2.0.0': { version: '2.0.0', _npmUser: npmUser('Yve', 'yve@example.com') }
+        },
+        time: {
+          '1.0.0': daysAgo(500),
+          '2.0.0': published
+        }
+      }
+      const marshall = createMarshall(pakument, '2.0.0')
+      await expect(
+        marshall.validate({ packageName: 'pkg', packageVersion: '2.0.0' })
+      ).resolves.toBe(published)
+    })
+
+    test('throws Warning when gap is over 6 months (~184 days) and version is outside recency window', async () => {
+      const prior = daysAgo(284)
+      const current = daysAgo(100)
+      const pakument = {
+        versions: {
+          '1.0.0': { version: '1.0.0', _npmUser: npmUser('Mia', 'mia@example.com') },
+          '2.0.0': { version: '2.0.0', _npmUser: npmUser('Mia', 'mia@example.com') }
+        },
+        time: {
+          '1.0.0': prior,
+          '2.0.0': current
+        }
+      }
+      const marshall = createMarshall(pakument, '2.0.0')
+      await expect(
+        marshall.validate({ packageName: 'pkg', packageVersion: '2.0.0' })
+      ).rejects.toThrow(Warning)
+      await expect(
+        marshall.validate({ packageName: 'pkg', packageVersion: '2.0.0' })
+      ).rejects.toThrow(
+        /Mia <mia@example.com> had not published this package for 184 days before this release \(more than 6 months dormant\)/
+      )
+    })
+
+    test('throws Error when gap is over 9 months (~275 days) and version is outside recency window', async () => {
+      const prior = daysAgo(375)
+      const current = daysAgo(100)
+      const pakument = {
+        versions: {
+          '1.0.0': { version: '1.0.0', _npmUser: npmUser('Noa', 'noa@example.com') },
+          '2.0.0': { version: '2.0.0', _npmUser: npmUser('Noa', 'noa@example.com') }
+        },
+        time: {
+          '1.0.0': prior,
+          '2.0.0': current
+        }
+      }
+      const marshall = createMarshall(pakument, '2.0.0')
+      await expect(
+        marshall.validate({ packageName: 'pkg', packageVersion: '2.0.0' })
+      ).rejects.toThrow(
+        /Noa <noa@example.com> had not published this package for 275 days before this release \(more than 9 months dormant\)/
+      )
+    })
+
+    test('does not flag when inter-release gap is exactly 183 days (strict boundary)', async () => {
+      const prior = daysAgo(283)
+      const current = daysAgo(100)
+      const pakument = {
+        versions: {
+          '1.0.0': { version: '1.0.0', _npmUser: npmUser('Pia', 'pia@example.com') },
+          '2.0.0': { version: '2.0.0', _npmUser: npmUser('Pia', 'pia@example.com') }
+        },
+        time: {
+          '1.0.0': prior,
+          '2.0.0': current
+        }
+      }
+      const marshall = createMarshall(pakument, '2.0.0')
+      await expect(
+        marshall.validate({ packageName: 'pkg', packageVersion: '2.0.0' })
+      ).resolves.toBe(current)
+    })
+
+    test('Warning only when gap is exactly 274 days (strict boundary for 9-month error)', async () => {
+      const prior = daysAgo(324)
+      const current = daysAgo(50)
+      const pakument = {
+        versions: {
+          '1.0.0': { version: '1.0.0', _npmUser: npmUser('Quin', 'quin@example.com') },
+          '2.0.0': { version: '2.0.0', _npmUser: npmUser('Quin', 'quin@example.com') }
+        },
+        time: {
+          '1.0.0': prior,
+          '2.0.0': current
+        }
+      }
+      const marshall = createMarshall(pakument, '2.0.0')
+      await expect(
+        marshall.validate({ packageName: 'pkg', packageVersion: '2.0.0' })
+      ).rejects.toThrow(Warning)
+      await expect(
+        marshall.validate({ packageName: 'pkg', packageVersion: '2.0.0' })
+      ).rejects.toThrow(
+        /Quin <quin@example.com> had not published this package for 274 days before this release \(more than 6 months dormant\)/
+      )
+    })
+
+    test('uses last publish by same email, ignoring other maintainers in between', async () => {
+      const alice = npmUser('Alice', 'alice-dormant@example.com')
+      const bob = npmUser('Bob', 'bob@example.com')
+      const pakument = {
+        versions: {
+          '1.0.0': { version: '1.0.0', _npmUser: alice },
+          '2.0.0': { version: '2.0.0', _npmUser: bob },
+          '3.0.0': { version: '3.0.0', _npmUser: alice }
+        },
+        time: {
+          '1.0.0': daysAgo(500),
+          '2.0.0': daysAgo(400),
+          '3.0.0': daysAgo(100)
+        }
+      }
+      const marshall = createMarshall(pakument, '3.0.0')
+      await expect(
+        marshall.validate({ packageName: 'pkg', packageVersion: '3.0.0' })
+      ).rejects.toThrow(
+        /Alice <alice-dormant@example.com> had not published this package for 400 days before this release \(more than 9 months dormant\)/
+      )
+    })
+
+    test('finds prior publish by timestamp, not versions map key order', async () => {
+      const u = npmUser('Ron', 'ron@example.com')
+      const pakument = {
+        versions: {
+          '3.0.0': { version: '3.0.0', _npmUser: u },
+          '1.0.0': { version: '1.0.0', _npmUser: u },
+          '2.0.0': { version: '2.0.0', _npmUser: u }
+        },
+        time: {
+          '1.0.0': daysAgo(500),
+          '2.0.0': daysAgo(300),
+          '3.0.0': daysAgo(100)
+        }
+      }
+      const marshall = createMarshall(pakument, '3.0.0')
+      await expect(
+        marshall.validate({ packageName: 'pkg', packageVersion: '3.0.0' })
+      ).rejects.toThrow(
+        /Ron <ron@example.com> had not published this package for 200 days before this release \(more than 6 months dormant\)/
+      )
+    })
+  })
+
   describe('version recency check', () => {
     test('should error when version is within 7 days (established same-email history)', async () => {
-      const oldRelease = daysAgo(2000)
+      const oldRelease = daysAgo(100)
       const newRelease = daysAgo(3)
       const pakument = {
         versions: {
@@ -191,7 +345,7 @@ describe('Author Marshall', () => {
     })
 
     test('should throw Warning when version is between 8 and 30 days old', async () => {
-      const oldRelease = daysAgo(2000)
+      const oldRelease = daysAgo(100)
       const newRelease = daysAgo(20)
       const pakument = {
         versions: {
@@ -213,7 +367,7 @@ describe('Author Marshall', () => {
     })
 
     test('should pass when version is 31–45 days old (no recency error or warning)', async () => {
-      const oldRelease = daysAgo(2000)
+      const oldRelease = daysAgo(100)
       const newRelease = daysAgo(40)
       const pakument = {
         versions: {
