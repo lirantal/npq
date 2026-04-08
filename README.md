@@ -130,7 +130,7 @@ Note: `npq` by default will offload all commands and their arguments to the `npm
 | Marshall Name | Description | Notes
 | --- | --- | ---
 | age | Will show a warning for a package if its age on npm is less than 22 days | Checks a package creation date, not a specific version
-| author | Will show a warning if a package has been found without an author field | Checks the latest version for an author
+| author | Validates the resolved version’s publisher (`_npmUser`), flags a **new** maintainer on the package (first publish by that email within 21 days), **dormant maintainer** gaps (warning if over ~6 months since their last publish on that package, error if over ~9 months), and very **recent** publishes | See [docs/feature/author-marshall.md](docs/feature/author-marshall.md)
 | downloads | Will show a warning for a package if its download count in the last month is less than 20
 | readme | Will show a warning if a package has no README or it has been detected as a security placeholder package by npm staff
 | repo | Will show a warning if a package has been found without a valid and working repository URL | Checks the latest version for a repository URL
