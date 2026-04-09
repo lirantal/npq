@@ -145,6 +145,27 @@ describe('Snyk Marshall', () => {
       expect(fetch).toHaveBeenCalledWith('https://api.osv.dev/v1/query', expect.any(Object))
     })
 
+    it('should throw the same malicious-package error as Snyk when OSV flags malware', async () => {
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            vulns: [
+              {
+                id: 'MAL-1',
+                summary: 'Malicious code in pkg (npm)',
+                database_specific: { 'malicious-packages-origins': [{}] }
+              }
+            ]
+          })
+      })
+
+      const pkg = { packageName: 'malware-pkg-osv', packageVersion: '1.0.0' }
+      await expect(marshall.validate(pkg)).rejects.toThrow(
+        'Malicious package found: https://snyk.io/vuln/npm:malware-pkg-osv'
+      )
+    })
+
     it('should pass if no vulnerabilities are found by OSV', async () => {
       fetch.mockResolvedValueOnce({
         ok: true,
@@ -175,6 +196,87 @@ describe('Snyk Marshall', () => {
       const result = await marshall.validate(pkg)
 
       expect(result).toEqual({ issuesCount: 0, isMaliciousPackage: false })
+    })
+
+    it('should set isMaliciousPackage when OSV vuln has malicious-packages-origins array', async () => {
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            vulns: [
+              {
+                id: 'MAL-2026-2452',
+                summary: 'Malicious code in strapi-plugin-blurhash (npm)',
+                database_specific: { 'malicious-packages-origins': [{ source: 'ghsa-malware' }] }
+              }
+            ]
+          })
+      })
+
+      const result = await marshall.getOsvVulnerabilityInfo({
+        packageName: 'strapi-plugin-blurhash',
+        packageVersion: '1.0.0'
+      })
+      expect(result).toEqual({ issuesCount: 1, isMaliciousPackage: true })
+    })
+
+    it('should set isMaliciousPackage when malicious-packages-origins is an empty array', async () => {
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            vulns: [
+              {
+                id: 'MAL-X',
+                database_specific: { 'malicious-packages-origins': [] }
+              }
+            ]
+          })
+      })
+
+      const result = await marshall.getOsvVulnerabilityInfo({
+        packageName: 'edge-pkg',
+        packageVersion: '1.0.0'
+      })
+      expect(result.isMaliciousPackage).toBe(true)
+    })
+
+    it('should set isMaliciousPackage when OSV summary starts with Malicious (case-insensitive)', async () => {
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            vulns: [{ id: 'GHSA-x', summary: 'MALICIOUS npm typosquat' }]
+          })
+      })
+
+      const result = await marshall.getOsvVulnerabilityInfo({
+        packageName: 'typosquat-pkg',
+        packageVersion: '1.0.0'
+      })
+      expect(result.isMaliciousPackage).toBe(true)
+    })
+
+    it('should not set isMaliciousPackage for non-malicious OSV vulns', async () => {
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            vulns: [
+              {
+                id: 'GHSA-abc',
+                summary: 'Prototype pollution in foo',
+                database_specific: {}
+              }
+            ]
+          })
+      })
+
+      const result = await marshall.getOsvVulnerabilityInfo({
+        packageName: 'foo',
+        packageVersion: '1.0.0'
+      })
+      expect(result.isMaliciousPackage).toBe(false)
     })
   })
 
