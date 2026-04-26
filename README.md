@@ -4,7 +4,6 @@ npq allows you to audit npm packages _before_ you install them
 [![license](https://img.shields.io/npm/l/npq)](LICENSE)
 [![codecov](https://img.shields.io/codecov/c/gh/lirantal/npq/main)](https://codecov.io/gh/lirantal/npq)
 [![CI](https://img.shields.io/github/actions/workflow/status/lirantal/npq/main.yml?branch=main&label=CI&logo=github)](https://github.com/lirantal/npq/actions/workflows/main.yml?query=branch%3Amain)
-[![Known Vulnerabilities](https://snyk.io/test/github/lirantal/npq/badge.svg)](https://snyk.io/test/github/lirantal/npq)
 [![Security Responsible Disclosure](https://img.shields.io/badge/Security-Responsible%20Disclosure-yellow)](SECURITY.md)
 
 TL;DR how to use npq:
