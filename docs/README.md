@@ -22,6 +22,7 @@ The `feature/` directory contains detailed documentation for specific features a
 ### Existing Features  
 
 - **`auto-continue.md`** - Documentation for the auto-continue feature that streamlines package installation workflows
+- **`expired-domains.md`** - Maintainer email domain checks for account takeover risk
 - **`pacote-dependency-reduction.md`** - Implementation summary for optional pacote dependency reduction
 
 ## Documentation Standards
@@ -46,6 +47,7 @@ Marshall components are the core security validation modules in NPQ. Each marsha
 - **Age Marshall** (`age.marshall.md`) - Package age and maturity validation
 - **Signature Marshall** - NPM registry signature verification (see `signature-verification-fix.md`)
 - **Provenance Marshall** - Package build attestation verification
+- **Expired Domains Marshall** - Maintainer email domain account takeover detection
 - **Snyk Marshall** - Vulnerability database integration
 - **Typosquatting Marshall** - Package name similarity detection
 
@@ -68,4 +70,5 @@ When adding new features or making significant changes:
 | Test Coverage | `feature/test-coverage-improvements.md` | Recent test suite enhancements |
 | Signature Verification | `feature/signature-verification-fix.md` | Version range bug fix and validation |
 | Auto-Continue | `feature/auto-continue.md` | Automated installation workflow |
+| Expired Domains | `feature/expired-domains.md` | Maintainer email domain account takeover checks |
 | Dependency Reduction | `feature/pacote-dependency-reduction.md` | Optional dependency management |

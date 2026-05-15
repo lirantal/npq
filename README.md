@@ -137,7 +137,7 @@ Note: `npq` by default will offload all commands and their arguments to the `npm
 | scripts | Will show a warning if a package has a pre/post install script which could potentially be malicious
 | snyk | Will show a warning if a package has been found with vulnerabilities in Snyk's database | For Snyk to work you need to either have the `snyk` npm package installed with a valid API token, or make the token available in the `SNYK_TOKEN` environment variable, and npq will use it
 | license | Will show a warning if a package has been found without a license field | Checks the latest version for a license
-| expired domains | Will show a warning if a package has been found with one of its maintainers having an email address that includes an expired domain | Checks a dependency version for a maintainer with an expired domain
+| expired domains | Errors when the resolved package version lists maintainers whose email domains appear expired and could enable account takeover | Reports every affected maintainer/domain pair. See [docs/feature/expired-domains.md](docs/feature/expired-domains.md)
 | signatures | Will compare the package's signature as it shows on the registry's pakument with the keys published on the npmjs.com registry
 | provenance | Will verify the package's attestations of provenance metadata for the published package, and **error** on [provenance regression](docs/feature/provenance.md) (an older semver had registry provenance metadata but the version you install does not)
 | version-maturity | Will show a warning if the specific version being installed was published less than 7 days ago | Helps identify recently published versions that may not have been reviewed by the community yet
@@ -256,7 +256,7 @@ When auto-continue is disabled, npq will always prompt for explicit confirmation
 
 5. **Why is NPQ connecting to external domains like gmail.com or personal websites during installation?**
 
-* This is not telemetry. NPQ does not collect any usage data. When auditing a package, NPQ fetches the maintainers/authors of the dependency and checks their email addresses to verify they are valid and not associated with expired domains. Expired domains can be abused by attackers for account takeover (ATO) attacks to compromise packages with malicious versions. Hence, NPQ may make DNS requests to domains like `gmail.com` or personal domains found in maintainer emails. Additionally, NPQ makes HTTP requests to `osv.dev` to fetch security vulnerability data (or uses Snyk if configured, as a prioritized option).
+* This is not telemetry. NPQ does not collect any usage data. When auditing a package, NPQ fetches the maintainers/authors of the dependency and checks their email domains for DNS evidence that the domain still exists. Expired domains can be abused by attackers for account takeover (ATO) attacks to compromise packages with malicious versions. Hence, NPQ may make DNS requests to domains like `gmail.com` or personal domains found in maintainer emails. Additionally, NPQ makes HTTP requests to `osv.dev` to fetch security vulnerability data (or uses Snyk if configured, as a prioritized option).
 
 ## Contributing
 
