@@ -643,13 +643,11 @@ describe('Provenance test suites', () => {
       .mockResolvedValueOnce(mockKeysResponse)
       .mockResolvedValueOnce({ ok: true, json: jest.fn().mockResolvedValue(packument) })
 
-    jest
-      .spyOn(NpmRegistry.prototype, 'verifyAttestations')
-      .mockRejectedValue(
-        Object.assign(new Error('verifyFailReg@2.0.0 failed to verify attestation: sig invalid'), {
-          code: 'EATTESTATIONVERIFY'
-        })
-      )
+    jest.spyOn(NpmRegistry.prototype, 'verifyAttestations').mockRejectedValue(
+      Object.assign(new Error('verifyFailReg@2.0.0 failed to verify attestation: sig invalid'), {
+        code: 'EATTESTATIONVERIFY'
+      })
+    )
 
     const testMarshall = new ProvenanceMarshall({
       packageRepoUtils: {
