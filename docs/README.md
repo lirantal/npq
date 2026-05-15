@@ -22,6 +22,8 @@ The `feature/` directory contains detailed documentation for specific features a
 ### Existing Features  
 
 - **`auto-continue.md`** - Documentation for the auto-continue feature that streamlines package installation workflows
+- **`exit-codes.md`** - Reference for `npq` and `npq-hero` process exit behavior
+- **`malicious-package.md`** - Documentation for known-malicious package detection through Snyk/OSV data
 - **`pacote-dependency-reduction.md`** - Implementation summary for optional pacote dependency reduction
 
 ## Documentation Standards
@@ -68,4 +70,6 @@ When adding new features or making significant changes:
 | Test Coverage | `feature/test-coverage-improvements.md` | Recent test suite enhancements |
 | Signature Verification | `feature/signature-verification-fix.md` | Version range bug fix and validation |
 | Auto-Continue | `feature/auto-continue.md` | Automated installation workflow |
+| Exit Codes | `feature/exit-codes.md` | CLI and package-manager passthrough exit behavior |
+| Malicious Packages | `feature/malicious-package.md` | Known-malicious package detection and reporting |
 | Dependency Reduction | `feature/pacote-dependency-reduction.md` | Optional dependency management |
