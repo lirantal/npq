@@ -1,33 +1,35 @@
-# Agent Guidance
+# AGENTS.md
 
-## Project Overview
+Guidance for AI coding agents working in this repository.
 
-`npq` is a Node.js CLI that audits npm package installs before handing off to the package manager. The main executables live in `bin/npq.js` and `bin/npq-hero.js`; shared implementation code lives under `lib/`.
+## Start Here
 
-## Repository Map
+Before making changes, read:
 
-- `bin/` contains the CLI entry points.
-- `lib/marshalls/` contains the security checks that inspect package metadata, vulnerabilities, signatures, provenance, and related signals.
-- `lib/helpers/` contains shared helper modules for registry access, prompts, reporting, repository parsing, and utility logic.
-- `__tests__/` contains the Jest test suite.
-- `docs/` contains project documentation. Feature-specific docs belong in `docs/feature/` using the singular directory name.
-- `scripts/` contains release/build/support scripts.
+- `CONTRIBUTING.md` for contribution, PR, testing, commit, and agent-specific expectations.
+- `RELEASE.md` for release workflow details.
+- `README.md` for user-facing behavior, install/use examples, and package or app overview.
+- `docs/README.md` for the project documentation index.
+- `docs/development.md` for local setup and development workflows.
+- `docs/testing.md` for test strategy, commands, and verification expectations.
+- `docs/architecture.md` for project structure, boundaries, and important invariants.
+- `docs/conventions.md` for project-specific coding, documentation, and maintenance conventions.
 
-## Development Commands
+Treat those files as the source of truth. Do not duplicate or reinterpret their rules here.
 
-- Install dependencies with `npm install`.
-- Run tests with `npm test` or `npm run test`.
-- Run a focused Jest test with `npx jest __tests__/file.test.js`.
-- Run linting with `npm run lint`.
-- Run formatting for JavaScript files with `npm run format`.
-- Run the build script with `npm run build`.
+## Documentation
 
-The project requires Node.js `>=20.13.0`.
+- Keep documentation in sync when changing behavior, public interfaces, workflows, architecture, configuration, or operational assumptions.
+- Put project-specific development details in `docs/`; keep root files focused on their standard audiences.
+- Prefer linking to the source of truth over duplicating long instructions across files.
+- When adding new docs, link them from `docs/README.md` and update this file only when they become important entry points for future agents.
 
-## Working Conventions
+## PRs and Issues
 
-- Prefer existing CommonJS patterns (`require`, `module.exports`) unless a file already uses a different style.
-- Keep marshall behavior covered by focused tests in `__tests__/marshalls.*.test.js` when changing security checks.
-- When changing CLI behavior, check both `bin/npq.js` and `bin/npq-hero.js` for differences in audit-only, install, prompt, and package-manager passthrough flows.
-- When adding or moving feature documentation, place it in `docs/feature/` and update `docs/README.md` if it should appear in the docs index.
-- Avoid committing generated coverage output unless the task explicitly asks for it.
+- Follow PR, issue, and agent-labeling rules in `CONTRIBUTING.md`.
+- Use the issue-linking format specified in `CONTRIBUTING.md`.
+
+## Releases
+
+- Follow `RELEASE.md` for release workflow and changeset creation steps.
+- If this project uses changesets, treat `RELEASE.md` and any changeset guidance in `CONTRIBUTING.md` as authoritative.

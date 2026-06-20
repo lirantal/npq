@@ -73,3 +73,10 @@ When adding new features or making significant changes:
 | Exit Codes | `feature/exit-codes.md` | CLI and package-manager passthrough exit behavior |
 | Malicious Packages | `feature/malicious-package.md` | Known-malicious package detection and reporting |
 | Dependency Reduction | `feature/pacote-dependency-reduction.md` | Optional dependency management |
+
+## Project context
+
+- [Development](./development.md) - local setup, workflows, and useful commands.
+- [Testing](./testing.md) - test commands, test organization, and verification expectations.
+- [Architecture](./architecture.md) - repository structure, package boundaries, and important flows.
+- [Conventions](./conventions.md) - coding, documentation, and maintenance conventions.
