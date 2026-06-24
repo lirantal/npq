@@ -257,6 +257,10 @@ When auto-continue is disabled, npq will always prompt for explicit confirmation
 
 * This is not telemetry. NPQ does not collect any usage data. When auditing a package, NPQ fetches the maintainers/authors of the dependency and checks their email addresses to verify they are valid and not associated with expired domains. Expired domains can be abused by attackers for account takeover (ATO) attacks to compromise packages with malicious versions. Hence, NPQ may make DNS requests to domains like `gmail.com` or personal domains found in maintainer emails. Additionally, NPQ makes HTTP requests to `osv.dev` to fetch security vulnerability data (or uses Snyk if configured, as a prioritized option).
 
+## Documentation
+
+- [Project documentation](./docs/README.md) - development, testing, architecture, and conventions.
+
 ## Contributing
 
 Please consult the [CONTRIBUTING](CONTRIBUTING.md) for guidelines on contributing to this project
