@@ -3,15 +3,11 @@
 const fs = require('fs/promises')
 const path = require('path')
 
-const TOP_PACKAGES_ASSET_URL =
-  'https://github.com/lirantal/npm-rank/releases/download/latest/list-package-names.json'
-
 const TOP_PACKAGES_FILE_PATH = path.join(__dirname, '../data/top-packages.json')
 
 async function downloadTopPackages() {
-  const response = await fetch(TOP_PACKAGES_ASSET_URL)
-  const data = await response.json()
-  return data
+  const { npmHighImpact } = await import('npm-high-impact')
+  return [...new Set(npmHighImpact)]
 }
 
 async function saveTopPackagesToFile() {

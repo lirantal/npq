@@ -2,19 +2,21 @@
 
 const TyposquattingMarshall = require('../lib/marshalls/typosquatting.marshall')
 
-describe('Typosquatting Marshall', () => {
-  test('should remove duplicate entries from similar packages', async () => {
-    const typosquattingMarshall = new TyposquattingMarshall({
-      packageRepoUtils: {
-        isPackageInAllowList: jest.fn(() => {
-          return false // Simulate that the package is not in the allow list
-        })
-      }
-    })
+function createTyposquattingMarshall(isPackageInAllowList = false) {
+  return new TyposquattingMarshall({
+    packageRepoUtils: {
+      isPackageInAllowList: jest.fn(() => {
+        return isPackageInAllowList
+      })
+    }
+  })
+}
 
-    // Create a test package that would match multiple similar packages
+describe('Typosquatting Marshall', () => {
+  test('should report unique similar packages', async () => {
+    const typosquattingMarshall = createTyposquattingMarshall()
     const pkg = {
-      packageName: 'ghtml' // This should match 'html' which appears multiple times in the data
+      packageName: 'eslont'
     }
 
     try {
@@ -33,23 +35,13 @@ describe('Typosquatting Marshall', () => {
       // Check that there are no duplicates
       const uniquePackages = [...new Set(packages)]
       expect(packages.length).toBe(uniquePackages.length)
-
-      // Verify that 'html' appears only once even though it exists multiple times in the data
-      const htmlCount = packages.filter((pkg) => pkg === 'html').length
-      expect(htmlCount).toBe(1)
+      expect(packages).toEqual(expect.arrayContaining(['eslint', 'jslint']))
     }
   })
 
   test('should not report typosquatting for packages in top packages list', async () => {
-    const typosquattingMarshall = new TyposquattingMarshall({
-      packageRepoUtils: {
-        isPackageInAllowList: jest.fn(() => {
-          return true
-        })
-      }
-    })
+    const typosquattingMarshall = createTyposquattingMarshall()
 
-    // Test with a package that exists in the top packages list
     const pkg = {
       packageName: 'express' // This should be in the top packages list
     }
@@ -58,16 +50,31 @@ describe('Typosquatting Marshall', () => {
     expect(result).toEqual([])
   })
 
-  test('should not report typosquatting for packages with no similar matches', async () => {
-    const typosquattingMarshall = new TyposquattingMarshall({
-      packageRepoUtils: {
-        isPackageInAllowList: jest.fn(() => {
-          return false // Simulate that the package is not in the allow list
-        })
-      }
-    })
+  test('should not report oxlint as typosquatting', async () => {
+    const typosquattingMarshall = createTyposquattingMarshall()
 
-    // Test with a package that has no similar matches
+    const pkg = {
+      packageName: 'oxlint'
+    }
+
+    const result = await typosquattingMarshall.validate(pkg)
+    expect(result).toEqual([])
+  })
+
+  test('should report typosquatting for close matches to high-impact packages', async () => {
+    const typosquattingMarshall = createTyposquattingMarshall()
+    const pkg = {
+      packageName: 'prettierr'
+    }
+
+    await expect(typosquattingMarshall.validate(pkg)).rejects.toThrow(
+      'Potential typosquatting with popular package(s): prettier'
+    )
+  })
+
+  test('should not report typosquatting for packages with no similar matches', async () => {
+    const typosquattingMarshall = createTyposquattingMarshall()
+
     const pkg = {
       packageName: 'verylonganduniquenamethatdoesnotmatchanything'
     }
