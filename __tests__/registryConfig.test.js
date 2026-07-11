@@ -107,6 +107,43 @@ describe('RegistryConfig', () => {
     ).toBe(Buffer.from('ci-password').toString('base64'))
   })
 
+  test('flattens CA, proxy, TLS, and registry-scoped client certificate options', async () => {
+    const caFile = path.join(root, 'company-ca.pem')
+    const certFile = path.join(root, 'client-cert.pem')
+    const keyFile = path.join(root, 'client-key.pem')
+    fs.writeFileSync(
+      caFile,
+      '-----BEGIN CERTIFICATE-----\nCOMPANY CA\n-----END CERTIFICATE-----\n'
+    )
+    fs.writeFileSync(certFile, 'CLIENT CERTIFICATE')
+    fs.writeFileSync(keyFile, 'CLIENT KEY')
+    fs.writeFileSync(
+      path.join(project, '.npmrc'),
+      [
+        'registry=https://secure.example.test/npm/',
+        `cafile=${caFile}`,
+        'strict-ssl=true',
+        'https-proxy=https://proxy.example.test:8443/',
+        `//secure.example.test/npm/:certfile=${certFile}`,
+        `//secure.example.test/npm/:keyfile=${keyFile}`
+      ].join('\n')
+    )
+
+    const config = await RegistryConfig.load({ env, cwd: project })
+
+    expect(config.requestOptions.ca.join('\n')).toContain('COMPANY CA')
+    expect(config.requestOptions.httpsProxy).toBe(
+      'https://proxy.example.test:8443/'
+    )
+    expect(config.requestOptions.strictSSL).toBe(true)
+    expect(
+      config.requestOptions['//secure.example.test/npm/:certfile']
+    ).toBe(certFile)
+    expect(config.requestOptions['//secure.example.test/npm/:keyfile']).toBe(
+      keyFile
+    )
+  })
+
   test('provides public npm defaults without reading config files', () => {
     const config = RegistryConfig.defaults()
 
