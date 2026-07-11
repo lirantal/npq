@@ -22,6 +22,7 @@ The `feature/` directory contains detailed documentation for specific features a
 ### Existing Features  
 
 - **`auto-continue.md`** - Documentation for the auto-continue feature that streamlines package installation workflows
+- **`custom-registry.md`** - Authenticated default and scoped npm-compatible registry configuration, routing, and failure behavior
 - **`exit-codes.md`** - Reference for `npq` and `npq-hero` process exit behavior
 - **`malicious-package.md`** - Documentation for known-malicious package detection through Snyk/OSV data
 - **`pacote-dependency-reduction.md`** - Implementation summary for optional pacote dependency reduction
@@ -70,6 +71,7 @@ When adding new features or making significant changes:
 | Test Coverage | `feature/test-coverage-improvements.md` | Recent test suite enhancements |
 | Signature Verification | `feature/signature-verification-fix.md` | Version range bug fix and validation |
 | Auto-Continue | `feature/auto-continue.md` | Automated installation workflow |
+| Custom Registries | `feature/custom-registry.md` | Authenticated npm-compatible registry configuration and privacy behavior |
 | Exit Codes | `feature/exit-codes.md` | CLI and package-manager passthrough exit behavior |
 | Malicious Packages | `feature/malicious-package.md` | Known-malicious package detection and reporting |
 | Dependency Reduction | `feature/pacote-dependency-reduction.md` | Optional dependency management |
