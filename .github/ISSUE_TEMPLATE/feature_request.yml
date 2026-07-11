@@ -1,0 +1,21 @@
+name: 💡 Feature request
+description: Suggest a new capability, marshall, or improvement
+labels: ['enhancement']
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: The problem you're hitting matters more than the solution you have in mind.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Optional — how you think it could work.
+  - type: textarea
+    id: example
+    attributes:
+      label: How would you use it?
+      description: A concrete usage example helps a lot.

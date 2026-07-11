@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🔒 Security vulnerability report
+    url: https://github.com/lirantal/npq/security/policy
+    about: Please report security vulnerabilities privately through the security policy, not in a public issue.
+  - name: 💬 Questions & ideas
+    url: https://github.com/lirantal/npq/discussions
+    about: Ask questions or float ideas in Discussions.

@@ -1,0 +1,48 @@
+name: 🐛 Bug report
+description: Something isn't working as expected
+labels: ['bug']
+body:
+  - type: textarea
+    id: current-behavior
+    attributes:
+      label: Current Behavior
+      description: What happened? Include error output if you have it.
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: What should happen instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: The shortest repro you can manage — commands, package names, config.
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: possible-solution
+    attributes:
+      label: Possible Solution
+      description: Optional — a fix idea or a guess at the cause.
+  - type: input
+    id: npq-version
+    attributes:
+      label: npq version
+      placeholder: e.g. 3.19.1
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Node.js version and operating system
+      placeholder: e.g. Node.js 24.1, macOS 15
+    validations:
+      required: true
