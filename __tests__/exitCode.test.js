@@ -32,6 +32,14 @@ jest.mock('../lib/helpers/sourcePackages', () => ({
   getProjectPackages: jest.fn().mockResolvedValue(['express'])
 }))
 
+jest.mock('../lib/helpers/registryConfig', () => ({
+  load: jest.fn().mockResolvedValue({ requestOptions: {} })
+}))
+
+jest.mock('../lib/helpers/registryClient', () =>
+  jest.fn().mockImplementation(() => ({ registryFor: jest.fn() }))
+)
+
 jest.mock('../lib/helpers/promiseThrottler', () => ({
   promiseThrottleHelper: jest.fn()
 }))
@@ -101,6 +109,30 @@ describe('npq-hero exit code propagation', () => {
     await flushPromises()
 
     expect(process.exitCode).toBe(1)
+  })
+
+  test('loads and injects registry configuration', async () => {
+    const { CliParser } = require('../lib/cli')
+    const RegistryConfig = require('../lib/helpers/registryConfig')
+    const RegistryClient = require('../lib/helpers/registryClient')
+    const Marshall = require('../lib/marshall')
+    CliParser.parseArgsMinimal.mockReturnValue({
+      packages: ['@company/tool'],
+      registryConfigArgs: [
+        '--registry=https://artifactory.example.test/api/npm/npm/'
+      ]
+    })
+
+    require('../bin/npq-hero.js')
+    await flushPromises()
+
+    expect(RegistryConfig.load).toHaveBeenCalledWith({
+      argv: ['--registry=https://artifactory.example.test/api/npm/npm/']
+    })
+    expect(RegistryClient).toHaveBeenCalled()
+    expect(Marshall).toHaveBeenCalledWith(
+      expect.objectContaining({ registryClient: expect.any(Object) })
+    )
   })
 })
 

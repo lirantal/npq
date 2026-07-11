@@ -15,6 +15,8 @@ const cliPrompt = require('../lib/helpers/cliPrompt.js')
 const { reportResults } = require('../lib/helpers/reportResults')
 const { Spinner } = require('../lib/helpers/cliSpinner')
 const { promiseThrottleHelper } = require('../lib/helpers/promiseThrottler')
+const RegistryConfig = require('../lib/helpers/registryConfig')
+const RegistryClient = require('../lib/helpers/registryClient')
 
 const debug = util.debuglog('npq')
 
@@ -27,7 +29,12 @@ if (spinner) {
   spinner.start()
 }
 
-Promise.resolve()
+let registryClient
+
+RegistryConfig.load({ argv: cliArgs.registryConfigArgs || [] })
+  .then((registryConfig) => {
+    registryClient = new RegistryClient(registryConfig)
+  })
   .then(() => {
     if (cliArgs.packages.length === 0) {
       debug('\nNo packages specified, using project packages from package.json')
@@ -48,6 +55,7 @@ Promise.resolve()
 
     const marshall = new Marshall({
       pkgs: packages,
+      registryClient,
       progressManager: spinner,
       promiseThrottleHelper
     })

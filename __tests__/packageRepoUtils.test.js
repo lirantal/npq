@@ -1,5 +1,30 @@
 'use strict'
 
+jest.mock('../lib/helpers/registryClient', () => {
+  return class RegistryClientMock {
+    static public() {
+      return new RegistryClientMock()
+    }
+
+    registryFor() {
+      return 'https://registry.npmjs.org/'
+    }
+
+    getPackageInfo(pkg) {
+      return global.fetch(`https://registry.npmjs.org/${pkg}`).then((response) =>
+        response.json()
+      )
+    }
+
+    getDownloadInfo(pkg) {
+      return global
+        .fetch(`https://api.npmjs.org/downloads/point/last-month/${pkg}`)
+        .then((response) => response.json())
+        .then(({ downloads }) => downloads)
+    }
+  }
+})
+
 const PackageRepoUtils = require('../lib/helpers/packageRepoUtils')
 
 global.fetch = jest.fn().mockImplementation(() =>
@@ -12,25 +37,44 @@ beforeEach(() => {
   fetch.mockClear()
 })
 
-test('repo utils always has a default package registry url', () => {
-  const packageRepoUtils = new PackageRepoUtils()
-  expect(packageRepoUtils.registryUrl).toBeTruthy()
+test('repo utils delegates package metadata and downloads to RegistryClient', async () => {
+  const registryClient = {
+    registryFor: jest.fn().mockReturnValue('https://registry.example.test/'),
+    getPackageInfo: jest.fn().mockResolvedValue({ name: 'test-package' }),
+    getDownloadInfo: jest.fn().mockResolvedValue(1950)
+  }
+  const packageRepoUtils = new PackageRepoUtils({ registryClient })
+
+  await expect(packageRepoUtils.getPackageInfo('test-package')).resolves.toEqual({
+    name: 'test-package'
+  })
+  await expect(packageRepoUtils.getDownloadInfo('test-package')).resolves.toBe(
+    1950
+  )
+  expect(registryClient.getPackageInfo).toHaveBeenCalledWith('test-package')
+  expect(registryClient.getDownloadInfo).toHaveBeenCalledWith('test-package')
 })
 
-test('repo utils constructor allows setting a package registry url', () => {
-  const pkgRegistryUrl = 'https://registry.yarnpkg.com'
-  const packageRepoUtils = new PackageRepoUtils({
-    registryUrl: pkgRegistryUrl
-  })
-  expect(packageRepoUtils.registryUrl).toEqual(pkgRegistryUrl)
-})
+test('repo utils isolates package metadata cache entries by registry', async () => {
+  const registryClient = {
+    registryFor: jest
+      .fn()
+      .mockReturnValueOnce('https://one.example.test/')
+      .mockReturnValueOnce('https://two.example.test/'),
+    getPackageInfo: jest
+      .fn()
+      .mockResolvedValueOnce({ source: 'one' })
+      .mockResolvedValueOnce({ source: 'two' })
+  }
+  const packageRepoUtils = new PackageRepoUtils({ registryClient })
 
-test('repo utils constructor allows setting a package registry api url', () => {
-  const pkgRegistryApiUrl = 'https://api.npmjs.org'
-  const packageRepoUtils = new PackageRepoUtils({
-    registryApiUrl: pkgRegistryApiUrl
+  await expect(packageRepoUtils.getPackageInfo('same-package')).resolves.toEqual({
+    source: 'one'
   })
-  expect(packageRepoUtils.registryApiUrl).toEqual(pkgRegistryApiUrl)
+  await expect(packageRepoUtils.getPackageInfo('same-package')).resolves.toEqual({
+    source: 'two'
+  })
+  expect(registryClient.getPackageInfo).toHaveBeenCalledTimes(2)
 })
 
 test('repo utils returns a package json object from registry', async () => {
