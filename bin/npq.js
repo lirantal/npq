@@ -73,12 +73,20 @@ RegistryConfig.load({ argv: cliArgs.registryConfigArgs || [] })
       Object.hasOwn(results, 'countErrors') &&
       Object.hasOwn(results, 'countWarnings')
     ) {
-      const { countErrors, countWarnings, useRichFormatting } = results
-      const isErrors = countErrors > 0 || countWarnings > 0
+      const {
+        countErrors,
+        countWarnings,
+        countNotEvaluated = 0,
+        useRichFormatting
+      } = results
+      const hasFindings = countErrors > 0 || countWarnings > 0
+      const hasReportableResults = hasFindings || countNotEvaluated > 0
 
-      if (isErrors) {
+      if (hasReportableResults) {
         console.log()
-        console.log('Packages with issues found:')
+        console.log(
+          hasFindings ? 'Packages with issues found:' : 'Package checks not evaluated:'
+        )
 
         if (useRichFormatting) {
           console.log(results.resultsForPrettyPrint)
@@ -90,9 +98,10 @@ RegistryConfig.load({ argv: cliArgs.registryConfigArgs || [] })
       }
 
       return {
-        anyIssues: isErrors,
+        anyIssues: hasFindings,
         countErrors,
-        countWarnings
+        countWarnings,
+        countNotEvaluated
       }
     }
     return undefined

@@ -175,4 +175,72 @@ describe('npq CLI script', () => {
     expect(Marshall).not.toHaveBeenCalled()
     expect(pkgMgr.process).not.toHaveBeenCalled()
   })
+
+  test('prints skipped checks and continues an explicit install without prompting', async () => {
+    const { CliParser } = require('../lib/cli')
+    const { reportResults } = require('../lib/helpers/reportResults')
+    const cliPrompt = require('../lib/helpers/cliPrompt.js')
+    const pkgMgr = require('../lib/packageManager')
+    const consoleLog = jest.spyOn(console, 'log').mockImplementation(() => {})
+
+    CliParser.parseArgsFull.mockReturnValue({
+      packages: ['@company/tool'],
+      packageManager: 'pnpm',
+      plain: true,
+      dryRun: false,
+      disableAutoContinue: false,
+      installSubcommandExplicit: true
+    })
+    reportResults.mockReturnValue({
+      countErrors: 0,
+      countWarnings: 0,
+      countNotEvaluated: 2,
+      resultsForPlainTextPrint: 'skipped-plain',
+      summaryForPlainTextPrint: 'summary-plain',
+      useRichFormatting: false
+    })
+
+    require('../bin/npq.js')
+    await new Promise(setImmediate)
+
+    expect(consoleLog).toHaveBeenCalledWith('Package checks not evaluated:')
+    expect(consoleLog).toHaveBeenCalledWith('skipped-plain')
+    expect(cliPrompt.prompt).not.toHaveBeenCalled()
+    expect(cliPrompt.autoContinue).not.toHaveBeenCalled()
+    expect(pkgMgr.process).toHaveBeenCalledWith('pnpm')
+
+    consoleLog.mockRestore()
+  })
+
+  test('still follows warning behavior when skipped checks accompany a warning', async () => {
+    const { CliParser } = require('../lib/cli')
+    const { reportResults } = require('../lib/helpers/reportResults')
+    const cliPrompt = require('../lib/helpers/cliPrompt.js')
+    const consoleLog = jest.spyOn(console, 'log').mockImplementation(() => {})
+
+    CliParser.parseArgsFull.mockReturnValue({
+      packages: ['@company/tool'],
+      packageManager: 'npm',
+      plain: true,
+      dryRun: false,
+      disableAutoContinue: false,
+      installSubcommandExplicit: true
+    })
+    reportResults.mockReturnValue({
+      countErrors: 0,
+      countWarnings: 1,
+      countNotEvaluated: 2,
+      resultsForPlainTextPrint: 'mixed-plain',
+      summaryForPlainTextPrint: 'summary-plain',
+      useRichFormatting: false
+    })
+
+    require('../bin/npq.js')
+    await new Promise(setImmediate)
+
+    expect(consoleLog).toHaveBeenCalledWith('Packages with issues found:')
+    expect(cliPrompt.autoContinue).toHaveBeenCalled()
+
+    consoleLog.mockRestore()
+  })
 })
