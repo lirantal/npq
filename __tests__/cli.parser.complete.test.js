@@ -199,6 +199,23 @@ describe('CliParser', () => {
   })
 
   describe('parseArgsFull', () => {
+    test('returns standard registry configuration arguments', () => {
+      mockParseArgs.mockReturnValue({
+        values: {
+          registry: 'https://artifactory.example.test/api/npm/npm/',
+          userconfig: '/tmp/user.npmrc',
+          globalconfig: '/tmp/global.npmrc'
+        },
+        positionals: ['install', '@company/tool']
+      })
+
+      expect(CliParser.parseArgsFull().registryConfigArgs).toEqual([
+        '--registry=https://artifactory.example.test/api/npm/npm/',
+        '--userconfig=/tmp/user.npmrc',
+        '--globalconfig=/tmp/global.npmrc'
+      ])
+    })
+
     test('should display help when --help flag is provided', () => {
       mockParseArgs.mockReturnValue({
         values: { help: true },
@@ -243,6 +260,7 @@ describe('CliParser', () => {
         dryRun: true,
         plain: true,
         disableAutoContinue: false,
+        registryConfigArgs: [],
         installSubcommandExplicit: true
       })
     })
@@ -409,6 +427,19 @@ describe('CliParser', () => {
   })
 
   describe('parseArgsMinimal', () => {
+    test('returns standard registry configuration arguments', () => {
+      mockParseArgs.mockReturnValue({
+        values: {
+          registry: 'https://artifactory.example.test/api/npm/npm/'
+        },
+        positionals: ['install', '@company/tool']
+      })
+
+      expect(CliParser.parseArgsMinimal().registryConfigArgs).toEqual([
+        '--registry=https://artifactory.example.test/api/npm/npm/'
+      ])
+    })
+
     test('should extract packages with install command', () => {
       mockParseArgs.mockReturnValue({
         positionals: ['install', 'express', 'lodash']
@@ -417,7 +448,8 @@ describe('CliParser', () => {
       const result = CliParser.parseArgsMinimal()
 
       expect(result).toEqual({
-        packages: ['express@latest', 'lodash@latest']
+        packages: ['express@latest', 'lodash@latest'],
+        registryConfigArgs: []
       })
     })
 
@@ -429,7 +461,8 @@ describe('CliParser', () => {
       const result = CliParser.parseArgsMinimal()
 
       expect(result).toEqual({
-        packages: []
+        packages: [],
+        registryConfigArgs: []
       })
     })
 
@@ -441,7 +474,8 @@ describe('CliParser', () => {
       const result = CliParser.parseArgsMinimal()
 
       expect(result).toEqual({
-        packages: []
+        packages: [],
+        registryConfigArgs: []
       })
     })
   })
@@ -490,6 +524,7 @@ describe('CliParser', () => {
         dryRun: true,
         plain: true,
         disableAutoContinue: false,
+        registryConfigArgs: [],
         installSubcommandExplicit: true
       })
     })
@@ -513,6 +548,7 @@ describe('CliParser', () => {
         dryRun: true,
         plain: true,
         disableAutoContinue: true,
+        registryConfigArgs: [],
         installSubcommandExplicit: true
       })
     })
