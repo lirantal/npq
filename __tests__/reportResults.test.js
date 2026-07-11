@@ -763,6 +763,42 @@ describe('reportResults helper functions', () => {
   })
 })
 
+describe('not evaluated results', () => {
+  test('renders skipped checks without counting them as findings', () => {
+    const { reportResults } = require('../lib/helpers/reportResults')
+    const skippedOnlyResults = {
+      'private-package@1.0.0': [
+        {
+          signatures: {
+            status: null,
+            errors: [],
+            warnings: [],
+            notEvaluated: [
+              {
+                pkg: 'private-package@1.0.0',
+                message: 'configured registry does not expose signing keys'
+              }
+            ],
+            data: {},
+            marshall: 'signatures',
+            categoryId: 'SupplyChainSecurity'
+          }
+        }
+      ]
+    }
+
+    const result = reportResults(skippedOnlyResults, { plain: true })
+
+    expect(result.countErrors).toBe(0)
+    expect(result.countWarnings).toBe(0)
+    expect(result.countNotEvaluated).toBe(1)
+    expect(result.resultsForPlainTextPrint).toContain(
+      'NOT EVALUATED: Supply Chain Security - configured registry does not expose signing keys'
+    )
+    expect(result.summaryForPlainTextPrint).toContain('Total not evaluated: 1')
+  })
+})
+
 describe('basic functionality test', () => {
   test('functions can be imported', () => {
     const { reportResults } = require('../lib/helpers/reportResults')

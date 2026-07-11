@@ -113,3 +113,46 @@ test('base marshall implemented isEnabled', async () => {
   const result = await testMarshall.run(ctx, task)
   expect(result).toStrictEqual([undefined])
 })
+
+test('checkPackage records NotEvaluated separately from findings', async () => {
+  const NotEvaluated = require('../lib/helpers/notEvaluated')
+  const marshall = new BaseMarshall({ packageRepoUtils: null })
+  marshall.name = 'optional'
+  marshall.validate = jest.fn().mockRejectedValue(
+    new NotEvaluated('configured registry does not expose signing keys', {
+      capability: 'signing-keys'
+    })
+  )
+  const ctx = { pkgs: [], marshalls: {} }
+  marshall.init(ctx)
+
+  await marshall.checkPackage({ packageString: 'private-package@1.0.0' }, ctx)
+
+  expect(ctx.marshalls.optional.errors).toEqual([])
+  expect(ctx.marshalls.optional.warnings).toEqual([])
+  expect(ctx.marshalls.optional.notEvaluated).toEqual([
+    {
+      pkg: 'private-package@1.0.0',
+      message: 'configured registry does not expose signing keys'
+    }
+  ])
+})
+
+test('checkPackage rethrows fatal RegistryError', async () => {
+  const { RegistryError } = require('../lib/helpers/registryErrors')
+  const marshall = new BaseMarshall({ packageRepoUtils: null })
+  marshall.name = 'optional'
+  marshall.validate = jest.fn().mockRejectedValue(
+    new RegistryError('Registry authentication failed', {
+      registry: 'https://user:secret@artifactory.example.test/api/npm/npm/',
+      code: 'EREGISTRYAUTH',
+      statusCode: 401
+    })
+  )
+  const ctx = { pkgs: [], marshalls: {} }
+  marshall.init(ctx)
+
+  await expect(
+    marshall.checkPackage({ packageString: 'private-package@1.0.0' }, ctx)
+  ).rejects.toMatchObject({ code: 'EREGISTRYAUTH', statusCode: 401 })
+})
