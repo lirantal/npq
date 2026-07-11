@@ -32,232 +32,12 @@ jest.mock('ssri', () => ({
   })
 }))
 
-// Mock fetch globally
-global.fetch = jest.fn()
-
 describe('NpmRegistry', () => {
   let npmRegistry
 
   beforeEach(() => {
     jest.clearAllMocks()
     npmRegistry = new NpmRegistry()
-  })
-
-  describe('Constructor', () => {
-    test('should create instance with default registry', () => {
-      const registry = new NpmRegistry()
-      expect(registry.registry).toBe('https://registry.npmjs.org')
-      expect(registry.opts).toEqual({})
-    })
-
-    test('should create instance with custom registry', () => {
-      const customRegistry = 'https://custom.registry.com'
-      const registry = new NpmRegistry({ registry: customRegistry })
-      expect(registry.registry).toBe(customRegistry)
-      expect(registry.opts).toEqual({ registry: customRegistry })
-    })
-
-    test('should store additional options', () => {
-      const opts = { registry: 'https://custom.com', timeout: 5000 }
-      const registry = new NpmRegistry(opts)
-      expect(registry.opts).toEqual(opts)
-    })
-  })
-
-  describe('getManifest', () => {
-    test('should fetch package manifest successfully', async () => {
-      const mockPackument = {
-        'dist-tags': { latest: '1.0.0' },
-        versions: {
-          '1.0.0': {
-            name: 'express',
-            version: '1.0.0',
-            dist: {
-              tarball: 'https://registry.npmjs.org/express/-/express-1.0.0.tgz',
-              integrity: 'sha512-example'
-            }
-          }
-        },
-        time: {
-          '1.0.0': '2023-01-01T00:00:00.000Z'
-        }
-      }
-
-      fetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockPackument)
-      })
-
-      const manifest = await npmRegistry.getManifest('express@1.0.0')
-
-      expect(fetch).toHaveBeenCalledWith('https://registry.npmjs.org/express', {
-        headers: {
-          accept: 'application/json',
-          'user-agent': 'npq-npm-registry-client'
-        }
-      })
-      expect(manifest.name).toBe('express')
-      expect(manifest.version).toBe('1.0.0')
-      expect(manifest._time).toBe('2023-01-01T00:00:00.000Z')
-    })
-
-    test('should handle latest tag when no version specified', async () => {
-      const mockPackument = {
-        'dist-tags': { latest: '2.0.0' },
-        versions: {
-          '2.0.0': {
-            name: 'express',
-            version: '2.0.0'
-          }
-        }
-      }
-
-      fetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockPackument)
-      })
-
-      const manifest = await npmRegistry.getManifest('express')
-      expect(manifest.version).toBe('2.0.0')
-    })
-
-    test('should handle explicit latest tag', async () => {
-      const mockPackument = {
-        'dist-tags': { latest: '3.0.0' },
-        versions: {
-          '3.0.0': {
-            name: 'express',
-            version: '3.0.0'
-          }
-        }
-      }
-
-      fetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockPackument)
-      })
-
-      const manifest = await npmRegistry.getManifest('express@latest')
-      expect(manifest.version).toBe('3.0.0')
-    })
-
-    test('should pass custom headers', async () => {
-      const mockPackument = {
-        'dist-tags': { latest: '1.0.0' },
-        versions: {
-          '1.0.0': { name: 'express', version: '1.0.0' }
-        }
-      }
-
-      fetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockPackument)
-      })
-
-      await npmRegistry.getManifest('express', {
-        headers: { authorization: 'Bearer token' }
-      })
-
-      expect(fetch).toHaveBeenCalledWith('https://registry.npmjs.org/express', {
-        headers: {
-          accept: 'application/json',
-          'user-agent': 'npq-npm-registry-client',
-          authorization: 'Bearer token'
-        }
-      })
-    })
-
-    test('should handle fetch failure', async () => {
-      fetch.mockResolvedValueOnce({
-        ok: false,
-        status: 404,
-        statusText: 'Not Found'
-      })
-
-      await expect(npmRegistry.getManifest('nonexistent')).rejects.toThrow(
-        'Failed to fetch package manifest: 404 Not Found'
-      )
-    })
-
-    test('should handle missing version', async () => {
-      const mockPackument = {
-        'dist-tags': { latest: '1.0.0' },
-        versions: {
-          '1.0.0': { name: 'express', version: '1.0.0' }
-        }
-      }
-
-      fetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockPackument)
-      })
-
-      await expect(npmRegistry.getManifest('express@2.0.0')).rejects.toThrow(
-        'Version 2.0.0 not found for package express'
-      )
-    })
-
-    test('should handle missing versions object', async () => {
-      const mockPackument = {
-        'dist-tags': { latest: '1.0.0' }
-      }
-
-      fetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockPackument)
-      })
-
-      await expect(npmRegistry.getManifest('express@1.0.0')).rejects.toThrow(
-        'Version 1.0.0 not found for package express'
-      )
-    })
-
-    test('should handle missing time information gracefully', async () => {
-      const mockPackument = {
-        'dist-tags': { latest: '1.0.0' },
-        versions: {
-          '1.0.0': {
-            name: 'express',
-            version: '1.0.0'
-          }
-        }
-        // No time field
-      }
-
-      fetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockPackument)
-      })
-
-      const manifest = await npmRegistry.getManifest('express@1.0.0')
-      expect(manifest._time).toBeUndefined()
-    })
-
-    test('should handle scoped packages', async () => {
-      const mockPackument = {
-        'dist-tags': { latest: '1.0.0' },
-        versions: {
-          '1.0.0': {
-            name: '@scope/package',
-            version: '1.0.0'
-          }
-        }
-      }
-
-      fetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockPackument)
-      })
-
-      await npmRegistry.getManifest('@scope/package@1.0.0')
-
-      expect(fetch).toHaveBeenCalledWith('https://registry.npmjs.org/@scope%2fpackage', {
-        headers: {
-          accept: 'application/json',
-          'user-agent': 'npq-npm-registry-client'
-        }
-      })
-    })
   })
 
   describe('verifySignatures', () => {
@@ -469,7 +249,7 @@ describe('NpmRegistry', () => {
       ).rejects.toThrow('Package has no attestations to verify')
     })
 
-    test('should fetch and verify attestations successfully', async () => {
+    test('should verify supplied attestations successfully', async () => {
       // Mock the statement payload with matching hex digest
       const correctHexDigest = require('ssri').parse(mockManifest.dist.integrity).hexDigest()
       const statement = {
@@ -509,39 +289,21 @@ describe('NpmRegistry', () => {
         ]
       }
 
-      // Mock fetch for attestations
-      fetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockAttestations)
-      })
-
       // Mock sigstore verification
       sigstore.verify.mockResolvedValue()
 
-      const result = await npmRegistry.verifyAttestations(mockManifest, mockRegistryKeys)
-
-      expect(fetch).toHaveBeenCalledWith(
-        'https://registry.npmjs.org/-/npm/v1/attestations/express@1.0.0',
-        {
-          headers: {
-            accept: 'application/json',
-            'user-agent': 'npq-npm-registry-client'
-          }
-        }
+      const result = await npmRegistry.verifyAttestations(
+        mockManifest,
+        mockRegistryKeys,
+        mockAttestations.attestations
       )
       expect(result._attestations).toEqual(mockManifest.dist.attestations)
     })
 
-    test('should handle fetch failure for attestations', async () => {
-      fetch.mockResolvedValueOnce({
-        ok: false,
-        status: 404,
-        statusText: 'Not Found'
-      })
-
-      await expect(npmRegistry.verifyAttestations(mockManifest, mockRegistryKeys)).rejects.toThrow(
-        'Failed to fetch attestations: 404 Not Found'
-      )
+    test('should reject an invalid attestations response', async () => {
+      await expect(
+        npmRegistry.verifyAttestations(mockManifest, mockRegistryKeys, null)
+      ).rejects.toThrow('Package attestations response is invalid')
     })
 
     test('should throw error when no corresponding public key found', async () => {
@@ -564,14 +326,9 @@ describe('NpmRegistry', () => {
         ]
       }
 
-      fetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockAttestations)
-      })
-
-      await expect(npmRegistry.verifyAttestations(mockManifest, [])).rejects.toThrow(
-        /has attestations but no corresponding public key\(s\) can be found/
-      )
+      await expect(
+        npmRegistry.verifyAttestations(mockManifest, [], mockAttestations.attestations)
+      ).rejects.toThrow(/has attestations but no corresponding public key\(s\) can be found/)
     })
 
     test('should handle attestation verification failure', async () => {
@@ -608,17 +365,16 @@ describe('NpmRegistry', () => {
         ]
       }
 
-      fetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockAttestations)
-      })
-
       // Mock sigstore verification failure
       sigstore.verify.mockRejectedValue(new Error('Verification failed'))
 
-      await expect(npmRegistry.verifyAttestations(mockManifest, mockRegistryKeys)).rejects.toThrow(
-        /failed to verify attestation: Verification failed/
-      )
+      await expect(
+        npmRegistry.verifyAttestations(
+          mockManifest,
+          mockRegistryKeys,
+          mockAttestations.attestations
+        )
+      ).rejects.toThrow(/failed to verify attestation: Verification failed/)
     })
   })
 })
