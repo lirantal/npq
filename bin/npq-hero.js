@@ -12,6 +12,8 @@ const cliPrompt = require('../lib/helpers/cliPrompt.js')
 const { reportResults } = require('../lib/helpers/reportResults')
 const { Spinner } = require('../lib/helpers/cliSpinner')
 const { promiseThrottleHelper } = require('../lib/helpers/promiseThrottler')
+const RegistryConfig = require('../lib/helpers/registryConfig')
+const RegistryClient = require('../lib/helpers/registryClient')
 
 const PACKAGE_MANAGER_TOOL = process.env.NPQ_PKG_MGR
 const DISABLE_AUTO_CONTINUE = process.env.NPQ_DISABLE_AUTO_CONTINUE === 'true'
@@ -27,14 +29,17 @@ if (spinner) {
   spinner.start()
 }
 
-const marshall = new Marshall({
-  pkgs: cliArgs.packages,
-  progressManager: spinner,
-  promiseThrottleHelper
-})
-
-marshall
-  .process()
+RegistryConfig.load({ argv: cliArgs.registryConfigArgs || [] })
+  .then((registryConfig) => {
+    const registryClient = new RegistryClient(registryConfig)
+    const marshall = new Marshall({
+      pkgs: cliArgs.packages,
+      registryClient,
+      progressManager: spinner,
+      promiseThrottleHelper
+    })
+    return marshall.process()
+  })
   .then((marshallResults) => {
     if (spinner) {
       spinner.stop()
@@ -46,12 +51,20 @@ marshall
       Object.hasOwn(results, 'countErrors') &&
       Object.hasOwn(results, 'countWarnings')
     ) {
-      const { countErrors, countWarnings, useRichFormatting } = results
-      const isErrors = countErrors > 0 || countWarnings > 0
+      const {
+        countErrors,
+        countWarnings,
+        countNotEvaluated = 0,
+        useRichFormatting
+      } = results
+      const hasFindings = countErrors > 0 || countWarnings > 0
+      const hasReportableResults = hasFindings || countNotEvaluated > 0
 
-      if (isErrors) {
+      if (hasReportableResults) {
         console.log()
-        console.log('Packages with issues found:')
+        console.log(
+          hasFindings ? 'Packages with issues found:' : 'Package checks not evaluated:'
+        )
 
         if (useRichFormatting) {
           console.log(results.resultsForPrettyPrint)
@@ -63,9 +76,10 @@ marshall
       }
 
       return {
-        anyIssues: isErrors,
+        anyIssues: hasFindings,
         countErrors,
-        countWarnings
+        countWarnings,
+        countNotEvaluated
       }
     }
     return undefined
