@@ -84,3 +84,7 @@ When adding new features or making significant changes:
 ## Design specifications
 
 - [Custom registry support](./superpowers/specs/2026-07-11-custom-registry-support-design.md) - approved design for npm-compatible Artifactory and private registry support.
+
+## Implementation plans
+
+- [Custom registry support](./superpowers/plans/2026-07-11-custom-registry-support.md) - task-by-task implementation plan for issue #429.
