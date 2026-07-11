@@ -178,6 +178,21 @@ describe('RegistryConfig', () => {
     })
   })
 
+  test('reports false npm config validation results as configuration errors', async () => {
+    await expect(
+      RegistryConfig.load({
+        env: {
+          ...env,
+          npm_config_fetch_retries: 'not-a-number'
+        },
+        cwd: project
+      })
+    ).rejects.toMatchObject({
+      name: 'RegistryError',
+      code: 'EREGISTRYCONFIG'
+    })
+  })
+
   test('reports invalid unscoped authentication as a safe config error', async () => {
     fs.writeFileSync(path.join(project, '.npmrc'), '_authToken=secret-value\n')
 

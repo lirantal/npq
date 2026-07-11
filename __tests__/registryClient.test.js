@@ -230,6 +230,29 @@ describe('RegistryClient', () => {
     )
   })
 
+  test('does not duplicate a registry base path advertised in an attestation URL', async () => {
+    const fetcher = {
+      json: jest.fn().mockResolvedValue({ attestations: [{ bundle: {} }] })
+    }
+    const client = new RegistryClient(createConfig(), { fetcher })
+    const manifest = {
+      dist: {
+        attestations: {
+          url:
+            'https://artifactory.example.test/artifactory/api/npm/company/' +
+            '-/npm/v1/attestations/tool@1.0.0'
+        }
+      }
+    }
+
+    await client.getAttestations('@company/tool', manifest)
+
+    expect(fetcher.json).toHaveBeenCalledWith(
+      '-/npm/v1/attestations/tool@1.0.0',
+      expect.objectContaining({ spec: '@company/tool' })
+    )
+  })
+
   test('rejects malformed attestation URLs and responses', async () => {
     const fetcher = { json: jest.fn().mockResolvedValue({ invalid: true }) }
     const client = new RegistryClient(createConfig(), { fetcher })

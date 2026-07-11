@@ -1000,6 +1000,52 @@ describe('Provenance test suites', () => {
     expect(verify).toHaveBeenCalledWith(manifest, keys, attestations)
   })
 
+  test('keeps registry routing bound to the requested package name', async () => {
+    const manifest = {
+      name: 'response-name',
+      version: '1.0.0',
+      dist: {
+        attestations: {
+          url: 'https://registry.npmjs.org/-/npm/v1/attestations/response-name@1.0.0'
+        }
+      }
+    }
+    const packument = {
+      name: 'response-name',
+      versions: { '1.0.0': manifest }
+    }
+    const registryClient = {
+      getManifest: jest.fn().mockResolvedValue(manifest),
+      getRegistryKeys: jest.fn().mockResolvedValue([{ keyid: 'key-1' }]),
+      getAttestations: jest.fn().mockResolvedValue([{ bundle: {} }])
+    }
+    jest
+      .spyOn(NpmRegistry.prototype, 'verifyAttestations')
+      .mockResolvedValue({ _attestations: {} })
+    const marshall = new ProvenanceMarshall({
+      packageRepoUtils: {
+        getPackageInfo: jest.fn().mockResolvedValue(packument),
+        parsePackageVersion: jest.fn()
+      },
+      registryClient
+    })
+
+    await marshall.validate({
+      packageName: '@company/tool',
+      packageVersion: '1.0.0'
+    })
+
+    expect(registryClient.getManifest).toHaveBeenCalledWith(
+      '@company/tool@1.0.0',
+      packument
+    )
+    expect(registryClient.getRegistryKeys).toHaveBeenCalledWith('@company/tool')
+    expect(registryClient.getAttestations).toHaveBeenCalledWith(
+      '@company/tool',
+      manifest
+    )
+  })
+
   test.each([
     new NotEvaluated('configured registry does not expose attestations', {
       capability: 'attestations'

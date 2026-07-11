@@ -63,6 +63,10 @@ describe('npq CLI script', () => {
     Spinner.mockClear()
   })
 
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
   test('should initialize and start spinner in interactive mode without --plain flag', async () => {
     // Arrange
     const { CliParser } = require('../lib/cli')
@@ -209,7 +213,6 @@ describe('npq CLI script', () => {
     expect(cliPrompt.autoContinue).not.toHaveBeenCalled()
     expect(pkgMgr.process).toHaveBeenCalledWith('pnpm')
 
-    consoleLog.mockRestore()
   })
 
   test('still follows warning behavior when skipped checks accompany a warning', async () => {
@@ -241,6 +244,5 @@ describe('npq CLI script', () => {
     expect(consoleLog).toHaveBeenCalledWith('Packages with issues found:')
     expect(cliPrompt.autoContinue).toHaveBeenCalled()
 
-    consoleLog.mockRestore()
   })
 })
