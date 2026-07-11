@@ -80,3 +80,7 @@ When adding new features or making significant changes:
 - [Testing](./testing.md) - test commands, test organization, and verification expectations.
 - [Architecture](./architecture.md) - repository structure, package boundaries, and important flows.
 - [Conventions](./conventions.md) - coding, documentation, and maintenance conventions.
+
+## Design specifications
+
+- [Custom registry support](./superpowers/specs/2026-07-11-custom-registry-support-design.md) - approved design for npm-compatible Artifactory and private registry support.
