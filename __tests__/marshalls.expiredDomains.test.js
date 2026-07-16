@@ -96,7 +96,7 @@ describe('Expired domains test suites', () => {
 
       await expect(
         testMarshall.validate({
-          packageName: packageData([{ name: 'maintainer', email: 'dev@example.com' }])
+          packageName: packageData([{ name: 'maintainer', email: 'dev@public-domain.com' }])
         })
       ).rejects.toThrow(NotEvaluated)
     }
@@ -166,14 +166,14 @@ describe('Expired domains test suites', () => {
     const resolve = jest.fn().mockResolvedValue(['ns1.example.com'])
     const testMarshall = createMarshall({ resolve })
     const data = {
-      ...packageData([{ name: 'maintainer', email: 'dev@mail.example.com' }]),
+      ...packageData([{ name: 'maintainer', email: 'dev@mail.public-domain.com' }]),
       _registry: 'https://registry.example.test/'
     }
 
     await expect(testMarshall.validate({ packageName: data })).resolves.toEqual([
       ['ns1.example.com']
     ])
-    expect(resolve).toHaveBeenCalledWith('example.com', 'NS')
+    expect(resolve).toHaveBeenCalledWith('public-domain.com', 'NS')
   })
 
   test('is not evaluated when custom-registry metadata has only internal domains', async () => {
@@ -195,13 +195,13 @@ describe('Expired domains test suites', () => {
     await expect(
       testMarshall.validate({
         packageName: packageData([
-          { name: 'first', email: 'first@Example.COM' },
-          { name: 'second', email: 'second@example.com' }
+          { name: 'first', email: 'first@Public-Domain.COM' },
+          { name: 'second', email: 'second@public-domain.com' }
         ])
       })
     ).resolves.toEqual([['ns1.example.com']])
     expect(resolve).toHaveBeenCalledTimes(1)
-    expect(resolve).toHaveBeenCalledWith('example.com', 'NS')
+    expect(resolve).toHaveBeenCalledWith('public-domain.com', 'NS')
   })
 
   test('counts incomplete DNS results by affected maintainer record', async () => {
@@ -211,8 +211,8 @@ describe('Expired domains test suites', () => {
     await expect(
       testMarshall.validate({
         packageName: packageData([
-          { name: 'first', email: 'first@example.com' },
-          { name: 'second', email: 'second@example.com' }
+          { name: 'first', email: 'first@public-domain.com' },
+          { name: 'second', email: 'second@public-domain.com' }
         ])
       })
     ).rejects.toThrow(
@@ -228,8 +228,8 @@ describe('Expired domains test suites', () => {
     await expect(
       testMarshall.validate({
         packageName: packageData([
-          { name: 'first', email: 'first@example.com' },
-          { name: 'second', email: 'second@example.org' }
+          { name: 'first', email: 'first@public-domain.com' },
+          { name: 'second', email: 'second@public-domain.org' }
         ])
       })
     ).resolves.toEqual([['ns1.example.com'], ['ns1.example.com']])
