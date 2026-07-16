@@ -72,18 +72,18 @@ describe('Expired domains test suites', () => {
   })
 
   test('reports NXDOMAIN as a warning instead of an error', async () => {
-    const resolve = jest.fn().mockRejectedValue(dnsFailure('ENOTFOUND', 'missing.example'))
+    const resolve = jest.fn().mockRejectedValue(dnsFailure('ENOTFOUND', 'missing-domain.com'))
     const testMarshall = createMarshall({ resolve })
 
     await expect(
       testMarshall.validate({
-        packageName: packageData([{ name: 'maintainer', email: 'dev@missing.example' }])
+        packageName: packageData([{ name: 'maintainer', email: 'dev@missing-domain.com' }])
       })
     ).rejects.toEqual(
       expect.objectContaining({
         constructor: Warning,
         message:
-          'Maintainer domain missing.example does not resolve in public DNS and may warrant investigation.'
+          'Maintainer domain missing-domain.com does not resolve in public DNS and may warrant investigation.'
       })
     )
   })
@@ -103,14 +103,14 @@ describe('Expired domains test suites', () => {
   )
 
   test('records NXDOMAIN through the marshall warning channel', async () => {
-    const resolve = jest.fn().mockRejectedValue(dnsFailure('ENOTFOUND', 'missing.example'))
+    const resolve = jest.fn().mockRejectedValue(dnsFailure('ENOTFOUND', 'missing-domain.com'))
     const testMarshall = createMarshall({ resolve })
     const ctx = { pkgs: [], marshalls: {} }
     testMarshall.init(ctx)
 
     await testMarshall.checkPackage(
       {
-        packageName: packageData([{ name: 'maintainer', email: 'dev@missing.example' }]),
+        packageName: packageData([{ name: 'maintainer', email: 'dev@missing-domain.com' }]),
         packageString: 'example-package'
       },
       ctx
@@ -127,10 +127,10 @@ describe('Expired domains test suites', () => {
 
   test('orders suspected domains and reports other incomplete records', async () => {
     const resolve = jest.fn(async (domain) => {
-      if (domain === 'a.example' || domain === 'b.example') {
+      if (domain === 'a-domain.com' || domain === 'b-domain.com') {
         throw dnsFailure('ENOTFOUND', domain)
       }
-      if (domain === 'timeout.example') {
+      if (domain === 'timeout-domain.com') {
         throw dnsFailure('ETIMEOUT', domain)
       }
       return ['ns1.example.com']
@@ -140,15 +140,52 @@ describe('Expired domains test suites', () => {
     await expect(
       testMarshall.validate({
         packageName: packageData([
-          { name: 'b', email: 'dev@b.example' },
+          { name: 'b', email: 'dev@b-domain.com' },
           { name: 'invalid', email: '' },
-          { name: 'timeout', email: 'dev@timeout.example' },
-          { name: 'a', email: 'dev@a.example' }
+          { name: 'timeout', email: 'dev@timeout-domain.com' },
+          { name: 'a', email: 'dev@a-domain.com' }
         ])
       })
     ).rejects.toThrow(
-      'Maintainer domains a.example, b.example do not resolve in public DNS and may warrant investigation. 2 other maintainer records could not be evaluated.'
+      'Maintainer domains a-domain.com, b-domain.com do not resolve in public DNS and may warrant investigation. 2 other maintainer records could not be evaluated.'
     )
+  })
+
+  test('queries the registrable ICANN domain instead of the mail subdomain', async () => {
+    const resolve = jest.fn().mockResolvedValue(['ns1.example.com'])
+    const testMarshall = createMarshall({ resolve })
+
+    await testMarshall.validate({
+      packageName: packageData([{ name: 'maintainer', email: 'dev@MAIL.Example.CO.UK.' }])
+    })
+
+    expect(resolve).toHaveBeenCalledWith('example.co.uk', 'NS')
+  })
+
+  test('evaluates public ICANN domains from custom-registry metadata', async () => {
+    const resolve = jest.fn().mockResolvedValue(['ns1.example.com'])
+    const testMarshall = createMarshall({ resolve })
+    const data = {
+      ...packageData([{ name: 'maintainer', email: 'dev@mail.example.com' }]),
+      _registry: 'https://registry.example.test/'
+    }
+
+    await expect(testMarshall.validate({ packageName: data })).resolves.toEqual([
+      ['ns1.example.com']
+    ])
+    expect(resolve).toHaveBeenCalledWith('example.com', 'NS')
+  })
+
+  test('is not evaluated when custom-registry metadata has only internal domains', async () => {
+    const resolve = jest.fn()
+    const testMarshall = createMarshall({ resolve })
+    const data = {
+      ...packageData([{ name: 'maintainer', email: 'dev@packages.corp' }]),
+      _registry: 'https://registry.example.test/'
+    }
+
+    await expect(testMarshall.validate({ packageName: data })).rejects.toThrow(NotEvaluated)
+    expect(resolve).not.toHaveBeenCalled()
   })
 
   test('deduplicates maintainer domains before resolving them', async () => {
