@@ -1,6 +1,7 @@
 'use strict'
 
 const ExpiredDomainsMarshall = require('../lib/marshalls/expiredDomains.marshall')
+const NotEvaluated = require('../lib/helpers/notEvaluated')
 
 const testMarshall = new ExpiredDomainsMarshall({
   packageRepoUtils: {
@@ -73,6 +74,46 @@ describe('Expired domains test suites', () => {
     await expect(testMarshall.validate(pkgData)).rejects.toThrow(
       /Detected expired domain can be abused for account takeover: <unknown>/
     )
+  })
+
+  test('is not evaluated when the latest version has no maintainers data', async () => {
+    const pkgData = {
+      packageName: {
+        'dist-tags': {
+          latest: '1.0.0'
+        },
+        versions: {
+          '1.0.0': {}
+        }
+      }
+    }
+
+    await expect(testMarshall.validate(pkgData)).rejects.toThrow(NotEvaluated)
+  })
+
+  test('is not evaluated when the maintainers list is empty', async () => {
+    const pkgData = {
+      packageName: {
+        'dist-tags': {
+          latest: '1.0.0'
+        },
+        versions: {
+          '1.0.0': {
+            maintainers: []
+          }
+        }
+      }
+    }
+
+    await expect(testMarshall.validate(pkgData)).rejects.toThrow(NotEvaluated)
+  })
+
+  test('is not evaluated when the package data has no versions', async () => {
+    const pkgData = {
+      packageName: {}
+    }
+
+    await expect(testMarshall.validate(pkgData)).rejects.toThrow(NotEvaluated)
   })
 
   test('does not throw any errors if the domain resolves well', async () => {
