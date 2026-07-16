@@ -48,8 +48,7 @@
     "npm-registry-fetch": "^19.1.1",
     "semver": "^7.7.4",
     "sigstore": "^4.1.0",
-    "ssri": "^13.0.1",
-    "tldts": "^7.4.8"
+    "ssri": "^13.0.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",

@@ -72,7 +72,12 @@ describe('Expired domains test suites', () => {
   })
 
   test('reports NXDOMAIN as a warning instead of an error', async () => {
-    const resolve = jest.fn().mockRejectedValue(dnsFailure('ENOTFOUND', 'missing-domain.com'))
+    const resolve = jest.fn(async (domain) => {
+      if (domain === 'com') {
+        return ['a.gtld-servers.net']
+      }
+      throw dnsFailure('ENOTFOUND', domain)
+    })
     const testMarshall = createMarshall({ resolve })
 
     await expect(
@@ -103,7 +108,12 @@ describe('Expired domains test suites', () => {
   )
 
   test('records NXDOMAIN through the marshall warning channel', async () => {
-    const resolve = jest.fn().mockRejectedValue(dnsFailure('ENOTFOUND', 'missing-domain.com'))
+    const resolve = jest.fn(async (domain) => {
+      if (domain === 'com') {
+        return ['a.gtld-servers.net']
+      }
+      throw dnsFailure('ENOTFOUND', domain)
+    })
     const testMarshall = createMarshall({ resolve })
     const ctx = { pkgs: [], marshalls: {} }
     testMarshall.init(ctx)
@@ -133,6 +143,9 @@ describe('Expired domains test suites', () => {
       if (domain === 'timeout-domain.com') {
         throw dnsFailure('ETIMEOUT', domain)
       }
+      if (domain === 'com') {
+        return ['a.gtld-servers.net']
+      }
       return ['ns1.example.com']
     })
     const testMarshall = createMarshall({ resolve })
@@ -149,9 +162,10 @@ describe('Expired domains test suites', () => {
     ).rejects.toThrow(
       'Maintainer domains a-domain.com, b-domain.com do not resolve in public DNS and may warrant investigation. 2 other maintainer records could not be evaluated.'
     )
+    expect(resolve).toHaveBeenCalledWith('com', 'NS')
   })
 
-  test('queries the registrable ICANN domain instead of the mail subdomain', async () => {
+  test('queries the complete normalized email host', async () => {
     const resolve = jest.fn().mockResolvedValue(['ns1.example.com'])
     const testMarshall = createMarshall({ resolve })
 
@@ -159,7 +173,46 @@ describe('Expired domains test suites', () => {
       packageName: packageData([{ name: 'maintainer', email: 'dev@MAIL.Example.CO.UK.' }])
     })
 
+    expect(resolve).toHaveBeenCalledWith('mail.example.co.uk', 'NS')
+  })
+
+  test('reports a multipart NXDOMAIN as not evaluated', async () => {
+    const resolve = jest.fn().mockRejectedValue(dnsFailure('ENOTFOUND'))
+    const testMarshall = createMarshall({ resolve })
+
+    await expect(
+      testMarshall.validate({
+        packageName: packageData([{ name: 'maintainer', email: 'dev@example.co.uk' }])
+      })
+    ).rejects.toThrow(NotEvaluated)
+    expect(resolve).toHaveBeenCalledTimes(1)
     expect(resolve).toHaveBeenCalledWith('example.co.uk', 'NS')
+  })
+
+  test('reports an unverifiable top-level domain as not evaluated', async () => {
+    const resolve = jest.fn().mockRejectedValue(dnsFailure('ENOTFOUND'))
+    const testMarshall = createMarshall({ resolve })
+
+    await expect(
+      testMarshall.validate({
+        packageName: packageData([{ name: 'maintainer', email: 'dev@service.unknown' }])
+      })
+    ).rejects.toThrow(NotEvaluated)
+    expect(resolve.mock.calls).toEqual([
+      ['service.unknown', 'NS'],
+      ['unknown', 'NS']
+    ])
+  })
+
+  test('queries IDN domains in ASCII form', async () => {
+    const resolve = jest.fn().mockResolvedValue(['ns1.example.com'])
+    const testMarshall = createMarshall({ resolve })
+
+    await testMarshall.validate({
+      packageName: packageData([{ name: 'maintainer', email: 'dev@BÜCHER.DE.' }])
+    })
+
+    expect(resolve).toHaveBeenCalledWith('xn--bcher-kva.de', 'NS')
   })
 
   test('evaluates public ICANN domains from custom-registry metadata', async () => {
@@ -173,7 +226,7 @@ describe('Expired domains test suites', () => {
     await expect(testMarshall.validate({ packageName: data })).resolves.toEqual([
       ['ns1.example.com']
     ])
-    expect(resolve).toHaveBeenCalledWith('public-domain.com', 'NS')
+    expect(resolve).toHaveBeenCalledWith('mail.public-domain.com', 'NS')
   })
 
   test('is not evaluated when custom-registry metadata has only internal domains', async () => {
