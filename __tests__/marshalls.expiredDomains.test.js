@@ -158,11 +158,29 @@ describe('Expired domains test suites', () => {
     await expect(
       testMarshall.validate({
         packageName: packageData([
-          { name: 'first', email: 'first@example.com' },
+          { name: 'first', email: 'first@Example.COM' },
           { name: 'second', email: 'second@example.com' }
         ])
       })
     ).resolves.toEqual([['ns1.example.com']])
+    expect(resolve).toHaveBeenCalledTimes(1)
+    expect(resolve).toHaveBeenCalledWith('example.com', 'NS')
+  })
+
+  test('counts incomplete DNS results by affected maintainer record', async () => {
+    const resolve = jest.fn().mockRejectedValue(dnsFailure('ETIMEOUT'))
+    const testMarshall = createMarshall({ resolve })
+
+    await expect(
+      testMarshall.validate({
+        packageName: packageData([
+          { name: 'first', email: 'first@example.com' },
+          { name: 'second', email: 'second@example.com' }
+        ])
+      })
+    ).rejects.toThrow(
+      '2 maintainer records could not be evaluated because DNS or email data was incomplete'
+    )
     expect(resolve).toHaveBeenCalledTimes(1)
   })
 
