@@ -130,6 +130,7 @@ NPQ_PKG_MGR=pnpm npx npq install fastify
 
 ```bash
 alias pnpm="NPQ_PKG_MGR=pnpm npq-hero"
+pnpm --filter workspace... add express
 ```
 
 Note: `npq` by default will offload all commands and their arguments to the `npm` (or other package manager as specified) after it finished its due-diligence checks for the respective packages.
