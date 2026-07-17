@@ -15,6 +15,18 @@ function packageData(maintainers) {
   }
 }
 
+function packageDataWithVersionedMaintainers() {
+  return {
+    'dist-tags': { latest: '2.0.0', next: '3.0.0' },
+    versions: {
+      '1.0.0': { maintainers: [{ name: 'exact', email: 'dev@exact.example.dev' }] },
+      '1.1.0': { maintainers: [{ name: 'range', email: 'dev@range.example.dev' }] },
+      '2.0.0': { maintainers: [{ name: 'latest', email: 'dev@latest.example.dev' }] },
+      '3.0.0': { maintainers: [{ name: 'next', email: 'dev@next.example.dev' }] }
+    }
+  }
+}
+
 function dnsFailure(code, hostname = 'example.com') {
   return Object.assign(new Error(code), { code, hostname })
 }
@@ -22,7 +34,8 @@ function dnsFailure(code, hostname = 'example.com') {
 function createMarshall({ getPackageInfo, resolve, rdapLookup } = {}) {
   return new ExpiredDomainsMarshall({
     packageRepoUtils: {
-      getPackageInfo: getPackageInfo || (async (pkgInfo) => pkgInfo)
+      getPackageInfo: getPackageInfo || (async (pkgInfo) => pkgInfo),
+      parsePackageVersion: () => null
     },
     dnsResolver: {
       resolve: resolve || jest.fn().mockResolvedValue(['ns1.example.com'])
@@ -51,6 +64,36 @@ describe('Expired domains test suites', () => {
   })
 
   test.each([
+    ['an exact older version', '1.0.0', 'exact.example.dev'],
+    ['a semver range', '^1.0.0', 'range.example.dev'],
+    ['a non-latest dist-tag', 'next', 'next.example.dev']
+  ])('checks maintainers for %s', async (_case, packageVersion, expectedDomain) => {
+    const resolve = jest.fn().mockResolvedValue(['ns1.example.com'])
+    const testMarshall = createMarshall({ resolve })
+
+    await testMarshall.validate({
+      packageName: packageDataWithVersionedMaintainers(),
+      packageVersion
+    })
+
+    expect(resolve).toHaveBeenCalledWith(expectedDomain, 'NS')
+    expect(resolve).not.toHaveBeenCalledWith('latest.example.dev', 'NS')
+  })
+
+  test('is not evaluated for an unresolvable selector', async () => {
+    const resolve = jest.fn()
+    const testMarshall = createMarshall({ resolve })
+
+    await expect(
+      testMarshall.validate({
+        packageName: packageDataWithVersionedMaintainers(),
+        packageVersion: 'unknown'
+      })
+    ).rejects.toThrow(NotEvaluated)
+    expect(resolve).not.toHaveBeenCalled()
+  })
+
+  test.each([
     ['missing email', { name: 'maintainer' }],
     ['empty email', { name: 'maintainer', email: '' }],
     ['email without a domain', { name: 'maintainer', email: 'dev@' }],
@@ -59,9 +102,9 @@ describe('Expired domains test suites', () => {
     const resolve = jest.fn()
     const testMarshall = createMarshall({ resolve })
 
-    await expect(testMarshall.validate({ packageName: packageData([maintainer]) })).rejects.toThrow(
-      NotEvaluated
-    )
+    await expect(
+      testMarshall.validate({ packageName: packageData([maintainer]), packageVersion: 'latest' })
+    ).rejects.toThrow(NotEvaluated)
     expect(resolve).not.toHaveBeenCalled()
   })
 
@@ -72,7 +115,9 @@ describe('Expired domains test suites', () => {
   ])('is not evaluated when the %s', async (_name, data) => {
     const testMarshall = createMarshall()
 
-    await expect(testMarshall.validate({ packageName: data })).rejects.toThrow(NotEvaluated)
+    await expect(
+      testMarshall.validate({ packageName: data, packageVersion: 'latest' })
+    ).rejects.toThrow(NotEvaluated)
   })
 
   test('reports NXDOMAIN as a warning instead of an error', async () => {
@@ -86,7 +131,8 @@ describe('Expired domains test suites', () => {
 
     await expect(
       testMarshall.validate({
-        packageName: packageData([{ name: 'maintainer', email: 'dev@missing-domain.com' }])
+        packageName: packageData([{ name: 'maintainer', email: 'dev@missing-domain.com' }]),
+        packageVersion: 'latest'
       })
     ).rejects.toEqual(
       expect.objectContaining({
@@ -105,7 +151,8 @@ describe('Expired domains test suites', () => {
 
       await expect(
         testMarshall.validate({
-          packageName: packageData([{ name: 'maintainer', email: 'dev@public-domain.com' }])
+          packageName: packageData([{ name: 'maintainer', email: 'dev@public-domain.com' }]),
+          packageVersion: 'latest'
         })
       ).rejects.toThrow(NotEvaluated)
     }
@@ -161,7 +208,8 @@ describe('Expired domains test suites', () => {
           { name: 'invalid', email: '' },
           { name: 'timeout', email: 'dev@timeout-domain.com' },
           { name: 'a', email: 'dev@a-domain.com' }
-        ])
+        ]),
+        packageVersion: 'latest'
       })
     ).rejects.toThrow(
       'Maintainer domains a-domain.com, b-domain.com do not resolve in public DNS, and RDAP found no active registration; account takeover may be possible. 2 other maintainer records could not be evaluated.'
@@ -181,7 +229,8 @@ describe('Expired domains test suites', () => {
 
     await expect(
       testMarshall.validate({
-        packageName: packageData([{ name: 'maintainer', email: 'dev@public-domain.com' }])
+        packageName: packageData([{ name: 'maintainer', email: 'dev@public-domain.com' }]),
+        packageVersion: 'latest'
       })
     ).resolves.toEqual([undefined])
     expect(rdapLookup).toHaveBeenCalledWith('public-domain.com')
@@ -201,7 +250,8 @@ describe('Expired domains test suites', () => {
 
     await expect(
       testMarshall.validate({
-        packageName: packageData([{ name: 'maintainer', email: 'dev@public-domain.com' }])
+        packageName: packageData([{ name: 'maintainer', email: 'dev@public-domain.com' }]),
+        packageVersion: 'latest'
       })
     ).rejects.toThrow(NotEvaluated)
   })
@@ -213,7 +263,8 @@ describe('Expired domains test suites', () => {
 
     await expect(
       testMarshall.validate({
-        packageName: packageData([{ name: 'maintainer', email: 'dev@public-domain.com' }])
+        packageName: packageData([{ name: 'maintainer', email: 'dev@public-domain.com' }]),
+        packageVersion: 'latest'
       })
     ).resolves.toEqual([['ns1.example.com']])
     expect(rdapLookup).not.toHaveBeenCalled()
@@ -224,7 +275,8 @@ describe('Expired domains test suites', () => {
     const testMarshall = createMarshall({ resolve })
 
     await testMarshall.validate({
-      packageName: packageData([{ name: 'maintainer', email: 'dev@MAIL.Example.CO.UK.' }])
+      packageName: packageData([{ name: 'maintainer', email: 'dev@MAIL.Example.CO.UK.' }]),
+      packageVersion: 'latest'
     })
 
     expect(resolve).toHaveBeenCalledWith('mail.example.co.uk', 'NS')
@@ -237,7 +289,8 @@ describe('Expired domains test suites', () => {
 
     await expect(
       testMarshall.validate({
-        packageName: packageData([{ name: 'maintainer', email: 'dev@example.co.uk' }])
+        packageName: packageData([{ name: 'maintainer', email: 'dev@example.co.uk' }]),
+        packageVersion: 'latest'
       })
     ).rejects.toThrow(NotEvaluated)
     expect(resolve).toHaveBeenCalledTimes(1)
@@ -252,7 +305,8 @@ describe('Expired domains test suites', () => {
 
     await expect(
       testMarshall.validate({
-        packageName: packageData([{ name: 'maintainer', email: 'dev@service.unknown' }])
+        packageName: packageData([{ name: 'maintainer', email: 'dev@service.unknown' }]),
+        packageVersion: 'latest'
       })
     ).rejects.toThrow(NotEvaluated)
     expect(resolve.mock.calls).toEqual([
@@ -267,7 +321,8 @@ describe('Expired domains test suites', () => {
     const testMarshall = createMarshall({ resolve })
 
     await testMarshall.validate({
-      packageName: packageData([{ name: 'maintainer', email: 'dev@BÜCHER.DE.' }])
+      packageName: packageData([{ name: 'maintainer', email: 'dev@BÜCHER.DE.' }]),
+      packageVersion: 'latest'
     })
 
     expect(resolve).toHaveBeenCalledWith('xn--bcher-kva.de', 'NS')
@@ -281,9 +336,9 @@ describe('Expired domains test suites', () => {
       _registry: 'https://registry.example.test/'
     }
 
-    await expect(testMarshall.validate({ packageName: data })).resolves.toEqual([
-      ['ns1.example.com']
-    ])
+    await expect(
+      testMarshall.validate({ packageName: data, packageVersion: 'latest' })
+    ).resolves.toEqual([['ns1.example.com']])
     expect(resolve).toHaveBeenCalledWith('mail.public-domain.com', 'NS')
   })
 
@@ -295,7 +350,9 @@ describe('Expired domains test suites', () => {
       _registry: 'https://registry.example.test/'
     }
 
-    await expect(testMarshall.validate({ packageName: data })).rejects.toThrow(NotEvaluated)
+    await expect(
+      testMarshall.validate({ packageName: data, packageVersion: 'latest' })
+    ).rejects.toThrow(NotEvaluated)
     expect(resolve).not.toHaveBeenCalled()
   })
 
@@ -308,7 +365,8 @@ describe('Expired domains test suites', () => {
         packageName: packageData([
           { name: 'first', email: 'first@Public-Domain.COM' },
           { name: 'second', email: 'second@public-domain.com' }
-        ])
+        ]),
+        packageVersion: 'latest'
       })
     ).resolves.toEqual([['ns1.example.com']])
     expect(resolve).toHaveBeenCalledTimes(1)
@@ -324,7 +382,8 @@ describe('Expired domains test suites', () => {
         packageName: packageData([
           { name: 'first', email: 'first@public-domain.com' },
           { name: 'second', email: 'second@public-domain.com' }
-        ])
+        ]),
+        packageVersion: 'latest'
       })
     ).rejects.toThrow(
       '2 maintainer records could not be evaluated because DNS, RDAP, or email data was incomplete'
@@ -341,7 +400,8 @@ describe('Expired domains test suites', () => {
         packageName: packageData([
           { name: 'first', email: 'first@public-domain.com' },
           { name: 'second', email: 'second@public-domain.org' }
-        ])
+        ]),
+        packageVersion: 'latest'
       })
     ).resolves.toEqual([['ns1.example.com'], ['ns1.example.com']])
     expect(resolve).toHaveBeenCalledTimes(2)
