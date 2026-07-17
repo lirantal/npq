@@ -115,6 +115,21 @@ test('package manager spawns with pnpm when provided as parameter', async () => 
   childProcess.spawn.mockReset()
 })
 
+test.each([
+  ['before add', ['--filter', 'workspace...', 'add', 'express']],
+  ['after install', ['install', 'express', '--filter', '...workspace']]
+])('pnpm preserves filter and ellipsis selector order %s', async (_placement, args) => {
+  childProcess.spawn.mockImplementation(() => createMockChild(0))
+  process.argv = ['node', 'script name', ...args]
+
+  await packageManager.process('pnpm')
+
+  expect(childProcess.spawn).toHaveBeenCalledWith(`pnpm ${args.join(' ')}`, {
+    stdio: 'inherit',
+    shell: true
+  })
+})
+
 test('package manager forwards custom registry options', async () => {
   childProcess.spawn.mockImplementation(() => createMockChild(0))
   process.argv = [
