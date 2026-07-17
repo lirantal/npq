@@ -66,7 +66,7 @@ Expected: FAIL because the current implementation resolves `dist-tags.latest` an
 
 Ensure existing direct calls to `validate` specify `packageVersion: 'latest'` where their fixture represents the latest release. This makes the selector contract explicit without changing each test's DNS/RDAP assertion.
 
-- [ ] **Step 4: Commit the red test state only if it is useful to preserve**
+- [ ] **Step 4: Do not commit the red test state**
 
 Do not commit a deliberately failing state unless a separate review checkpoint requires it. Continue directly to the minimal implementation after recording the expected failure output.
 
