@@ -19,6 +19,10 @@ Maintainer email hosts are converted to ASCII, lowercased, and checked as comple
 
 A warning remains non-blocking. RDAP absence is not proof of current purchasability, registry policy can prevent registration, and npm account two-factor authentication status is not known to this check.
 
+## Warning attribution
+
+When DNS and RDAP corroborate an expired-domain warning, NPQ lists the affected maintainers grouped beneath each domain. The local warning includes the registry name and email when a name is available, or the email alone when it is not. This makes the finding traceable during a security review.
+
 ## External requests and privacy
 
 The marshall sends normalized host or domain names only, never full maintainer email addresses.

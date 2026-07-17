@@ -138,7 +138,7 @@ describe('Expired domains test suites', () => {
       expect.objectContaining({
         constructor: Warning,
         message:
-          'Maintainer domain missing-domain.com does not resolve in public DNS, and RDAP found no active registration; account takeover may be possible.'
+          'Maintainer domain missing-domain.com does not resolve in public DNS, and RDAP found no active registration; account takeover may be possible.\n\nAffected maintainers:\n- missing-domain.com: maintainer <dev@missing-domain.com>'
       })
     )
   })
@@ -212,9 +212,41 @@ describe('Expired domains test suites', () => {
         packageVersion: 'latest'
       })
     ).rejects.toThrow(
-      'Maintainer domains a-domain.com, b-domain.com do not resolve in public DNS, and RDAP found no active registration; account takeover may be possible. 2 other maintainer records could not be evaluated.'
+      'Maintainer domains a-domain.com, b-domain.com do not resolve in public DNS, and RDAP found no active registration; account takeover may be possible.\n\nAffected maintainers:\n- a-domain.com: a <dev@a-domain.com>\n- b-domain.com: b <dev@b-domain.com>\n\n2 other maintainer records could not be evaluated.'
     )
     expect(resolve).toHaveBeenCalledWith('com', 'NS')
+  })
+
+  test('identifies maintainers affected by corroborated domains', async () => {
+    const resolve = jest.fn(async (domain) => {
+      if (domain === 'a-domain.com' || domain === 'b-domain.com') {
+        throw dnsFailure('ENOTFOUND', domain)
+      }
+      if (domain === 'timeout-domain.com') {
+        throw dnsFailure('ETIMEOUT', domain)
+      }
+      if (domain === 'com') {
+        return ['a.gtld-servers.net']
+      }
+      return ['ns1.example.com']
+    })
+    const testMarshall = createMarshall({ resolve })
+
+    await expect(
+      testMarshall.validate({
+        packageName: packageData([
+          { name: 'B first', email: 'first@b-domain.com' },
+          { name: 'invalid', email: '' },
+          { name: 'timeout', email: 'timeout@timeout-domain.com' },
+          { name: 'A', email: 'a@a-domain.com' },
+          { name: 'B second', email: 'second@b-domain.com' },
+          { email: 'nameless@a-domain.com' }
+        ]),
+        packageVersion: 'latest'
+      })
+    ).rejects.toThrow(
+      'Maintainer domains a-domain.com, b-domain.com do not resolve in public DNS, and RDAP found no active registration; account takeover may be possible.\n\nAffected maintainers:\n- a-domain.com: A <a@a-domain.com>, nameless@a-domain.com\n- b-domain.com: B first <first@b-domain.com>, B second <second@b-domain.com>\n\n2 other maintainer records could not be evaluated.'
+    )
   })
 
   test('suppresses a DNS warning when RDAP finds a registered domain', async () => {
