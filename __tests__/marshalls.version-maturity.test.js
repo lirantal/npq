@@ -2,6 +2,10 @@
 
 const Marshall = require('../lib/marshalls/version-maturity.marshall')
 
+function daysAgo(days) {
+  return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
+}
+
 describe('Version Maturity Marshall', () => {
   test('should have the correct title', () => {
     const testMarshall = new Marshall({
@@ -203,5 +207,116 @@ describe('Version Maturity Marshall', () => {
     ).rejects.toThrow(
       'Detected a recently published version: published 2 days ago. Consider waiting for community review.'
     )
+  })
+
+  test('attaches an older stable release suggestion for latest', async () => {
+    const packageInfo = {
+      'dist-tags': { latest: '2.0.0' },
+      versions: {
+        '1.5.0': { version: '1.5.0' },
+        '2.0.0-beta.1': { version: '2.0.0-beta.1' },
+        '2.0.0': { version: '2.0.0' }
+      },
+      time: {
+        '1.5.0': daysAgo(40),
+        '2.0.0-beta.1': daysAgo(45),
+        '2.0.0': daysAgo(2)
+      }
+    }
+    const marshall = new Marshall({
+      packageRepoUtils: {
+        getPackageInfo: jest.fn().mockResolvedValue(packageInfo),
+        parsePackageVersion: (version) => ({ version })
+      }
+    })
+
+    await expect(
+      marshall.validate({
+        packageName: 'test-package',
+        packageVersion: 'latest',
+        packageString: 'test-package@latest'
+      })
+    ).rejects.toMatchObject({
+      suggestion: {
+        type: 'alternative-version',
+        packageName: 'test-package',
+        version: '1.5.0',
+        packageSpec: 'test-package@1.5.0',
+        publishedAt: packageInfo.time['1.5.0'],
+        ageDays: 40,
+        reason: 'version-recency'
+      }
+    })
+  })
+
+  test('keeps an alternative suggestion inside a requested semver range', async () => {
+    const packageInfo = {
+      versions: {
+        '1.9.9': { version: '1.9.9' },
+        '2.0.0': { version: '2.0.0' },
+        '2.2.0': { version: '2.2.0' }
+      },
+      time: {
+        '1.9.9': daysAgo(35),
+        '2.0.0': daysAgo(40),
+        '2.2.0': daysAgo(2)
+      }
+    }
+    const marshall = new Marshall({
+      packageRepoUtils: {
+        getPackageInfo: jest.fn().mockResolvedValue(packageInfo),
+        parsePackageVersion: (version) => ({ version })
+      }
+    })
+
+    await expect(
+      marshall.validate({
+        packageName: 'test-package',
+        packageVersion: '^2.0.0',
+        packageString: 'test-package@^2.0.0'
+      })
+    ).rejects.toMatchObject({
+      suggestion: expect.objectContaining({
+        version: '2.0.0',
+        packageSpec: 'test-package@2.0.0'
+      })
+    })
+  })
+
+  test('does not attach a suggestion when no older release clears the recency window', async () => {
+    const packageInfo = {
+      'dist-tags': { latest: '2.0.0' },
+      versions: {
+        '1.0.0': { version: '1.0.0' },
+        '2.0.0': { version: '2.0.0' }
+      },
+      time: {
+        '1.0.0': daysAgo(20),
+        '2.0.0': daysAgo(2)
+      }
+    }
+    const marshall = new Marshall({
+      packageRepoUtils: {
+        getPackageInfo: jest.fn().mockResolvedValue(packageInfo),
+        parsePackageVersion: (version) => ({ version })
+      }
+    })
+
+    let error
+    try {
+      await marshall.validate({
+        packageName: 'test-package',
+        packageVersion: 'latest',
+        packageString: 'test-package@latest'
+      })
+    } catch (caughtError) {
+      error = caughtError
+    }
+
+    expect(error).toBeInstanceOf(Error)
+    expect(error.message).toBe(
+      'Detected a recently published version: published 2 days ago. Consider waiting for community review.'
+    )
+    expect(error.suggestion).toBeUndefined()
   })
 })

@@ -156,3 +156,42 @@ test('checkPackage rethrows fatal RegistryError', async () => {
     marshall.checkPackage({ packageString: 'private-package@1.0.0' }, ctx)
   ).rejects.toMatchObject({ code: 'EREGISTRYAUTH', statusCode: 401 })
 })
+
+test('checkPackage records structured suggestions separately from errors', async () => {
+  const marshall = new BaseMarshall({ packageRepoUtils: null })
+  marshall.name = 'version_maturity'
+  const error = new Error('recent release')
+  error.suggestion = {
+    type: 'alternative-version',
+    packageName: 'pkg',
+    version: '1.0.0',
+    packageSpec: 'pkg@1.0.0',
+    publishedAt: '2026-01-01T00:00:00.000Z',
+    ageDays: 40,
+    reason: 'version-recency'
+  }
+  marshall.validate = jest.fn().mockRejectedValue(error)
+  const ctx = { pkgs: [], marshalls: {} }
+  marshall.init(ctx)
+
+  await marshall.checkPackage({ packageString: 'pkg@latest' }, ctx)
+
+  expect(ctx.marshalls.version_maturity.suggestions).toEqual([
+    {
+      pkg: 'pkg@latest',
+      type: 'alternative-version',
+      packageName: 'pkg',
+      version: '1.0.0',
+      packageSpec: 'pkg@1.0.0',
+      publishedAt: '2026-01-01T00:00:00.000Z',
+      ageDays: 40,
+      reason: 'version-recency'
+    }
+  ])
+  expect(ctx.marshalls.version_maturity.errors).toEqual([
+    {
+      pkg: 'pkg@latest',
+      message: 'recent release'
+    }
+  ])
+})
