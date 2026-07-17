@@ -150,10 +150,31 @@ Note: `npq` by default will offload all commands and their arguments to the `npm
 | expired domains | Normalizes and checks complete maintainer email hosts, then corroborates a simple two-label DNS failure through authoritative RDAP before warning | Multipart and otherwise inconclusive results are reported as not evaluated; see [expired-domain marshall documentation](docs/feature/expired-domains.md)
 | signatures | Will compare the package's signature as it shows on the registry's packument with signing keys published by the selected registry | Reports `not evaluated` if the selected registry does not expose signing keys
 | provenance | Will verify the package's attestations of provenance metadata for the published package, and **error** on [provenance regression](docs/feature/provenance.md) (an older semver had registry provenance metadata but the version you install does not) | Reports `not evaluated` if the selected registry does not expose signing keys or attestations
-| version-maturity | Will show a warning if the specific version being installed was published less than 7 days ago | Helps identify recently published versions that may not have been reviewed by the community yet
+| version-maturity | Will show an error if the specific version being installed was published less than 7 days ago | Suggests the highest older semver outside npq's 30-day version-recency window when one is available
 | newBin | Will show a warning if the package version being installed introduces a new command-line binary (via the `bin` field in `package.json`) that was not present in its previous version. | Helps identify potentially unexpected new executables being added to your `node_modules/.bin/` directory.
 | typosquatting | Will show a warning if the package name is similar to a popular package name, which could indicate a potential typosquatting attack. | Helps identify packages that may be trying to trick users into installing them by mimicking popular package names.
 | deprecation | Will show a warning if the package version is deprecated on npm or if its GitHub repository has been archived. | Helps identify packages that are no longer maintained or recommended for use. Set `GITHUB_TOKEN` environment variable for higher GitHub API rate limits.
+
+### Older release suggestions
+
+When a requested version fails the version-maturity check, npq may show the highest older
+semver published outside its 30-day package-version recency window:
+
+```text
+ │
+ │ ℹ Suggested older release · @openai/codex@0.121.0 — published 33 days ago
+ │   Clears npq's package-version recency windows. Re-run npq to audit this
+ │   version; compatibility is not evaluated.
+```
+
+The suggestion:
+
+- can cross a major-version boundary for tags such as `latest`;
+- is based on cached package publication metadata and is not automatically installed;
+- is not a statement that the older release is safe or that it passes every npq check;
+- does not evaluate API or runtime compatibility.
+
+Run npq again with the suggested version and review its compatibility before installing it.
 
 ### Disabling Marshalls
 

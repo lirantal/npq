@@ -366,6 +366,49 @@ describe('Author Marshall', () => {
       ).rejects.toThrow(`This version was published only 20 days ago by Alice <${DEFAULT_EMAIL}>`)
     })
 
+    test('should still warn when version is exactly 30 days old', async () => {
+      const oldRelease = daysAgo(100)
+      const newRelease = daysAgo(30)
+      const pakument = {
+        versions: {
+          '1.0.0': { version: '1.0.0', _npmUser: npmUser() },
+          '2.0.0': { version: '2.0.0', _npmUser: npmUser() }
+        },
+        time: {
+          '1.0.0': oldRelease,
+          '2.0.0': newRelease
+        }
+      }
+      const marshall = createMarshall(pakument, '2.0.0')
+
+      await expect(
+        marshall.validate({ packageName: 'pkg', packageVersion: '2.0.0' })
+      ).rejects.toThrow(Warning)
+      await expect(
+        marshall.validate({ packageName: 'pkg', packageVersion: '2.0.0' })
+      ).rejects.toThrow(`This version was published only 30 days ago by Alice <${DEFAULT_EMAIL}>`)
+    })
+
+    test('should pass when version is 31 days old', async () => {
+      const oldRelease = daysAgo(100)
+      const newRelease = daysAgo(31)
+      const pakument = {
+        versions: {
+          '1.0.0': { version: '1.0.0', _npmUser: npmUser() },
+          '2.0.0': { version: '2.0.0', _npmUser: npmUser() }
+        },
+        time: {
+          '1.0.0': oldRelease,
+          '2.0.0': newRelease
+        }
+      }
+      const marshall = createMarshall(pakument, '2.0.0')
+
+      await expect(
+        marshall.validate({ packageName: 'pkg', packageVersion: '2.0.0' })
+      ).resolves.toBe(newRelease)
+    })
+
     test('should pass when version is 31–45 days old (no recency error or warning)', async () => {
       const oldRelease = daysAgo(100)
       const newRelease = daysAgo(40)
