@@ -249,6 +249,30 @@ describe('Expired domains test suites', () => {
     )
   })
 
+  test('removes terminal control characters from maintainer identities', async () => {
+    const resolve = jest.fn(async (domain) => {
+      if (domain === 'com') {
+        return ['a.gtld-servers.net']
+      }
+      throw dnsFailure('ENOTFOUND', domain)
+    })
+    const testMarshall = createMarshall({ resolve })
+
+    await expect(
+      testMarshall.validate({
+        packageName: packageData([
+          {
+            name: 'Trusted\nMaintainer\u001b[31m',
+            email: 'dev\u001b[0m@missing-domain.com'
+          }
+        ]),
+        packageVersion: 'latest'
+      })
+    ).rejects.toThrow(
+      'Maintainer domain missing-domain.com does not resolve in public DNS, and RDAP found no active registration; account takeover may be possible.\n\nAffected maintainers:\n- missing-domain.com: TrustedMaintainer[31m <dev[0m@missing-domain.com>'
+    )
+  })
+
   test('suppresses a DNS warning when RDAP finds a registered domain', async () => {
     const resolve = jest.fn(async (domain) => {
       if (domain === 'com') {

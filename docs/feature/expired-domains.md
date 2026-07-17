@@ -21,7 +21,7 @@ A warning remains non-blocking. RDAP absence is not proof of current purchasabil
 
 ## Warning attribution
 
-When DNS and RDAP corroborate an expired-domain warning, NPQ lists the affected maintainers grouped beneath each domain. The local warning includes the registry name and email when a name is available, or the email alone when it is not. This makes the finding traceable during a security review.
+When DNS and RDAP corroborate an expired-domain warning, NPQ lists the affected maintainers grouped beneath each domain. The local warning includes the registry name and email when a name is available, or the email alone when it is not. This makes the finding traceable during a security review. Control characters are stripped from the displayed identities.
 
 ## External requests and privacy
 
