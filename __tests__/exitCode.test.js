@@ -32,6 +32,11 @@ jest.mock('../lib/helpers/sourcePackages', () => ({
   getProjectPackages: jest.fn().mockResolvedValue(['express'])
 }))
 
+jest.mock('../lib/jsonCli', () => ({
+  runJsonCli: jest.fn().mockResolvedValue({ status: 'clean' }),
+  writeInvalidJsonInvocation: jest.fn()
+}))
+
 jest.mock('../lib/helpers/promiseThrottler', () => ({
   promiseThrottleHelper: jest.fn()
 }))
@@ -48,6 +53,7 @@ const mockNpqCliArgs = {
   packageManager: 'npm',
   dryRun: false,
   plain: false,
+  json: false,
   disableAutoContinue: false,
   installSubcommandExplicit: true
 }
@@ -113,6 +119,7 @@ describe('npq exit code propagation', () => {
     mockPkgMgrProcessResolvedValue = 0
     mockNpqCliArgs.installSubcommandExplicit = true
     mockNpqCliArgs.dryRun = false
+    mockNpqCliArgs.json = false
 
     const { CliParser } = require('../lib/cli')
     CliParser.parseArgsFull.mockImplementation(() => ({ ...mockNpqCliArgs }))
@@ -149,6 +156,7 @@ describe('npq exit code propagation', () => {
       packageManager: 'npm',
       dryRun: false,
       plain: false,
+      json: false,
       disableAutoContinue: false,
       installSubcommandExplicit: false
     }))
@@ -175,6 +183,7 @@ describe('npq exit code propagation', () => {
       packageManager: 'npm',
       dryRun: false,
       plain: false,
+      json: false,
       disableAutoContinue: false,
       installSubcommandExplicit: false
     }))
@@ -205,6 +214,7 @@ describe('npq exit code propagation', () => {
       packageManager: 'npm',
       dryRun: false,
       plain: false,
+      json: false,
       disableAutoContinue: false,
       installSubcommandExplicit: false
     }))
@@ -235,6 +245,7 @@ describe('npq exit code propagation', () => {
       packageManager: 'npm',
       dryRun: true,
       plain: false,
+      json: false,
       disableAutoContinue: false,
       installSubcommandExplicit: true
     }))
