@@ -51,9 +51,21 @@ jest.mock('../lib/helpers/cliPrompt.js', () => ({
   prompt: jest.fn().mockResolvedValue({ install: true }),
   autoContinue: jest.fn().mockResolvedValue({ install: true })
 }))
+jest.mock('../lib/jsonCli', () => ({
+  runJsonCli: jest.fn().mockResolvedValue({ status: 'clean' }),
+  writeInvalidJsonInvocation: jest.fn()
+}))
+
+const originalArgv = process.argv
+const originalExitCode = process.exitCode
+const originalSigintListeners = process.listeners('SIGINT')
+let existingSigintListeners
 
 describe('npq CLI script', () => {
   beforeEach(() => {
+    process.argv = [...originalArgv]
+    process.exitCode = originalExitCode
+    existingSigintListeners = new Set(process.listeners('SIGINT'))
     // Reset modules to ensure mocks are fresh for each test.
     jest.resetModules()
     // Clear mock history on the shared instance and the constructor.
@@ -64,6 +76,13 @@ describe('npq CLI script', () => {
   })
 
   afterEach(() => {
+    process.argv = originalArgv
+    process.exitCode = originalExitCode
+    for (const listener of process.listeners('SIGINT')) {
+      if (!existingSigintListeners.has(listener)) {
+        process.removeListener('SIGINT', listener)
+      }
+    }
     jest.restoreAllMocks()
   })
 
@@ -241,4 +260,65 @@ describe('npq CLI script', () => {
     expect(consoleLog).toHaveBeenCalledWith('Packages with issues found:')
     expect(cliPrompt.autoContinue).toHaveBeenCalled()
   })
+  test('routes explicit-install JSON requests away from the human pipeline', async () => {
+    const { CliParser } = require('../lib/cli')
+    const { Spinner } = require('../lib/helpers/cliSpinner')
+    const { reportResults } = require('../lib/helpers/reportResults')
+    const cliPrompt = require('../lib/helpers/cliPrompt.js')
+    const pkgMgr = require('../lib/packageManager')
+    const { runJsonCli } = require('../lib/jsonCli')
+    const cliArgs = {
+      packages: ['express'],
+      packageManager: 'npm',
+      dryRun: false,
+      plain: false,
+      json: true,
+      disableAutoContinue: false,
+      installSubcommandExplicit: true
+    }
+    const consoleLog = jest.spyOn(console, 'log').mockImplementation(() => {})
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {})
+    process.argv = [...originalArgv, '--json', 'install', 'express']
+    CliParser.parseArgsFull.mockReturnValue(cliArgs)
+
+    require('../bin/npq.js')
+    await new Promise(process.nextTick)
+
+    expect(runJsonCli).toHaveBeenCalledTimes(1)
+    expect(runJsonCli).toHaveBeenCalledWith(cliArgs, {
+      output: expect.objectContaining({ write: expect.any(Function) })
+    })
+    expect(Spinner).not.toHaveBeenCalled()
+    expect(reportResults).not.toHaveBeenCalled()
+    expect(cliPrompt.prompt).not.toHaveBeenCalled()
+    expect(cliPrompt.autoContinue).not.toHaveBeenCalled()
+    expect(pkgMgr.process).not.toHaveBeenCalled()
+    expect(consoleLog).not.toHaveBeenCalled()
+    expect(consoleError).not.toHaveBeenCalled()
+  })
+
+  test('routes raw JSON parser failures to invalid-invocation output synchronously', () => {
+    const { CliParser } = require('../lib/cli')
+    const { runJsonCli, writeInvalidJsonInvocation } = require('../lib/jsonCli')
+    const parserError = new Error('raw parser detail')
+    process.argv = [...originalArgv, '--json', 'not a valid package']
+    CliParser.parseArgsFull.mockImplementation(() => {
+      throw parserError
+    })
+
+    expect(() => require('../bin/npq.js')).not.toThrow()
+
+    expect(writeInvalidJsonInvocation).toHaveBeenCalledTimes(1)
+    expect(writeInvalidJsonInvocation).toHaveBeenCalledWith(
+      expect.objectContaining({ write: expect.any(Function) })
+    )
+    expect(runJsonCli).not.toHaveBeenCalled()
+    expect(process.exitCode).toBe(2)
+  })
+})
+
+test('restores process state after CLI routing tests', () => {
+  expect(process.argv).toBe(originalArgv)
+  expect(process.exitCode).toBe(originalExitCode)
+  expect(process.listeners('SIGINT')).toEqual(originalSigintListeners)
 })

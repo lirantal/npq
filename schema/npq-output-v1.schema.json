@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/lirantal/npq/main/schema/npq-output-v1.schema.json",
+  "title": "npq JSON audit output v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "tool", "status", "summary", "packages", "failures"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "tool": { "$ref": "#/$defs/tool" },
+    "status": { "enum": ["clean", "findings", "failed"] },
+    "summary": { "$ref": "#/$defs/summary" },
+    "packages": { "type": "array", "items": { "$ref": "#/$defs/package" } },
+    "failures": { "type": "array", "items": { "$ref": "#/$defs/failure" } }
+  },
+  "$defs": {
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "const": "npq" },
+        "version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["packagesAudited", "errors", "warnings"],
+      "properties": {
+        "packagesAudited": { "type": "integer", "minimum": 0 },
+        "errors": { "type": "integer", "minimum": 0 },
+        "warnings": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "package": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requested", "findings"],
+      "properties": {
+        "requested": { "type": "string", "minLength": 1 },
+        "findings": { "type": "array", "items": { "$ref": "#/$defs/finding" } }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["severity", "marshall", "category", "message"],
+      "properties": {
+        "severity": { "enum": ["warning", "error"] },
+        "marshall": { "type": "string", "minLength": 1 },
+        "category": { "$ref": "#/$defs/category" },
+        "message": { "type": "string" }
+      }
+    },
+    "category": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 }
+      }
+    },
+    "failure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message"],
+      "properties": {
+        "code": {
+          "enum": [
+            "INVALID_INPUT",
+            "PROJECT_MANIFEST_ERROR",
+            "PACKAGE_LOOKUP_FAILED",
+            "AUDIT_CHECK_FAILED",
+            "INTERRUPTED",
+            "INTERNAL_ERROR"
+          ]
+        },
+        "message": { "type": "string", "minLength": 1 },
+        "package": { "type": "string", "minLength": 1 },
+        "marshall": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

@@ -157,3 +157,61 @@ test('running marshall tasks propagates fatal registry errors', async () => {
     code: 'EREGISTRYNETWORK'
   })
 })
+
+test('running marshall tasks captures registry lookup failures when requested', async () => {
+  const onAuditFailure = jest.fn()
+  const config = {
+    pkgs: [{ packageName: 'express', packageString: 'express@latest' }],
+    packageRepoUtils: {
+      getPackageInfo: jest.fn().mockRejectedValue(new Error('token=secret'))
+    }
+  }
+
+  await expect(marshalls.tasks(config, null, { onAuditFailure })).resolves.toEqual([])
+
+  expect(onAuditFailure).toHaveBeenCalledWith({
+    code: 'PACKAGE_LOOKUP_FAILED',
+    message: 'Unable to retrieve package metadata',
+    package: 'express@latest'
+  })
+})
+
+test('running marshall tasks preserves lookup rejection without a failure callback', async () => {
+  const config = {
+    pkgs: [{ packageName: 'express', packageString: 'express@latest' }],
+    packageRepoUtils: {
+      getPackageInfo: jest.fn().mockRejectedValue(new Error('token=secret'))
+    }
+  }
+
+  await expect(marshalls.tasks(config)).rejects.toThrow('token=secret')
+})
+
+test('running marshall tasks captures audit check failures when requested', async () => {
+  const onAuditFailure = jest.fn()
+  const buildMarshallTasks = jest.spyOn(marshalls, 'buildMarshallTasks').mockResolvedValue([
+    {
+      name: 'repo',
+      title: 'Repository check',
+      execute: jest.fn().mockRejectedValue(new Error('token=secret'))
+    }
+  ])
+  jest.spyOn(marshalls, 'collectMarshalls').mockResolvedValue([])
+
+  const config = {
+    pkgs: [{ packageName: 'express', packageString: 'express@latest' }],
+    packageRepoUtils: new PackageRepoUtilsMock()
+  }
+
+  await expect(marshalls.tasks(config, null, { onAuditFailure })).resolves.toEqual([])
+
+  expect(onAuditFailure).toHaveBeenCalledWith({
+    code: 'AUDIT_CHECK_FAILED',
+    message: 'Audit check could not complete',
+    package: 'express@latest',
+    marshall: 'repo'
+  })
+
+  buildMarshallTasks.mockRestore()
+  marshalls.collectMarshalls.mockRestore()
+})

@@ -24,6 +24,18 @@ On Unix, exit codes are unsigned 8-bit values; `-1` is often reported as `255` i
 - **Audit-only** — `npq` without an explicit `install` / `i` / `add` (and similar) subcommand, **or** when `--dry-run` is set. Marshalls run, results print, then the process exits **without** calling the package manager.
 - **Install path** — Explicit install subcommand **and** not `--dry-run`. After marshalls, npq may prompt or auto-continue, then runs the configured package manager.
 
+- **JSON audit-only** — `npq ... --json` always writes one machine-readable audit report and never calls the package manager. This behavior overrides an explicit `install` subcommand; see [JSON audit output](./json-output.md).
+
+### JSON-mode exit codes
+
+| JSON status | Exit code | Meaning |
+|---|---:|---|
+| `clean` | `0` | Audit completed with no findings or operational failures. |
+| `findings` | `1` | Audit completed with one or more warning or error findings and no operational failures. |
+| `failed` | `2` | Audit could not complete reliably and reports one or more operational failures. |
+
+JSON finding severity is represented in the report, not by additional exit codes. `--help` and `--version` retain their existing text-only early exits.
+
 ### Audit-only exit codes
 
 | Outcome | Exit code |

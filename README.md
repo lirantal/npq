@@ -222,6 +222,18 @@ npq install express --dry-run
 npq install express --plain
 ```
 
+### Machine-readable audits
+
+Use `--json` for a non-interactive, audit-only result suitable for CI:
+
+```sh
+npq install express --json
+```
+
+JSON mode never invokes the package manager. It exits `0` for a clean audit,
+`1` for findings, and `2` when the audit cannot complete. See
+[JSON audit output](docs/feature/json-output.md).
+
 ### Disable auto-continue countdown
 
 By default, when npq detects only warnings (no errors), it automatically proceeds with installation after a 15-second countdown. To disable this behavior and always require explicit confirmation:

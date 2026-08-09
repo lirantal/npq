@@ -230,6 +230,14 @@ describe('CliParser', () => {
       expect(process.exit).toHaveBeenCalledWith(0)
     })
 
+    test('describes JSON as audit-only in help', () => {
+      mockParseArgs.mockReturnValue({ values: { help: true }, positionals: [] })
+      CliParser.parseArgsFull()
+      expect(consoleLogSpy).toHaveBeenCalledWith(
+        expect.stringContaining('--json                  Emit JSON and never install')
+      )
+    })
+
     test('should display version when --version flag is provided', () => {
       mockParseArgs.mockReturnValue({
         values: { version: true },
@@ -259,6 +267,7 @@ describe('CliParser', () => {
         packageManager: 'yarn',
         dryRun: true,
         plain: true,
+        json: false,
         disableAutoContinue: false,
         registryConfigArgs: [],
         installSubcommandExplicit: true
@@ -328,6 +337,59 @@ describe('CliParser', () => {
       expect(result.dryRun).toBe(false)
       expect(result.plain).toBe(false)
       expect(result.disableAutoContinue).toBe(false)
+    })
+
+    test('enables JSON audit mode', () => {
+      mockParseArgs.mockReturnValue({
+        values: { json: true },
+        positionals: ['install', 'express']
+      })
+
+      expect(CliParser.parseArgsFull()).toEqual({
+        packages: ['express@latest'],
+        packageManager: 'npm',
+        dryRun: false,
+        plain: false,
+        json: true,
+        disableAutoContinue: false,
+        registryConfigArgs: [],
+        installSubcommandExplicit: true
+      })
+    })
+
+    test.each([
+      'https://user:credential@example.test/package.tgz',
+      'git+https://user:credential@example.test/repository.git',
+      'file:/private/project/package.tgz',
+      '../private/project',
+      'alias-name@npm:express@1.0.0'
+    ])('rejects non-registry JSON package input before normalization', (packageSpec) => {
+      mockParseArgs.mockReturnValue({
+        values: { json: true },
+        positionals: ['install', packageSpec]
+      })
+
+      expect(() => CliParser.parseArgsFull()).toThrow('Invalid JSON package input')
+    })
+
+    test.each([
+      'https://example.test/package.tgz',
+      'git+https://example.test/repository.git',
+      'file:/tmp/package.tgz',
+      '../package',
+      'alias-name@npm:express@1.0.0'
+    ])('preserves human-mode support for %s', (packageSpec) => {
+      mockParseArgs.mockReturnValue({
+        values: {},
+        positionals: ['install', packageSpec]
+      })
+
+      expect(() => CliParser.parseArgsFull()).not.toThrow()
+    })
+
+    test('defaults JSON audit mode to false', () => {
+      mockParseArgs.mockReturnValue({ values: {}, positionals: ['express'] })
+      expect(CliParser.parseArgsFull().json).toBe(false)
     })
 
     test('should set disableAutoContinue to true when --disable-auto-continue flag is provided', () => {
@@ -523,6 +585,7 @@ describe('CliParser', () => {
         packageManager: 'yarn',
         dryRun: true,
         plain: true,
+        json: false,
         disableAutoContinue: false,
         registryConfigArgs: [],
         installSubcommandExplicit: true
@@ -547,6 +610,7 @@ describe('CliParser', () => {
         packageManager: 'yarn',
         dryRun: true,
         plain: true,
+        json: false,
         disableAutoContinue: true,
         registryConfigArgs: [],
         installSubcommandExplicit: true

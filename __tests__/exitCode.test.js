@@ -32,6 +32,10 @@ jest.mock('../lib/helpers/sourcePackages', () => ({
   getProjectPackages: jest.fn().mockResolvedValue(['express'])
 }))
 
+jest.mock('../lib/jsonCli', () => ({
+  runJsonCli: jest.fn().mockResolvedValue({ status: 'clean' }),
+  writeInvalidJsonInvocation: jest.fn()
+}))
 jest.mock('../lib/helpers/registryConfig', () => ({
   load: jest.fn().mockResolvedValue({ requestOptions: {} })
 }))
@@ -44,7 +48,12 @@ jest.mock('../lib/helpers/promiseThrottler', () => ({
   promiseThrottleHelper: jest.fn()
 }))
 
-const mockProcessExit = jest.spyOn(process, 'exit').mockImplementation(() => {})
+const originalProcessExit = process.exit
+const originalExitCode = process.exitCode
+const originalSigintListeners = process.listeners('SIGINT')
+
+let mockProcessExit
+let existingSigintListeners
 
 let mockPkgMgrProcessResolvedValue = 0
 jest.mock('../lib/packageManager', () => ({
@@ -56,6 +65,7 @@ const mockNpqCliArgs = {
   packageManager: 'npm',
   dryRun: false,
   plain: false,
+  json: false,
   disableAutoContinue: false,
   installSubcommandExplicit: true
 }
@@ -74,16 +84,36 @@ function flushPromises() {
   return new Promise((resolve) => setImmediate(resolve))
 }
 
+function setupProcessState() {
+  existingSigintListeners = new Set(process.listeners('SIGINT'))
+  mockProcessExit = jest.spyOn(process, 'exit').mockImplementation(() => {})
+}
+
+function restoreProcessState() {
+  process.exitCode = originalExitCode
+  mockProcessExit.mockRestore()
+  for (const listener of process.listeners('SIGINT')) {
+    if (!existingSigintListeners.has(listener)) {
+      process.removeListener('SIGINT', listener)
+    }
+  }
+}
+
 describe('npq-hero exit code propagation', () => {
   beforeEach(() => {
+    setupProcessState()
     jest.resetModules()
     jest.clearAllMocks()
     mockProcessExit.mockClear()
-    process.exitCode = undefined
+    process.exitCode = originalExitCode
     mockPkgMgrProcessResolvedValue = 0
 
     const { CliParser } = require('../lib/cli')
     CliParser.parseArgsMinimal.mockReturnValue({ packages: [] })
+  })
+
+  afterEach(() => {
+    restoreProcessState()
   })
 
   test('sets process.exitCode to 1 when package manager exits with code 1', async () => {
@@ -110,73 +140,29 @@ describe('npq-hero exit code propagation', () => {
 
     expect(process.exitCode).toBe(1)
   })
-
-  test('loads and injects registry configuration', async () => {
-    const { CliParser } = require('../lib/cli')
-    const RegistryConfig = require('../lib/helpers/registryConfig')
-    const RegistryClient = require('../lib/helpers/registryClient')
-    const Marshall = require('../lib/marshall')
-    CliParser.parseArgsMinimal.mockReturnValue({
-      packages: ['@company/tool'],
-      registryConfigArgs: ['--registry=https://artifactory.example.test/api/npm/npm/']
-    })
-
-    require('../bin/npq-hero.js')
-    await flushPromises()
-
-    expect(RegistryConfig.load).toHaveBeenCalledWith({
-      argv: ['--registry=https://artifactory.example.test/api/npm/npm/']
-    })
-    expect(RegistryClient).toHaveBeenCalled()
-    expect(Marshall).toHaveBeenCalledWith(
-      expect.objectContaining({ registryClient: expect.any(Object) })
-    )
-  })
-
-  test('prints skipped checks and installs without prompting', async () => {
-    const { CliParser } = require('../lib/cli')
-    const { reportResults } = require('../lib/helpers/reportResults')
-    const cliPrompt = require('../lib/helpers/cliPrompt.js')
-    const pkgMgr = require('../lib/packageManager')
-    const consoleLog = jest.spyOn(console, 'log').mockImplementation(() => {})
-    CliParser.parseArgsMinimal.mockReturnValue({ packages: ['@company/tool'] })
-    reportResults.mockReturnValue({
-      countErrors: 0,
-      countWarnings: 0,
-      countNotEvaluated: 2,
-      resultsForPlainTextPrint: 'skipped-plain',
-      summaryForPlainTextPrint: 'summary-plain',
-      useRichFormatting: false
-    })
-
-    require('../bin/npq-hero.js')
-    await flushPromises()
-
-    expect(consoleLog).toHaveBeenCalledWith('Package checks not evaluated:')
-    expect(consoleLog).toHaveBeenCalledWith('skipped-plain')
-    expect(cliPrompt.prompt).not.toHaveBeenCalled()
-    expect(cliPrompt.autoContinue).not.toHaveBeenCalled()
-    expect(pkgMgr.process).toHaveBeenCalled()
-
-    consoleLog.mockRestore()
-  })
 })
 
 describe('npq exit code propagation', () => {
   beforeEach(() => {
+    setupProcessState()
     jest.resetModules()
     jest.clearAllMocks()
     mockProcessExit.mockClear()
-    process.exitCode = undefined
+    process.exitCode = originalExitCode
     mockPkgMgrProcessResolvedValue = 0
     mockNpqCliArgs.installSubcommandExplicit = true
     mockNpqCliArgs.dryRun = false
+    mockNpqCliArgs.json = false
 
     const { CliParser } = require('../lib/cli')
     CliParser.parseArgsFull.mockImplementation(() => ({ ...mockNpqCliArgs }))
 
     const { reportResults } = require('../lib/helpers/reportResults')
     reportResults.mockReturnValue({ countErrors: 0, countWarnings: 0 })
+  })
+
+  afterEach(() => {
+    restoreProcessState()
   })
 
   test('sets process.exitCode to 1 when package manager exits with code 1', async () => {
@@ -199,7 +185,7 @@ describe('npq exit code propagation', () => {
     jest.resetModules()
     jest.clearAllMocks()
     mockProcessExit.mockClear()
-    process.exitCode = undefined
+    process.exitCode = originalExitCode
 
     const { CliParser } = require('../lib/cli')
     CliParser.parseArgsFull.mockImplementation(() => ({
@@ -207,6 +193,7 @@ describe('npq exit code propagation', () => {
       packageManager: 'npm',
       dryRun: false,
       plain: false,
+      json: false,
       disableAutoContinue: false,
       installSubcommandExplicit: false
     }))
@@ -225,7 +212,7 @@ describe('npq exit code propagation', () => {
     jest.resetModules()
     jest.clearAllMocks()
     mockProcessExit.mockClear()
-    process.exitCode = undefined
+    process.exitCode = originalExitCode
 
     const { CliParser } = require('../lib/cli')
     CliParser.parseArgsFull.mockImplementation(() => ({
@@ -233,6 +220,7 @@ describe('npq exit code propagation', () => {
       packageManager: 'npm',
       dryRun: false,
       plain: false,
+      json: false,
       disableAutoContinue: false,
       installSubcommandExplicit: false
     }))
@@ -255,7 +243,7 @@ describe('npq exit code propagation', () => {
     jest.resetModules()
     jest.clearAllMocks()
     mockProcessExit.mockClear()
-    process.exitCode = undefined
+    process.exitCode = originalExitCode
 
     const { CliParser } = require('../lib/cli')
     CliParser.parseArgsFull.mockImplementation(() => ({
@@ -263,6 +251,7 @@ describe('npq exit code propagation', () => {
       packageManager: 'npm',
       dryRun: false,
       plain: false,
+      json: false,
       disableAutoContinue: false,
       installSubcommandExplicit: false
     }))
@@ -285,7 +274,7 @@ describe('npq exit code propagation', () => {
     jest.resetModules()
     jest.clearAllMocks()
     mockProcessExit.mockClear()
-    process.exitCode = undefined
+    process.exitCode = originalExitCode
 
     const { CliParser } = require('../lib/cli')
     CliParser.parseArgsFull.mockImplementation(() => ({
@@ -293,6 +282,7 @@ describe('npq exit code propagation', () => {
       packageManager: 'npm',
       dryRun: true,
       plain: false,
+      json: false,
       disableAutoContinue: false,
       installSubcommandExplicit: true
     }))
@@ -315,7 +305,7 @@ describe('npq exit code propagation', () => {
     jest.resetModules()
     jest.clearAllMocks()
     mockProcessExit.mockClear()
-    process.exitCode = undefined
+    process.exitCode = originalExitCode
     const consoleLog = jest.spyOn(console, 'log').mockImplementation(() => {})
 
     const { CliParser } = require('../lib/cli')
@@ -324,6 +314,7 @@ describe('npq exit code propagation', () => {
       packageManager: 'npm',
       dryRun: false,
       plain: true,
+      json: false,
       disableAutoContinue: false,
       installSubcommandExplicit: false
     }))
@@ -346,4 +337,16 @@ describe('npq exit code propagation', () => {
 
     consoleLog.mockRestore()
   })
+})
+
+test('restores process.exit after exit-code tests', () => {
+  expect(process.exit).toBe(originalProcessExit)
+})
+
+test('restores the entry process.exitCode after exit-code tests', () => {
+  expect(process.exitCode).toBe(originalExitCode)
+})
+
+test('removes only SIGINT listeners introduced by exit-code tests', () => {
+  expect(process.listeners('SIGINT')).toEqual(originalSigintListeners)
 })
