@@ -82,6 +82,17 @@ alias pnpm="NPQ_PKG_MGR=pnpm npq-hero"
 
 The `NPQ_PKG_MGR` environment variable tells npq which package manager to delegate to after completing its checks.
 
+### Filtered pnpm installs
+
+For pnpm aliases, filter options may appear before or after an `install` or `add` command. npq audits the registry package operands and then passes the original arguments to pnpm in their original order:
+
+```bash
+pnpm --filter workspace... add express
+pnpm install express --filter ...workspace
+```
+
+The values following `--filter`, `-F`, and `--filter-prod` select pnpm workspaces. These selectors are not registry packages, so npq does not audit them as package dependencies.
+
 ## Exit Code Preservation
 
 A critical requirement for the alias feature is that npq must preserve the exit code of the underlying package manager. Without this, CI pipelines and scripts that depend on exit codes (e.g. `npm audit` returning `1` when vulnerabilities are found) would silently pass.

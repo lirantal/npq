@@ -3,6 +3,7 @@
 const EventEmitter = require('node:events')
 const packageManager = require('../lib/packageManager')
 const childProcess = require('child_process')
+const originalArgv = process.argv
 
 function createMockChild(exitCode = 0) {
   const child = new EventEmitter()
@@ -16,6 +17,15 @@ jest.mock('child_process', () => {
       return new (require('node:events').EventEmitter)()
     })
   }
+})
+
+beforeEach(() => {
+  childProcess.spawn.mockReset()
+  process.argv = ['node', 'npq']
+})
+
+afterAll(() => {
+  process.argv = originalArgv
 })
 
 test('package manager validation should fail if provided array', () => {
@@ -102,6 +112,40 @@ test('package manager spawns with pnpm when provided as parameter', async () => 
   expect(childProcess.spawn).toHaveBeenCalled()
   expect(childProcess.spawn.mock.calls.length).toBe(1)
   expect(childProcess.spawn.mock.calls[0][0]).toEqual('pnpm install lodash')
+  childProcess.spawn.mockReset()
+})
+
+test.each([
+  ['before add', ['--filter', 'workspace...', 'add', 'express']],
+  ['after install', ['install', 'express', '--filter', '...workspace']]
+])('pnpm preserves filter and ellipsis selector order %s', async (_placement, args) => {
+  childProcess.spawn.mockImplementation(() => createMockChild(0))
+  process.argv = ['node', 'script name', ...args]
+
+  await packageManager.process('pnpm')
+
+  expect(childProcess.spawn).toHaveBeenCalledWith(`pnpm ${args.join(' ')}`, {
+    stdio: 'inherit',
+    shell: true
+  })
+})
+
+test('package manager forwards custom registry options', async () => {
+  childProcess.spawn.mockImplementation(() => createMockChild(0))
+  process.argv = [
+    'node',
+    'npq',
+    'install',
+    '@company/tool',
+    '--registry=https://artifactory.example.test/api/npm/npm/'
+  ]
+
+  await packageManager.process('pnpm')
+
+  expect(childProcess.spawn).toHaveBeenCalledWith(
+    'pnpm install @company/tool --registry=https://artifactory.example.test/api/npm/npm/',
+    expect.objectContaining({ stdio: 'inherit', shell: true })
+  )
   childProcess.spawn.mockReset()
 })
 

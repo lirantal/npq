@@ -1,102 +1,465 @@
 'use strict'
 
 const ExpiredDomainsMarshall = require('../lib/marshalls/expiredDomains.marshall')
+const NotEvaluated = require('../lib/helpers/notEvaluated')
+const { rdapStatuses } = require('../lib/helpers/rdapClient')
+const { RegistryError } = require('../lib/helpers/registryErrors')
+const Warning = require('../lib/helpers/warning')
 
-const testMarshall = new ExpiredDomainsMarshall({
-  packageRepoUtils: {
-    getPackageInfo: (pkgInfo) => {
-      return new Promise((resolve) => {
-        resolve(pkgInfo)
-      })
+function packageData(maintainers) {
+  return {
+    'dist-tags': { latest: '1.0.0' },
+    versions: {
+      '1.0.0': { maintainers }
     }
   }
-})
+}
+
+function packageDataWithVersionedMaintainers() {
+  return {
+    'dist-tags': { latest: '2.0.0', next: '3.0.0' },
+    versions: {
+      '1.0.0': { maintainers: [{ name: 'exact', email: 'dev@exact.example.dev' }] },
+      '1.1.0': { maintainers: [{ name: 'range', email: 'dev@range.example.dev' }] },
+      '2.0.0': { maintainers: [{ name: 'latest', email: 'dev@latest.example.dev' }] },
+      '3.0.0': { maintainers: [{ name: 'next', email: 'dev@next.example.dev' }] }
+    }
+  }
+}
+
+function dnsFailure(code, hostname = 'example.com') {
+  return Object.assign(new Error(code), { code, hostname })
+}
+
+function createMarshall({ getPackageInfo, resolve, rdapLookup } = {}) {
+  return new ExpiredDomainsMarshall({
+    packageRepoUtils: {
+      getPackageInfo: getPackageInfo || (async (pkgInfo) => pkgInfo),
+      parsePackageVersion: () => null
+    },
+    dnsResolver: {
+      resolve: resolve || jest.fn().mockResolvedValue(['ns1.example.com'])
+    },
+    rdapClient: {
+      lookup: rdapLookup || jest.fn().mockResolvedValue({ status: rdapStatuses.NotFound })
+    }
+  })
+}
 
 describe('Expired domains test suites', () => {
-  beforeEach(() => {
-    jest.clearAllMocks()
-    jest.resetAllMocks()
+  test('has the right title', () => {
+    expect(createMarshall().title()).toEqual('Detecting expired domains for authors account...')
   })
 
-  test('has the right title', async () => {
-    expect(testMarshall.title()).toEqual('Detecting expired domains for authors account...')
+  test('preserves registry errors', async () => {
+    const failure = new RegistryError('Registry network request failed', {
+      registry: 'https://registry.example.test/',
+      code: 'EREGISTRYNETWORK'
+    })
+    const testMarshall = createMarshall({
+      getPackageInfo: jest.fn().mockRejectedValue(failure)
+    })
+
+    await expect(testMarshall.validate({ packageName: 'example' })).rejects.toBe(failure)
   })
 
-  test('throws the right error when an email domain cant be verified', async () => {
-    const nonExistentEmailAddress =
-      'liran.tal+test1234@somenonexistentdomainongoogle109dubv98g39ujasdasda.com'
-    const pkgData = {
-      packageName: {
-        'dist-tags': {
-          latest: '1.0.0'
-        },
-        versions: {
-          '1.0.0': {
-            maintainers: [
-              { name: 'lirantal', email: 'liran.tal@gmail.com' },
-              {
-                name: 'lirantal_test_user',
-                email: nonExistentEmailAddress
-              }
-            ]
-          }
-        }
+  test.each([
+    ['an exact older version', '1.0.0', 'exact.example.dev'],
+    ['a semver range', '^1.0.0', 'range.example.dev'],
+    ['a non-latest dist-tag', 'next', 'next.example.dev']
+  ])('checks maintainers for %s', async (_case, packageVersion, expectedDomain) => {
+    const resolve = jest.fn().mockResolvedValue(['ns1.example.com'])
+    const testMarshall = createMarshall({ resolve })
+
+    await testMarshall.validate({
+      packageName: packageDataWithVersionedMaintainers(),
+      packageVersion
+    })
+
+    expect(resolve).toHaveBeenCalledWith(expectedDomain, 'NS')
+    expect(resolve).not.toHaveBeenCalledWith('latest.example.dev', 'NS')
+  })
+
+  test('is not evaluated for an unresolvable selector', async () => {
+    const resolve = jest.fn()
+    const testMarshall = createMarshall({ resolve })
+
+    await expect(
+      testMarshall.validate({
+        packageName: packageDataWithVersionedMaintainers(),
+        packageVersion: 'unknown'
+      })
+    ).rejects.toThrow(NotEvaluated)
+    expect(resolve).not.toHaveBeenCalled()
+  })
+
+  test.each([
+    ['missing email', { name: 'maintainer' }],
+    ['empty email', { name: 'maintainer', email: '' }],
+    ['email without a domain', { name: 'maintainer', email: 'dev@' }],
+    ['email with whitespace in its domain', { name: 'maintainer', email: 'dev@example .com' }]
+  ])('is not evaluated for a %s', async (_name, maintainer) => {
+    const resolve = jest.fn()
+    const testMarshall = createMarshall({ resolve })
+
+    await expect(
+      testMarshall.validate({ packageName: packageData([maintainer]), packageVersion: 'latest' })
+    ).rejects.toThrow(NotEvaluated)
+    expect(resolve).not.toHaveBeenCalled()
+  })
+
+  test.each([
+    ['latest version has no maintainers data', packageData(undefined)],
+    ['maintainers list is empty', packageData([])],
+    ['package data has no versions', {}]
+  ])('is not evaluated when the %s', async (_name, data) => {
+    const testMarshall = createMarshall()
+
+    await expect(
+      testMarshall.validate({ packageName: data, packageVersion: 'latest' })
+    ).rejects.toThrow(NotEvaluated)
+  })
+
+  test('reports NXDOMAIN as a warning instead of an error', async () => {
+    const resolve = jest.fn(async (domain) => {
+      if (domain === 'com') {
+        return ['a.gtld-servers.net']
       }
-    }
+      throw dnsFailure('ENOTFOUND', domain)
+    })
+    const testMarshall = createMarshall({ resolve })
 
-    await expect(testMarshall.validate(pkgData)).rejects.toThrow(
-      /Detected expired domain can be abused for account takeover/
+    await expect(
+      testMarshall.validate({
+        packageName: packageData([{ name: 'maintainer', email: 'dev@missing-domain.com' }]),
+        packageVersion: 'latest'
+      })
+    ).rejects.toEqual(
+      expect.objectContaining({
+        constructor: Warning,
+        message:
+          'Maintainer domain missing-domain.com does not resolve in public DNS, and RDAP found no active registration; account takeover may be possible.\n\nAffected maintainers:\n- missing-domain.com: maintainer <dev@missing-domain.com>'
+      })
     )
   })
 
-  test('if email hostname is empty then show an unknown message', async () => {
-    const nonExistentEmailAddress = ''
-    const pkgData = {
-      packageName: {
-        'dist-tags': {
-          latest: '1.0.0'
-        },
-        versions: {
-          '1.0.0': {
-            maintainers: [
-              { name: 'lirantal', email: 'liran.tal@gmail.com' },
-              {
-                name: 'lirantal_test_user',
-                email: nonExistentEmailAddress
-              }
-            ]
-          }
-        }
-      }
-    }
+  test.each(['ENODATA', 'ETIMEOUT', 'ESERVFAIL', 'ECONNREFUSED', 'EBADRESP', 'UNKNOWN'])(
+    'reports %s DNS failures as not evaluated',
+    async (code) => {
+      const resolve = jest.fn().mockRejectedValue(dnsFailure(code))
+      const testMarshall = createMarshall({ resolve })
 
-    await expect(testMarshall.validate(pkgData)).rejects.toThrow(
-      /Detected expired domain can be abused for account takeover: <unknown>/
+      await expect(
+        testMarshall.validate({
+          packageName: packageData([{ name: 'maintainer', email: 'dev@public-domain.com' }]),
+          packageVersion: 'latest'
+        })
+      ).rejects.toThrow(NotEvaluated)
+    }
+  )
+
+  test('records NXDOMAIN through the marshall warning channel', async () => {
+    const resolve = jest.fn(async (domain) => {
+      if (domain === 'com') {
+        return ['a.gtld-servers.net']
+      }
+      throw dnsFailure('ENOTFOUND', domain)
+    })
+    const testMarshall = createMarshall({ resolve })
+    const ctx = { pkgs: [], marshalls: {} }
+    testMarshall.init(ctx)
+
+    await testMarshall.checkPackage(
+      {
+        packageName: packageData([{ name: 'maintainer', email: 'dev@missing-domain.com' }]),
+        packageString: 'example-package'
+      },
+      ctx
+    )
+
+    expect(ctx.marshalls.maintainers_expired_emails.errors).toEqual([])
+    expect(ctx.marshalls.maintainers_expired_emails.warnings).toEqual([
+      expect.objectContaining({
+        pkg: 'example-package',
+        message: expect.stringContaining('does not resolve in public DNS')
+      })
+    ])
+  })
+
+  test('orders suspected domains and reports other incomplete records', async () => {
+    const resolve = jest.fn(async (domain) => {
+      if (domain === 'a-domain.com' || domain === 'b-domain.com') {
+        throw dnsFailure('ENOTFOUND', domain)
+      }
+      if (domain === 'timeout-domain.com') {
+        throw dnsFailure('ETIMEOUT', domain)
+      }
+      if (domain === 'com') {
+        return ['a.gtld-servers.net']
+      }
+      return ['ns1.example.com']
+    })
+    const testMarshall = createMarshall({ resolve })
+
+    await expect(
+      testMarshall.validate({
+        packageName: packageData([
+          { name: 'b', email: 'dev@b-domain.com' },
+          { name: 'invalid', email: '' },
+          { name: 'timeout', email: 'dev@timeout-domain.com' },
+          { name: 'a', email: 'dev@a-domain.com' }
+        ]),
+        packageVersion: 'latest'
+      })
+    ).rejects.toThrow(
+      'Maintainer domains a-domain.com, b-domain.com do not resolve in public DNS, and RDAP found no active registration; account takeover may be possible.\n\nAffected maintainers:\n- a-domain.com: a <dev@a-domain.com>\n- b-domain.com: b <dev@b-domain.com>\n\n2 other maintainer records could not be evaluated.'
+    )
+    expect(resolve).toHaveBeenCalledWith('com', 'NS')
+  })
+
+  test('identifies maintainers affected by corroborated domains', async () => {
+    const resolve = jest.fn(async (domain) => {
+      if (domain === 'a-domain.com' || domain === 'b-domain.com') {
+        throw dnsFailure('ENOTFOUND', domain)
+      }
+      if (domain === 'timeout-domain.com') {
+        throw dnsFailure('ETIMEOUT', domain)
+      }
+      if (domain === 'com') {
+        return ['a.gtld-servers.net']
+      }
+      return ['ns1.example.com']
+    })
+    const testMarshall = createMarshall({ resolve })
+
+    await expect(
+      testMarshall.validate({
+        packageName: packageData([
+          { name: 'B first', email: 'first@b-domain.com' },
+          { name: 'invalid', email: '' },
+          { name: 'timeout', email: 'timeout@timeout-domain.com' },
+          { name: 'A', email: 'a@a-domain.com' },
+          { name: 'B second', email: 'second@b-domain.com' },
+          { email: 'nameless@a-domain.com' }
+        ]),
+        packageVersion: 'latest'
+      })
+    ).rejects.toThrow(
+      'Maintainer domains a-domain.com, b-domain.com do not resolve in public DNS, and RDAP found no active registration; account takeover may be possible.\n\nAffected maintainers:\n- a-domain.com: A <a@a-domain.com>, nameless@a-domain.com\n- b-domain.com: B first <first@b-domain.com>, B second <second@b-domain.com>\n\n2 other maintainer records could not be evaluated.'
     )
   })
 
-  test('does not throw any errors if the domain resolves well', async () => {
-    jest.setTimeout(15000)
-
-    const pkgData = {
-      packageName: {
-        'dist-tags': {
-          latest: '1.0.0'
-        },
-        versions: {
-          '1.0.0': {
-            maintainers: [
-              { name: 'lirantal', email: 'liran.tal@gmail.com' },
-              {
-                name: 'lirantal_test_user',
-                email: 'liran.tal@gmail.com'
-              }
-            ]
-          }
-        }
+  test('removes terminal control characters from maintainer identities', async () => {
+    const resolve = jest.fn(async (domain) => {
+      if (domain === 'com') {
+        return ['a.gtld-servers.net']
       }
+      throw dnsFailure('ENOTFOUND', domain)
+    })
+    const testMarshall = createMarshall({ resolve })
+
+    await expect(
+      testMarshall.validate({
+        packageName: packageData([
+          {
+            name: 'Trusted\nMaintainer\u001b[31m',
+            email: 'dev\u001b[0m@missing-domain.com'
+          }
+        ]),
+        packageVersion: 'latest'
+      })
+    ).rejects.toThrow(
+      'Maintainer domain missing-domain.com does not resolve in public DNS, and RDAP found no active registration; account takeover may be possible.\n\nAffected maintainers:\n- missing-domain.com: TrustedMaintainer[31m <dev[0m@missing-domain.com>'
+    )
+  })
+
+  test('suppresses a DNS warning when RDAP finds a registered domain', async () => {
+    const resolve = jest.fn(async (domain) => {
+      if (domain === 'com') {
+        return ['a.gtld-servers.net']
+      }
+      throw dnsFailure('ENOTFOUND', domain)
+    })
+    const rdapLookup = jest.fn().mockResolvedValue({ status: rdapStatuses.Registered })
+    const testMarshall = createMarshall({ resolve, rdapLookup })
+
+    await expect(
+      testMarshall.validate({
+        packageName: packageData([{ name: 'maintainer', email: 'dev@public-domain.com' }]),
+        packageVersion: 'latest'
+      })
+    ).resolves.toEqual([undefined])
+    expect(rdapLookup).toHaveBeenCalledWith('public-domain.com')
+  })
+
+  test.each([
+    ['inconclusive response', jest.fn().mockResolvedValue({ status: rdapStatuses.Inconclusive })],
+    ['client failure', jest.fn().mockRejectedValue(new Error('RDAP unavailable'))]
+  ])('is not evaluated for an RDAP %s', async (_case, rdapLookup) => {
+    const resolve = jest.fn(async (domain) => {
+      if (domain === 'com') {
+        return ['a.gtld-servers.net']
+      }
+      throw dnsFailure('ENOTFOUND', domain)
+    })
+    const testMarshall = createMarshall({ resolve, rdapLookup })
+
+    await expect(
+      testMarshall.validate({
+        packageName: packageData([{ name: 'maintainer', email: 'dev@public-domain.com' }]),
+        packageVersion: 'latest'
+      })
+    ).rejects.toThrow(NotEvaluated)
+  })
+
+  test('skips RDAP when public DNS resolves', async () => {
+    const resolve = jest.fn().mockResolvedValue(['ns1.example.com'])
+    const rdapLookup = jest.fn()
+    const testMarshall = createMarshall({ resolve, rdapLookup })
+
+    await expect(
+      testMarshall.validate({
+        packageName: packageData([{ name: 'maintainer', email: 'dev@public-domain.com' }]),
+        packageVersion: 'latest'
+      })
+    ).resolves.toEqual([['ns1.example.com']])
+    expect(rdapLookup).not.toHaveBeenCalled()
+  })
+
+  test('queries the complete normalized email host', async () => {
+    const resolve = jest.fn().mockResolvedValue(['ns1.example.com'])
+    const testMarshall = createMarshall({ resolve })
+
+    await testMarshall.validate({
+      packageName: packageData([{ name: 'maintainer', email: 'dev@MAIL.Example.CO.UK.' }]),
+      packageVersion: 'latest'
+    })
+
+    expect(resolve).toHaveBeenCalledWith('mail.example.co.uk', 'NS')
+  })
+
+  test('reports a multipart NXDOMAIN as not evaluated', async () => {
+    const resolve = jest.fn().mockRejectedValue(dnsFailure('ENOTFOUND'))
+    const rdapLookup = jest.fn()
+    const testMarshall = createMarshall({ resolve, rdapLookup })
+
+    await expect(
+      testMarshall.validate({
+        packageName: packageData([{ name: 'maintainer', email: 'dev@example.co.uk' }]),
+        packageVersion: 'latest'
+      })
+    ).rejects.toThrow(NotEvaluated)
+    expect(resolve).toHaveBeenCalledTimes(1)
+    expect(resolve).toHaveBeenCalledWith('example.co.uk', 'NS')
+    expect(rdapLookup).not.toHaveBeenCalled()
+  })
+
+  test('reports an unverifiable top-level domain as not evaluated', async () => {
+    const resolve = jest.fn().mockRejectedValue(dnsFailure('ENOTFOUND'))
+    const rdapLookup = jest.fn()
+    const testMarshall = createMarshall({ resolve, rdapLookup })
+
+    await expect(
+      testMarshall.validate({
+        packageName: packageData([{ name: 'maintainer', email: 'dev@service.unknown' }]),
+        packageVersion: 'latest'
+      })
+    ).rejects.toThrow(NotEvaluated)
+    expect(resolve.mock.calls).toEqual([
+      ['service.unknown', 'NS'],
+      ['unknown', 'NS']
+    ])
+    expect(rdapLookup).not.toHaveBeenCalled()
+  })
+
+  test('queries IDN domains in ASCII form', async () => {
+    const resolve = jest.fn().mockResolvedValue(['ns1.example.com'])
+    const testMarshall = createMarshall({ resolve })
+
+    await testMarshall.validate({
+      packageName: packageData([{ name: 'maintainer', email: 'dev@BÜCHER.DE.' }]),
+      packageVersion: 'latest'
+    })
+
+    expect(resolve).toHaveBeenCalledWith('xn--bcher-kva.de', 'NS')
+  })
+
+  test('evaluates public ICANN domains from custom-registry metadata', async () => {
+    const resolve = jest.fn().mockResolvedValue(['ns1.example.com'])
+    const testMarshall = createMarshall({ resolve })
+    const data = {
+      ...packageData([{ name: 'maintainer', email: 'dev@mail.public-domain.com' }]),
+      _registry: 'https://registry.example.test/'
     }
 
-    await expect(testMarshall.validate(pkgData)).resolves.toEqual(expect.anything())
+    await expect(
+      testMarshall.validate({ packageName: data, packageVersion: 'latest' })
+    ).resolves.toEqual([['ns1.example.com']])
+    expect(resolve).toHaveBeenCalledWith('mail.public-domain.com', 'NS')
+  })
+
+  test('is not evaluated when custom-registry metadata has only internal domains', async () => {
+    const resolve = jest.fn()
+    const testMarshall = createMarshall({ resolve })
+    const data = {
+      ...packageData([{ name: 'maintainer', email: 'dev@packages.corp' }]),
+      _registry: 'https://registry.example.test/'
+    }
+
+    await expect(
+      testMarshall.validate({ packageName: data, packageVersion: 'latest' })
+    ).rejects.toThrow(NotEvaluated)
+    expect(resolve).not.toHaveBeenCalled()
+  })
+
+  test('deduplicates maintainer domains before resolving them', async () => {
+    const resolve = jest.fn().mockResolvedValue(['ns1.example.com'])
+    const testMarshall = createMarshall({ resolve })
+
+    await expect(
+      testMarshall.validate({
+        packageName: packageData([
+          { name: 'first', email: 'first@Public-Domain.COM' },
+          { name: 'second', email: 'second@public-domain.com' }
+        ]),
+        packageVersion: 'latest'
+      })
+    ).resolves.toEqual([['ns1.example.com']])
+    expect(resolve).toHaveBeenCalledTimes(1)
+    expect(resolve).toHaveBeenCalledWith('public-domain.com', 'NS')
+  })
+
+  test('counts incomplete DNS results by affected maintainer record', async () => {
+    const resolve = jest.fn().mockRejectedValue(dnsFailure('ETIMEOUT'))
+    const testMarshall = createMarshall({ resolve })
+
+    await expect(
+      testMarshall.validate({
+        packageName: packageData([
+          { name: 'first', email: 'first@public-domain.com' },
+          { name: 'second', email: 'second@public-domain.com' }
+        ]),
+        packageVersion: 'latest'
+      })
+    ).rejects.toThrow(
+      '2 maintainer records could not be evaluated because DNS, RDAP, or email data was incomplete'
+    )
+    expect(resolve).toHaveBeenCalledTimes(1)
+  })
+
+  test('resolves without live network access when every unique domain resolves', async () => {
+    const resolve = jest.fn().mockResolvedValue(['ns1.example.com'])
+    const testMarshall = createMarshall({ resolve })
+
+    await expect(
+      testMarshall.validate({
+        packageName: packageData([
+          { name: 'first', email: 'first@public-domain.com' },
+          { name: 'second', email: 'second@public-domain.org' }
+        ]),
+        packageVersion: 'latest'
+      })
+    ).resolves.toEqual([['ns1.example.com'], ['ns1.example.com']])
+    expect(resolve).toHaveBeenCalledTimes(2)
   })
 })

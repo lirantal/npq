@@ -25,6 +25,8 @@ test('running marshall tasks succeeds', async () => {
     status: null,
     errors: [],
     warnings: [],
+    suggestions: [],
+    notEvaluated: [],
     data: { express: 'mock data check', semver: 'mock data check' },
     marshall: 'test.marshall',
     categoryId: 'PackageHealth'
@@ -116,6 +118,7 @@ test('running marshall tasks filters out not found packages when multiple packag
     status: null,
     errors: [{ pkg: 'nonexistent-package', message: 'Package not found' }],
     warnings: [],
+    notEvaluated: [],
     data: {},
     marshall: 'not_found',
     categoryId: 'PackageHealth'
@@ -125,8 +128,32 @@ test('running marshall tasks filters out not found packages when multiple packag
     status: null,
     errors: [],
     warnings: [],
+    suggestions: [],
+    notEvaluated: [],
     data: { express: 'mock data check', semver: 'mock data check' },
     marshall: 'test.marshall',
     categoryId: 'PackageHealth'
+  })
+})
+
+test('running marshall tasks propagates fatal registry errors', async () => {
+  marshalls.collectMarshalls = jest
+    .fn()
+    .mockResolvedValue([
+      path.join(process.cwd(), '__tests__/__fixtures__/fatalRegistry.marshall.js')
+    ])
+  const config = {
+    pkgs: [
+      {
+        packageName: 'private-package',
+        packageString: 'private-package@1.0.0'
+      }
+    ],
+    packageRepoUtils: new PackageRepoUtilsMock()
+  }
+
+  await expect(marshalls.tasks(config)).rejects.toMatchObject({
+    name: 'RegistryError',
+    code: 'EREGISTRYNETWORK'
   })
 })

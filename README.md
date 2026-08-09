@@ -78,6 +78,16 @@ brew install npq
 npq install express
 ```
 
+### Custom registries
+
+NPQ reads standard npm registry configuration, including default and scoped registries, authentication, proxies, and TLS settings. You can also select a registry on the command line; the option is shared with the package manager used for installation:
+
+```sh
+npq install @company/tool --registry=https://artifactory.example.com/artifactory/api/npm/npm-virtual/
+```
+
+See [Custom registries](docs/feature/custom-registry.md) for `.npmrc` examples, configuration precedence, private CA setup, skipped capability behavior, and NPQ's no-fallback privacy guarantee.
+
 ### Embed in your day to day
 
 Since `npq` is a pre-step to ensure that the npm package you're installing is safe, you can safely embed it in your day-to-day `npm` usage so there's no need to remember to run `npq` explicitly.
@@ -120,6 +130,7 @@ NPQ_PKG_MGR=pnpm npx npq install fastify
 
 ```bash
 alias pnpm="NPQ_PKG_MGR=pnpm npq-hero"
+pnpm --filter workspace... add express
 ```
 
 Note: `npq` by default will offload all commands and their arguments to the `npm` (or other package manager as specified) after it finished its due-diligence checks for the respective packages.
@@ -130,19 +141,40 @@ Note: `npq` by default will offload all commands and their arguments to the `npm
 | --- | --- | ---
 | age | Will show a warning for a package if its age on npm is less than 22 days | Checks a package creation date, not a specific version
 | author | Validates the resolved version’s publisher (`_npmUser`), flags a **new** maintainer on the package (first publish by that email within 21 days), **dormant maintainer** gaps (warning if over ~6 months since their last publish on that package, error if over ~9 months), and very **recent** publishes | See [docs/feature/author-marshall.md](docs/feature/author-marshall.md)
-| downloads | Will show a warning for a package if its download count in the last month is less than 20
+| downloads | Will show a warning for a package if its download count in the last month is less than 20 | Reports `not evaluated` for custom-registry packages instead of querying the public npm downloads service
 | readme | Will show a warning if a package has no README or it has been detected as a security placeholder package by npm staff
 | repo | Will show a warning if a package has been found without a valid and working repository URL | Checks the latest version for a repository URL
 | scripts | Will show a warning if a package has a pre/post install script which could potentially be malicious
 | snyk | Will show a warning if a package has been found with vulnerabilities in Snyk's database | For Snyk to work you need to either have the `snyk` npm package installed with a valid API token, or make the token available in the `SNYK_TOKEN` environment variable, and npq will use it
 | license | Will show a warning if a package has been found without a license field | Checks the latest version for a license
-| expired domains | Will show a warning if a package has been found with one of its maintainers having an email address that includes an expired domain | Checks a dependency version for a maintainer with an expired domain
-| signatures | Will compare the package's signature as it shows on the registry's pakument with the keys published on the npmjs.com registry
-| provenance | Will verify the package's attestations of provenance metadata for the published package, and **error** on [provenance regression](docs/feature/provenance.md) (an older semver had registry provenance metadata but the version you install does not)
-| version-maturity | Will show a warning if the specific version being installed was published less than 7 days ago | Helps identify recently published versions that may not have been reviewed by the community yet
+| expired domains | Normalizes and checks complete maintainer email hosts, then corroborates a simple two-label DNS failure through authoritative RDAP before warning | Multipart and otherwise inconclusive results are reported as not evaluated; see [expired-domain marshall documentation](docs/feature/expired-domains.md)
+| signatures | Will compare the package's signature as it shows on the registry's packument with signing keys published by the selected registry | Reports `not evaluated` if the selected registry does not expose signing keys
+| provenance | Will verify the package's attestations of provenance metadata for the published package, and **error** on [provenance regression](docs/feature/provenance.md) (an older semver had registry provenance metadata but the version you install does not) | Reports `not evaluated` if the selected registry does not expose signing keys or attestations
+| version-maturity | Will show an error if the specific version being installed was published less than 7 days ago | Suggests the highest older semver outside npq's 30-day version-recency window when one is available
 | newBin | Will show a warning if the package version being installed introduces a new command-line binary (via the `bin` field in `package.json`) that was not present in its previous version. | Helps identify potentially unexpected new executables being added to your `node_modules/.bin/` directory.
 | typosquatting | Will show a warning if the package name is similar to a popular package name, which could indicate a potential typosquatting attack. | Helps identify packages that may be trying to trick users into installing them by mimicking popular package names.
 | deprecation | Will show a warning if the package version is deprecated on npm or if its GitHub repository has been archived. | Helps identify packages that are no longer maintained or recommended for use. Set `GITHUB_TOKEN` environment variable for higher GitHub API rate limits.
+
+### Older release suggestions
+
+When a requested version fails the version-maturity check, npq may show the highest older
+semver published outside its 30-day package-version recency window:
+
+```text
+ │
+ │ ℹ Suggested older release · @openai/codex@0.121.0 — published 33 days ago
+ │   Clears npq's package-version recency windows. Re-run npq to audit this
+ │   version; compatibility is not evaluated.
+```
+
+The suggestion:
+
+- can cross a major-version boundary for tags such as `latest`;
+- is based on cached package publication metadata and is not automatically installed;
+- is not a statement that the older release is safe or that it passes every npq check;
+- does not evaluate API or runtime compatibility.
+
+Run npq again with the suggested version and review its compatibility before installing it.
 
 ### Disabling Marshalls
 
@@ -255,7 +287,7 @@ When auto-continue is disabled, npq will always prompt for explicit confirmation
 
 5. **Why is NPQ connecting to external domains like gmail.com or personal websites during installation?**
 
-* This is not telemetry. NPQ does not collect any usage data. When auditing a package, NPQ fetches the maintainers/authors of the dependency and checks their email addresses to verify they are valid and not associated with expired domains. Expired domains can be abused by attackers for account takeover (ATO) attacks to compromise packages with malicious versions. Hence, NPQ may make DNS requests to domains like `gmail.com` or personal domains found in maintainer emails. Additionally, NPQ makes HTTP requests to `osv.dev` to fetch security vulnerability data (or uses Snyk if configured, as a prioritized option).
+* This is not telemetry. NPQ does not collect any usage data. When auditing a package, NPQ fetches the maintainers/authors of the dependency and checks their email addresses to verify they are valid and not associated with expired domains. Expired domains can be abused by attackers for account takeover (ATO) attacks to compromise packages with malicious versions. Hence, NPQ may make DNS requests to domains like `gmail.com` or personal domains found in maintainer emails. After a simple two-label domain returns NXDOMAIN and its top-level domain resolves, NPQ may fetch the official IANA RDAP bootstrap and query the selected authoritative HTTPS RDAP service, sending only the normalized two-label domain. Additionally, NPQ makes HTTP requests to `osv.dev` to fetch security vulnerability data (or uses Snyk if configured, as a prioritized option).
 
 ## Documentation
 

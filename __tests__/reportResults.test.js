@@ -566,6 +566,115 @@ describe('reportResults', () => {
   })
 })
 
+describe('older release suggestions', () => {
+  const suggestion = {
+    pkg: '@openai/codex@latest',
+    type: 'alternative-version',
+    packageName: '@openai/codex',
+    version: '0.121.0',
+    packageSpec: '@openai/codex@0.121.0',
+    publishedAt: '2026-04-15T20:46:45.517Z',
+    ageDays: 33,
+    reason: 'version-recency'
+  }
+
+  function resultsWithSuggestions(errors = [{ message: 'Recent release' }]) {
+    return {
+      '@openai/codex@latest': [
+        {
+          version_maturity: {
+            marshall: 'version_maturity',
+            categoryId: 'SupplyChainSecurity',
+            errors,
+            warnings: [],
+            suggestions: [suggestion]
+          }
+        },
+        {
+          duplicate_source: {
+            marshall: 'duplicate_source',
+            categoryId: 'SupplyChainSecurity',
+            errors: [],
+            warnings: [],
+            suggestions: [suggestion]
+          }
+        }
+      ]
+    }
+  }
+
+  test('renders one package-level suggestion after findings in rich and plain output', () => {
+    const { reportResults } = require('../lib/helpers/reportResults')
+    const result = reportResults(resultsWithSuggestions(), { plain: true })
+    const prettySuggestionIndex = result.resultsForPrettyPrint.indexOf('@openai/codex@0.121.0')
+    const prettyCloseIndex = result.resultsForPrettyPrint.lastIndexOf('└─')
+
+    expect(result.resultsForPrettyPrint).toContain('Suggested older release')
+    expect(result.resultsForPrettyPrint).toContain("Clears npq's package-version recency windows.")
+    expect(prettySuggestionIndex).toBeGreaterThan(
+      result.resultsForPrettyPrint.indexOf('Recent release')
+    )
+    expect(prettySuggestionIndex).toBeLessThan(prettyCloseIndex)
+    expect(result.resultsForPlainTextPrint).toContain(
+      'SUGGESTION: @openai/codex@0.121.0 was published 33 days ago and clears the package-version recency windows. Re-run npq to audit it; compatibility is not evaluated.'
+    )
+    expect(result.resultsForPrettyPrint.match(/@openai\/codex@0\.121\.0/g)).toHaveLength(1)
+    expect(result.resultsForPlainTextPrint.match(/@openai\/codex@0\.121\.0/g)).toHaveLength(1)
+  })
+
+  test('keeps suggestions structured in JSON without changing finding counts', () => {
+    const { reportResults } = require('../lib/helpers/reportResults')
+    const result = reportResults(resultsWithSuggestions())
+
+    expect(result.countErrors).toBe(1)
+    expect(result.countWarnings).toBe(0)
+    expect(result.countNotEvaluated).toBe(0)
+    expect(result.resultsForJSON[0].suggestions).toEqual([
+      {
+        type: 'alternative-version',
+        packageName: '@openai/codex',
+        version: '0.121.0',
+        packageSpec: '@openai/codex@0.121.0',
+        publishedAt: '2026-04-15T20:46:45.517Z',
+        ageDays: 33,
+        reason: 'version-recency'
+      }
+    ])
+  })
+
+  test('wraps long suggestion details within the package block', () => {
+    const originalGetWindowSize = process.stdout.getWindowSize
+    const originalIsTTY = process.stdout.isTTY
+    process.stdout.getWindowSize = () => [55]
+    process.stdout.isTTY = true
+
+    const { reportResults } = require('../lib/helpers/reportResults')
+    const result = reportResults(resultsWithSuggestions())
+    const suggestionBlock = result.resultsForPrettyPrint.slice(
+      result.resultsForPrettyPrint.indexOf('Suggested older release'),
+      result.resultsForPrettyPrint.lastIndexOf('└─')
+    )
+
+    expect(suggestionBlock.split('\n').length).toBeGreaterThan(2)
+    expect(suggestionBlock).toContain('compatibility')
+    expect(suggestionBlock).toContain('is not evaluated.')
+
+    process.stdout.getWindowSize = originalGetWindowSize
+    process.stdout.isTTY = originalIsTTY
+  })
+
+  test('suppresses suggestions for malicious package results including JSON', () => {
+    const { reportResults } = require('../lib/helpers/reportResults')
+    const result = reportResults(
+      resultsWithSuggestions([{ message: 'Malicious package found in registry' }])
+    )
+
+    expect(result.resultsForPrettyPrint).not.toContain('@openai/codex@0.121.0')
+    expect(result.resultsForPlainTextPrint).not.toContain('@openai/codex@0.121.0')
+    expect(result.resultsForJSON[0].suggestions).toEqual([])
+  })
+})
+
 describe('reportResults helper functions', () => {
   test('should handle getTerminalWidth error cases', () => {
     // First define getWindowSize if it doesn't exist
@@ -760,6 +869,42 @@ describe('reportResults helper functions', () => {
     expect(result).toBeDefined()
     expect(result.countErrors).toBe(1) // Malicious packages count as 1 error regardless of count
     expect(result.resultsForPrettyPrint).toContain('Malicious package found')
+  })
+})
+
+describe('not evaluated results', () => {
+  test('renders skipped checks without counting them as findings', () => {
+    const { reportResults } = require('../lib/helpers/reportResults')
+    const skippedOnlyResults = {
+      'private-package@1.0.0': [
+        {
+          signatures: {
+            status: null,
+            errors: [],
+            warnings: [],
+            notEvaluated: [
+              {
+                pkg: 'private-package@1.0.0',
+                message: 'configured registry does not expose signing keys'
+              }
+            ],
+            data: {},
+            marshall: 'signatures',
+            categoryId: 'SupplyChainSecurity'
+          }
+        }
+      ]
+    }
+
+    const result = reportResults(skippedOnlyResults, { plain: true })
+
+    expect(result.countErrors).toBe(0)
+    expect(result.countWarnings).toBe(0)
+    expect(result.countNotEvaluated).toBe(1)
+    expect(result.resultsForPlainTextPrint).toContain(
+      'NOT EVALUATED: Supply Chain Security - configured registry does not expose signing keys'
+    )
+    expect(result.summaryForPlainTextPrint).toContain('Total not evaluated: 1')
   })
 })
 

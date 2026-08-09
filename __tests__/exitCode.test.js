@@ -32,6 +32,14 @@ jest.mock('../lib/helpers/sourcePackages', () => ({
   getProjectPackages: jest.fn().mockResolvedValue(['express'])
 }))
 
+jest.mock('../lib/helpers/registryConfig', () => ({
+  load: jest.fn().mockResolvedValue({ requestOptions: {} })
+}))
+
+jest.mock('../lib/helpers/registryClient', () =>
+  jest.fn().mockImplementation(() => ({ registryFor: jest.fn() }))
+)
+
 jest.mock('../lib/helpers/promiseThrottler', () => ({
   promiseThrottleHelper: jest.fn()
 }))
@@ -101,6 +109,56 @@ describe('npq-hero exit code propagation', () => {
     await flushPromises()
 
     expect(process.exitCode).toBe(1)
+  })
+
+  test('loads and injects registry configuration', async () => {
+    const { CliParser } = require('../lib/cli')
+    const RegistryConfig = require('../lib/helpers/registryConfig')
+    const RegistryClient = require('../lib/helpers/registryClient')
+    const Marshall = require('../lib/marshall')
+    CliParser.parseArgsMinimal.mockReturnValue({
+      packages: ['@company/tool'],
+      registryConfigArgs: ['--registry=https://artifactory.example.test/api/npm/npm/']
+    })
+
+    require('../bin/npq-hero.js')
+    await flushPromises()
+
+    expect(RegistryConfig.load).toHaveBeenCalledWith({
+      argv: ['--registry=https://artifactory.example.test/api/npm/npm/']
+    })
+    expect(RegistryClient).toHaveBeenCalled()
+    expect(Marshall).toHaveBeenCalledWith(
+      expect.objectContaining({ registryClient: expect.any(Object) })
+    )
+  })
+
+  test('prints skipped checks and installs without prompting', async () => {
+    const { CliParser } = require('../lib/cli')
+    const { reportResults } = require('../lib/helpers/reportResults')
+    const cliPrompt = require('../lib/helpers/cliPrompt.js')
+    const pkgMgr = require('../lib/packageManager')
+    const consoleLog = jest.spyOn(console, 'log').mockImplementation(() => {})
+    CliParser.parseArgsMinimal.mockReturnValue({ packages: ['@company/tool'] })
+    reportResults.mockReturnValue({
+      countErrors: 0,
+      countWarnings: 0,
+      countNotEvaluated: 2,
+      resultsForPlainTextPrint: 'skipped-plain',
+      summaryForPlainTextPrint: 'summary-plain',
+      useRichFormatting: false
+    })
+
+    require('../bin/npq-hero.js')
+    await flushPromises()
+
+    expect(consoleLog).toHaveBeenCalledWith('Package checks not evaluated:')
+    expect(consoleLog).toHaveBeenCalledWith('skipped-plain')
+    expect(cliPrompt.prompt).not.toHaveBeenCalled()
+    expect(cliPrompt.autoContinue).not.toHaveBeenCalled()
+    expect(pkgMgr.process).toHaveBeenCalled()
+
+    consoleLog.mockRestore()
   })
 })
 
@@ -251,5 +309,41 @@ describe('npq exit code propagation', () => {
     await flushPromises()
 
     expect(CliParser.exit).toHaveBeenCalledWith(expect.objectContaining({ errorCode: 1 }))
+  })
+
+  test('audit-only prints skipped checks and exits successfully', async () => {
+    jest.resetModules()
+    jest.clearAllMocks()
+    mockProcessExit.mockClear()
+    process.exitCode = undefined
+    const consoleLog = jest.spyOn(console, 'log').mockImplementation(() => {})
+
+    const { CliParser } = require('../lib/cli')
+    CliParser.parseArgsFull.mockImplementation(() => ({
+      packages: ['@company/tool'],
+      packageManager: 'npm',
+      dryRun: false,
+      plain: true,
+      disableAutoContinue: false,
+      installSubcommandExplicit: false
+    }))
+
+    const { reportResults } = require('../lib/helpers/reportResults')
+    reportResults.mockReturnValue({
+      countErrors: 0,
+      countWarnings: 0,
+      countNotEvaluated: 2,
+      resultsForPlainTextPrint: 'skipped-plain',
+      summaryForPlainTextPrint: 'summary-plain',
+      useRichFormatting: false
+    })
+
+    require('../bin/npq.js')
+    await flushPromises()
+
+    expect(consoleLog).toHaveBeenCalledWith('Package checks not evaluated:')
+    expect(CliParser.exit).toHaveBeenCalledWith(expect.objectContaining({ errorCode: 0 }))
+
+    consoleLog.mockRestore()
   })
 })

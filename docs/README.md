@@ -85,8 +85,12 @@ When adding new features or making significant changes:
 
 - [Custom registry support](./superpowers/specs/2026-07-11-custom-registry-support-design.md) - approved design for npm-compatible Artifactory and private registry support.
 - [JSON audit output](./superpowers/specs/2026-08-09-json-output-design.md) - approved design for versioned, non-interactive machine-readable audit results.
+- [Expired-domain maintainer identity warnings](./superpowers/specs/2026-07-17-expired-domain-maintainer-identities-design.md) - approved design for attributable expired-domain warnings.
+- [Expired-domain resolved version](./superpowers/specs/2026-07-17-expired-domain-resolved-version-design.md) - design for resolving the exact dependency version for expired-domain checks.
 
 ## Implementation plans
 
 - [Custom registry support](./superpowers/plans/2026-07-11-custom-registry-support.md) - task-by-task implementation plan for issue #429.
 - [JSON audit output](./superpowers/plans/2026-08-09-json-audit-output.md) - task-by-task plan for versioned, audit-only JSON CLI output.
+- [Expired-domain resolved version](./superpowers/plans/2026-07-17-expired-domain-resolved-version.md) - implementation plan for exact dependency-version resolution in expired-domain checks.
+- [Expired-domain maintainer identity warnings](./superpowers/plans/2026-07-17-expired-domain-maintainer-identities.md) - test-first implementation plan for attributable expired-domain warnings.

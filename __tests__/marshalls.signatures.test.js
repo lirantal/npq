@@ -3,12 +3,43 @@
 // Mock fetch for testing
 global.fetch = jest.fn()
 
-const SignaturesMarshall = require('../lib/marshalls/signatures.marshall')
+const SignaturesMarshallBase = require('../lib/marshalls/signatures.marshall')
+const NpmRegistry = require('../lib/helpers/npmRegistry')
+const NotEvaluated = require('../lib/helpers/notEvaluated')
+const { RegistryError } = require('../lib/helpers/registryErrors')
+
+const defaultRegistryClient = {
+  getManifest: jest.fn(async (packageSpec, packument) => {
+    const version = packageSpec.slice(packageSpec.lastIndexOf('@') + 1)
+    if (!packument.versions || !packument.versions[version]) {
+      throw new Error(`Version ${version} not found`)
+    }
+    return packument.versions[version]
+  }),
+  getRegistryKeys: jest.fn().mockResolvedValue([])
+}
+
+class SignaturesMarshall extends SignaturesMarshallBase {
+  constructor(options) {
+    super({
+      ...options,
+      registryClient: options.registryClient || defaultRegistryClient
+    })
+  }
+}
 
 describe('Signature test suites', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     jest.resetAllMocks()
+    defaultRegistryClient.getManifest.mockImplementation(async (packageSpec, packument) => {
+      const version = packageSpec.slice(packageSpec.lastIndexOf('@') + 1)
+      if (!packument.versions || !packument.versions[version]) {
+        throw new Error(`Version ${version} not found`)
+      }
+      return packument.versions[version]
+    })
+    defaultRegistryClient.getRegistryKeys.mockResolvedValue([])
   })
 
   test('has the right title', async () => {
@@ -122,17 +153,13 @@ describe('Signature test suites', () => {
     // Assert that getPackageInfo is called for version resolution
     expect(testMarshall.packageRepoUtils.getPackageInfo).toHaveBeenCalledWith('packageName')
 
-    // Assert that the fetch method is called with the correct URL for keys
-    expect(global.fetch).toHaveBeenCalledWith('https://registry.npmjs.org/-/npm/v1/keys')
-
-    // Assert that fetch is called for the package manifest
-    expect(global.fetch).toHaveBeenCalledWith(
-      'https://registry.npmjs.org/packageName',
-      expect.any(Object)
+    expect(defaultRegistryClient.getManifest).toHaveBeenCalledWith(
+      'packageName@1.0.0',
+      mockPackageData
     )
   })
 
-  test('should throw an error if keys dont match and manifest() throws an error', async () => {
+  test('wraps package signature verification failures as warnings', async () => {
     // Mock the response from fetch for keys
     const mockKeysResponse = {
       ok: true,
@@ -172,5 +199,80 @@ describe('Signature test suites', () => {
     await expect(testMarshall.validate(pkg)).rejects.toThrow(
       'Unable to verify package signature on registry'
     )
+  })
+
+  test('uses the injected registry client for manifests and signing keys', async () => {
+    const packument = {
+      'dist-tags': { latest: '1.0.0' },
+      versions: {
+        '1.0.0': {
+          name: 'packageName',
+          version: '1.0.0',
+          dist: { signatures: [{}] }
+        }
+      }
+    }
+    const manifest = packument.versions['1.0.0']
+    const registryClient = {
+      getManifest: jest.fn().mockResolvedValue(manifest),
+      getRegistryKeys: jest.fn().mockResolvedValue([{ keyid: 'key-1' }])
+    }
+    const verify = jest
+      .spyOn(NpmRegistry.prototype, 'verifySignatures')
+      .mockResolvedValue({ _signatures: [{}] })
+    const marshall = new SignaturesMarshall({
+      packageRepoUtils: {
+        getPackageInfo: jest.fn().mockResolvedValue(packument),
+        parsePackageVersion: jest.fn()
+      },
+      registryClient
+    })
+
+    await marshall.validate({
+      packageName: 'packageName',
+      packageVersion: '1.0.0'
+    })
+
+    expect(registryClient.getManifest).toHaveBeenCalledWith('packageName@1.0.0', packument)
+    expect(registryClient.getRegistryKeys).toHaveBeenCalledWith('packageName')
+    expect(verify).toHaveBeenCalledWith(manifest, [{ keyid: 'key-1' }])
+    verify.mockRestore()
+  })
+
+  test.each([
+    new NotEvaluated('configured registry does not expose signing keys', {
+      capability: 'signing-keys'
+    }),
+    new RegistryError('Registry authentication failed', {
+      registry: 'https://artifactory.example.test/npm/',
+      code: 'EREGISTRYAUTH'
+    })
+  ])('rethrows typed registry failures without wrapping', async (failure) => {
+    const packument = {
+      versions: {
+        '1.0.0': {
+          name: 'packageName',
+          version: '1.0.0',
+          dist: { signatures: [{}] }
+        }
+      }
+    }
+    const marshall = new SignaturesMarshall({
+      packageRepoUtils: {
+        getPackageInfo: jest.fn().mockResolvedValue(packument),
+        parsePackageVersion: jest.fn()
+      },
+      registryClient: {
+        getManifest: jest.fn().mockResolvedValue(packument.versions['1.0.0']),
+        getRegistryKeys: jest.fn().mockRejectedValue(failure)
+      }
+    })
+
+    await expect(
+      marshall.validate({
+        packageName: 'packageName',
+        packageVersion: '1.0.0'
+      })
+    ).rejects.toBe(failure)
   })
 })

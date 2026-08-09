@@ -4,14 +4,46 @@
 global.fetch = jest.fn()
 
 const NpmRegistry = require('../lib/helpers/npmRegistry')
-const ProvenanceMarshall = require('../lib/marshalls/provenance.marshall')
+const ProvenanceMarshallBase = require('../lib/marshalls/provenance.marshall')
 const Warning = require('../lib/helpers/warning')
+const NotEvaluated = require('../lib/helpers/notEvaluated')
+const { RegistryError } = require('../lib/helpers/registryErrors')
+
+const defaultRegistryClient = {
+  getManifest: jest.fn(async (packageSpec, packument) => {
+    const version = packageSpec.slice(packageSpec.lastIndexOf('@') + 1)
+    if (!packument.versions || !packument.versions[version]) {
+      throw new Error(`Version ${version} not found`)
+    }
+    return packument.versions[version]
+  }),
+  getRegistryKeys: jest.fn().mockResolvedValue([]),
+  getAttestations: jest.fn().mockResolvedValue([])
+}
+
+class ProvenanceMarshall extends ProvenanceMarshallBase {
+  constructor(options) {
+    super({
+      ...options,
+      registryClient: options.registryClient || defaultRegistryClient
+    })
+  }
+}
 
 describe('Provenance test suites', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     jest.resetAllMocks()
     jest.restoreAllMocks()
+    defaultRegistryClient.getManifest.mockImplementation(async (packageSpec, packument) => {
+      const version = packageSpec.slice(packageSpec.lastIndexOf('@') + 1)
+      if (!packument.versions || !packument.versions[version]) {
+        throw new Error(`Version ${version} not found`)
+      }
+      return packument.versions[version]
+    })
+    defaultRegistryClient.getRegistryKeys.mockResolvedValue([])
+    defaultRegistryClient.getAttestations.mockResolvedValue([])
   })
 
   test('returns _attestations when verifyAttestations resolves successfully', async () => {
@@ -167,14 +199,7 @@ describe('Provenance test suites', () => {
       expect(error.message).not.toContain('Version 1.0.0 not found')
     }
 
-    // Assert that the fetch method is called with the correct URL for keys
-    expect(global.fetch).toHaveBeenCalledWith('https://registry.npmjs.org/-/npm/v1/keys')
-
-    // Assert that fetch is called for the package manifest
-    expect(global.fetch).toHaveBeenCalledWith(
-      'https://registry.npmjs.org/packageName',
-      expect.any(Object)
-    )
+    expect(defaultRegistryClient.getManifest).toHaveBeenCalled()
   })
 
   test('should throw an error if attestation verification fails and manifest() throws an error', async () => {
@@ -284,8 +309,7 @@ describe('Provenance test suites', () => {
     expect(err).toBeInstanceOf(Warning)
     expect(err.message).toContain('Unable to verify provenance')
 
-    // Assert that the fetch method is called with the correct URL for keys
-    expect(global.fetch).toHaveBeenCalledWith('https://registry.npmjs.org/-/npm/v1/keys')
+    expect(defaultRegistryClient.getManifest).toHaveBeenCalled()
   })
 
   test('throws Error (provenance regression) when an older semver had dist.attestations but the target does not', async () => {
@@ -483,9 +507,7 @@ describe('Provenance test suites', () => {
     expect(result).toEqual([])
   })
 
-  test('rethrows Warning when registry keys fetch fails', async () => {
-    global.fetch = jest.fn().mockRejectedValue(new Error('network down'))
-
+  test('does not fetch registry keys when the manifest has no attestations', async () => {
     const testMarshall = new ProvenanceMarshall({
       packageRepoUtils: {
         getPackageInfo: () =>
@@ -509,7 +531,10 @@ describe('Provenance test suites', () => {
       .catch((e) => e)
 
     expect(err).toBeInstanceOf(Warning)
-    expect(err.message).toContain('Error fetching registry keys')
+    expect(err.message).toContain(
+      'Unable to verify provenance: the package was published without any attestations'
+    )
+    expect(defaultRegistryClient.getRegistryKeys).not.toHaveBeenCalled()
   })
 
   test('throws Error when version cannot be resolved', async () => {
@@ -643,13 +668,11 @@ describe('Provenance test suites', () => {
       .mockResolvedValueOnce(mockKeysResponse)
       .mockResolvedValueOnce({ ok: true, json: jest.fn().mockResolvedValue(packument) })
 
-    jest
-      .spyOn(NpmRegistry.prototype, 'verifyAttestations')
-      .mockRejectedValue(
-        Object.assign(new Error('verifyFailReg@2.0.0 failed to verify attestation: sig invalid'), {
-          code: 'EATTESTATIONVERIFY'
-        })
-      )
+    jest.spyOn(NpmRegistry.prototype, 'verifyAttestations').mockRejectedValue(
+      Object.assign(new Error('verifyFailReg@2.0.0 failed to verify attestation: sig invalid'), {
+        code: 'EATTESTATIONVERIFY'
+      })
+    )
 
     const testMarshall = new ProvenanceMarshall({
       packageRepoUtils: {
@@ -922,5 +945,130 @@ describe('Provenance test suites', () => {
 
     expect(err).toBeInstanceOf(Warning)
     expect(err.message).toBe('Unable to verify provenance')
+  })
+
+  test('uses the injected registry client for provenance inputs', async () => {
+    const packument = {
+      name: 'packageName',
+      versions: {
+        '1.0.0': {
+          name: 'packageName',
+          version: '1.0.0',
+          dist: {
+            attestations: {
+              url: 'https://registry.npmjs.org/-/npm/v1/attestations/packageName@1.0.0'
+            }
+          }
+        }
+      }
+    }
+    const manifest = packument.versions['1.0.0']
+    const attestations = [{ bundle: {} }]
+    const keys = [{ keyid: 'key-1' }]
+    const registryClient = {
+      getManifest: jest.fn().mockResolvedValue(manifest),
+      getRegistryKeys: jest.fn().mockResolvedValue(keys),
+      getAttestations: jest.fn().mockResolvedValue(attestations)
+    }
+    const verify = jest
+      .spyOn(NpmRegistry.prototype, 'verifyAttestations')
+      .mockResolvedValue({ _attestations: {} })
+    const marshall = new ProvenanceMarshall({
+      packageRepoUtils: {
+        getPackageInfo: jest.fn().mockResolvedValue(packument),
+        parsePackageVersion: jest.fn()
+      },
+      registryClient
+    })
+
+    await marshall.validate({
+      packageName: 'packageName',
+      packageVersion: '1.0.0'
+    })
+
+    expect(registryClient.getManifest).toHaveBeenCalledWith('packageName@1.0.0', packument)
+    expect(registryClient.getRegistryKeys).toHaveBeenCalledWith('packageName')
+    expect(registryClient.getAttestations).toHaveBeenCalledWith('packageName', manifest)
+    expect(verify).toHaveBeenCalledWith(manifest, keys, attestations)
+  })
+
+  test('keeps registry routing bound to the requested package name', async () => {
+    const manifest = {
+      name: 'response-name',
+      version: '1.0.0',
+      dist: {
+        attestations: {
+          url: 'https://registry.npmjs.org/-/npm/v1/attestations/response-name@1.0.0'
+        }
+      }
+    }
+    const packument = {
+      name: 'response-name',
+      versions: { '1.0.0': manifest }
+    }
+    const registryClient = {
+      getManifest: jest.fn().mockResolvedValue(manifest),
+      getRegistryKeys: jest.fn().mockResolvedValue([{ keyid: 'key-1' }]),
+      getAttestations: jest.fn().mockResolvedValue([{ bundle: {} }])
+    }
+    jest.spyOn(NpmRegistry.prototype, 'verifyAttestations').mockResolvedValue({ _attestations: {} })
+    const marshall = new ProvenanceMarshall({
+      packageRepoUtils: {
+        getPackageInfo: jest.fn().mockResolvedValue(packument),
+        parsePackageVersion: jest.fn()
+      },
+      registryClient
+    })
+
+    await marshall.validate({
+      packageName: '@company/tool',
+      packageVersion: '1.0.0'
+    })
+
+    expect(registryClient.getManifest).toHaveBeenCalledWith('@company/tool@1.0.0', packument)
+    expect(registryClient.getRegistryKeys).toHaveBeenCalledWith('@company/tool')
+    expect(registryClient.getAttestations).toHaveBeenCalledWith('@company/tool', manifest)
+  })
+
+  test.each([
+    new NotEvaluated('configured registry does not expose attestations', {
+      capability: 'attestations'
+    }),
+    new RegistryError('Registry authentication failed', {
+      registry: 'https://artifactory.example.test/npm/',
+      code: 'EREGISTRYAUTH'
+    })
+  ])('rethrows typed provenance registry failures', async (failure) => {
+    const manifest = {
+      name: 'packageName',
+      version: '1.0.0',
+      dist: {
+        attestations: {
+          url: 'https://registry.npmjs.org/-/npm/v1/attestations/packageName@1.0.0'
+        }
+      }
+    }
+    const packument = {
+      name: 'packageName',
+      versions: { '1.0.0': manifest }
+    }
+    const marshall = new ProvenanceMarshall({
+      packageRepoUtils: {
+        getPackageInfo: jest.fn().mockResolvedValue(packument),
+        parsePackageVersion: jest.fn()
+      },
+      registryClient: {
+        getManifest: jest.fn().mockResolvedValue(manifest),
+        getRegistryKeys: jest.fn().mockResolvedValue([]),
+        getAttestations: jest.fn().mockRejectedValue(failure)
+      }
+    })
+
+    await expect(
+      marshall.validate({
+        packageName: 'packageName',
+        packageVersion: '1.0.0'
+      })
+    ).rejects.toBe(failure)
   })
 })
