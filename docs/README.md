@@ -86,6 +86,7 @@ When adding new features or making significant changes:
 ## Design specifications
 
 - [Custom registry support](./superpowers/specs/2026-07-11-custom-registry-support-design.md) - approved design for npm-compatible Artifactory and private registry support.
+- [Coding-agent JSON detection](./superpowers/specs/2026-08-09-coding-agent-json-detection-design.md) - approved design for automatically selecting JSON audit mode in coding-agent environments.
 - [JSON audit output](./superpowers/specs/2026-08-09-json-output-design.md) - approved design for versioned, non-interactive machine-readable audit results.
 - [Expired-domain maintainer identity warnings](./superpowers/specs/2026-07-17-expired-domain-maintainer-identities-design.md) - approved design for attributable expired-domain warnings.
 - [Expired-domain resolved version](./superpowers/specs/2026-07-17-expired-domain-resolved-version-design.md) - design for resolving the exact dependency version for expired-domain checks.
