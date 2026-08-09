@@ -27,6 +27,7 @@
     "bin/",
     "data/",
     "lib/",
+    "schema/",
     "scripts/"
   ],
   "author": {
