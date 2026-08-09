@@ -84,6 +84,7 @@ When adding new features or making significant changes:
 ## Design specifications
 
 - [Custom registry support](./superpowers/specs/2026-07-11-custom-registry-support-design.md) - approved design for npm-compatible Artifactory and private registry support.
+- [JSON audit output](./superpowers/specs/2026-08-09-json-output-design.md) - approved design for versioned, non-interactive machine-readable audit results.
 
 ## Implementation plans
 
