@@ -1,0 +1,130 @@
+'use strict'
+
+/* eslint-disable security/detect-non-literal-fs-filename -- paths stay inside per-test temp dirs */
+
+const { spawnSync } = require('node:child_process')
+const fs = require('node:fs')
+const os = require('node:os')
+const path = require('node:path')
+const { CODING_AGENT_ENVIRONMENT_VARIABLES } = require('../lib/helpers/codingAgentEnvironment')
+
+const root = path.resolve(__dirname, '..')
+const npqBinary = path.join(root, 'bin/npq.js')
+const heroBinary = path.join(root, 'bin/npq-hero.js')
+const preload = path.join(__dirname, '__fixtures__/json-process-preload.js')
+let fixtureDirectory
+let packageManagerMarker
+
+function writeProject(packageJson = {}) {
+  fixtureDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'npq-agent-process-'))
+  packageManagerMarker = path.join(fixtureDirectory, 'package-manager-ran')
+  fs.writeFileSync(path.join(fixtureDirectory, 'package.json'), JSON.stringify(packageJson))
+}
+
+function childEnvironment(signal, scenario = 'clean') {
+  const env = { ...process.env }
+  for (const name of CODING_AGENT_ENVIRONMENT_VARIABLES) delete env[name]
+  env[signal.name] = signal.value
+  env.NODE_OPTIONS = `${env.NODE_OPTIONS || ''} --require=${preload}`.trim()
+  env.NPQ_JSON_TEST_SCENARIO = scenario
+  env.NPQ_PKG_MGR = `"${process.execPath}" -e "require('node:fs').writeFileSync('${packageManagerMarker}', 'ran')"`
+  return env
+}
+
+function run(binary, args, signal, scenario) {
+  return spawnSync(process.execPath, [binary, ...args], {
+    cwd: fixtureDirectory,
+    env: childEnvironment(signal, scenario),
+    encoding: 'utf8',
+    timeout: 10000
+  })
+}
+
+function packageManagerRan() {
+  return fs.existsSync(packageManagerMarker)
+}
+
+function expectJson(result, exitCode) {
+  expect(result.error).toBeUndefined()
+  expect(result.status).toBe(exitCode)
+  expect(result.stderr).toBe('')
+  expect(result.stdout.endsWith('\n')).toBe(true)
+  const report = JSON.parse(result.stdout)
+  expect(result.stdout).toBe(`${JSON.stringify(report)}\n`)
+  return report
+}
+
+beforeEach(() => {
+  writeProject({ name: 'agent-process-project', version: '1.0.0' })
+})
+
+afterEach(() => {
+  if (fixtureDirectory) fs.rmSync(fixtureDirectory, { recursive: true, force: true })
+  fixtureDirectory = undefined
+  packageManagerMarker = undefined
+})
+
+describe('coding-agent executable routing', () => {
+  test.each([
+    { name: 'CLAUDECODE', value: '1' },
+    { name: 'CODEX_THREAD_ID', value: 'thread-123' },
+    { name: 'AGENT', value: 'amp' },
+    { name: 'AI_AGENT', value: 'true' }
+  ])('npq emits JSON when $name is present', (signal) => {
+    const result = run(npqBinary, ['install', 'express'], signal)
+    const report = expectJson(result, 0)
+
+    expect(report.status).toBe('clean')
+    expect(packageManagerRan()).toBe(false)
+  })
+
+  test('npq-hero audits an agent install without passthrough', () => {
+    const result = run(heroBinary, ['install', 'express'], {
+      name: 'CURSOR_AGENT',
+      value: '1'
+    })
+    const report = expectJson(result, 0)
+
+    expect(report.packages[0].requested).toBe('express@latest')
+    expect(packageManagerRan()).toBe(false)
+  })
+
+  test('npq-hero audits project dependencies for an agent install without operands', () => {
+    fs.writeFileSync(
+      path.join(fixtureDirectory, 'package.json'),
+      JSON.stringify({ dependencies: { express: '^5.0.0' } })
+    )
+    const result = run(heroBinary, ['install'], { name: 'GEMINI_CLI', value: '1' })
+    const report = expectJson(result, 0)
+
+    expect(report.packages[0].requested).toBe('express@^5.0.0')
+    expect(packageManagerRan()).toBe(false)
+  })
+
+  test('npq-hero preserves non-install passthrough under agent detection', () => {
+    const result = run(heroBinary, ['run', 'build'], { name: 'AGENT', value: 'goose' })
+
+    expect(result.error).toBeUndefined()
+    expect(result.status).toBe(0)
+    expect(packageManagerRan()).toBe(true)
+  })
+
+  test('npq-hero sanitizes invalid agent install input without passthrough', () => {
+    const rawUrl = 'https://user:credential@example.test/package.tgz'
+    const result = run(heroBinary, ['install', rawUrl], {
+      name: 'CLAUDE_CODE_CHILD_SESSION',
+      value: '1'
+    })
+    const report = expectJson(result, 2)
+    const combinedOutput = `${result.stdout}${result.stderr}`
+
+    expect(report.status).toBe('failed')
+    expect(report.packages).toEqual([])
+    expect(report.failures).toEqual([
+      { code: 'INVALID_INPUT', message: 'Invalid package or option argument' }
+    ])
+    expect(packageManagerRan()).toBe(false)
+    expect(combinedOutput).not.toContain('credential')
+    expect(combinedOutput).not.toContain(rawUrl)
+  })
+})

@@ -17,12 +17,13 @@ const { Spinner } = require('../lib/helpers/cliSpinner')
 const { promiseThrottleHelper } = require('../lib/helpers/promiseThrottler')
 const { createJsonOutput } = require('../lib/helpers/jsonOutput')
 const { runJsonCli, writeInvalidJsonInvocation } = require('../lib/jsonCli')
+const { isCodingAgentEnvironment } = require('../lib/helpers/codingAgentEnvironment')
 const RegistryConfig = require('../lib/helpers/registryConfig')
 const RegistryClient = require('../lib/helpers/registryClient')
 
 const debug = util.debuglog('npq')
 
-const jsonRequested = process.argv.slice(2).includes('--json')
+const jsonRequested = process.argv.slice(2).includes('--json') || isCodingAgentEnvironment()
 const jsonOutput = jsonRequested ? createJsonOutput() : null
 let cliArgs
 

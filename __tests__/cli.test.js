@@ -14,6 +14,10 @@ jest.mock('../lib/helpers/cliSupportHandler', () => ({
   isInteractiveTerminal: jest.fn(),
   noSupportError: jest.fn()
 }))
+const mockIsCodingAgentEnvironment = jest.fn()
+jest.mock('../lib/helpers/codingAgentEnvironment', () => ({
+  isCodingAgentEnvironment: mockIsCodingAgentEnvironment
+}))
 
 // Create a shared mock for the spinner instance that we can inspect in tests.
 const mockSpinnerInstance = {
@@ -68,6 +72,8 @@ describe('npq CLI script', () => {
     existingSigintListeners = new Set(process.listeners('SIGINT'))
     // Reset modules to ensure mocks are fresh for each test.
     jest.resetModules()
+    mockIsCodingAgentEnvironment.mockReset()
+    mockIsCodingAgentEnvironment.mockReturnValue(false)
     // Clear mock history on the shared instance and the constructor.
     const { Spinner } = require('../lib/helpers/cliSpinner')
     mockSpinnerInstance.start.mockClear()
@@ -295,6 +301,25 @@ describe('npq CLI script', () => {
     expect(pkgMgr.process).not.toHaveBeenCalled()
     expect(consoleLog).not.toHaveBeenCalled()
     expect(consoleError).not.toHaveBeenCalled()
+  })
+
+  test('creates JSON output for an automatically detected coding agent', async () => {
+    const { CliParser } = require('../lib/cli')
+    const { runJsonCli } = require('../lib/jsonCli')
+    const cliArgs = {
+      packages: ['express@latest'],
+      json: true,
+      installSubcommandExplicit: true
+    }
+    mockIsCodingAgentEnvironment.mockReturnValue(true)
+    CliParser.parseArgsFull.mockReturnValue(cliArgs)
+
+    require('../bin/npq.js')
+    await new Promise(process.nextTick)
+
+    expect(runJsonCli).toHaveBeenCalledWith(cliArgs, {
+      output: expect.objectContaining({ write: expect.any(Function) })
+    })
   })
 
   test('routes raw JSON parser failures to invalid-invocation output synchronously', () => {
