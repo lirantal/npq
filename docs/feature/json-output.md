@@ -26,6 +26,40 @@ project's `package.json` and audits them:
 npq --json
 ```
 
+## Coding-agent detection
+
+A non-empty value in any supported coding-agent environment signal selects the
+exact existing JSON pipeline. Missing or empty signal values leave npq in its
+existing human-readable mode.
+
+| Environment variable | Agent or convention |
+| --- | --- |
+| `CLAUDECODE` | Claude Code |
+| `CLAUDE_CODE_CHILD_SESSION` | Claude Code direct tool or hook child |
+| `CURSOR_AGENT` | Cursor |
+| `PI_CODING_AGENT` | Pi |
+| `CODEX_SANDBOX` | Codex |
+| `CODEX_THREAD_ID` | Codex |
+| `GEMINI_CLI` | Gemini CLI |
+| `WINDSURF_AGENT` | Windsurf |
+| `CODEIUM_AGENT` | Codeium |
+| `AGENT` | Generic agent convention |
+| `AI_AGENT` | Emerging generic AI-agent convention |
+
+For example:
+
+```sh
+CLAUDECODE=1 npq install express
+AGENT=goose npq express
+AI_AGENT=true npq-hero install express
+```
+
+These commands are audit-only: they do not prompt, auto-continue, or invoke a
+package manager. Under a detected agent, `npq-hero` selects JSON mode only for
+recognized install commands; non-install commands continue to pass through to
+the configured package manager. `npq --help` and `npq --version` remain text
+early exits. The version 1 schema does not expose the detected agent identity.
+
 `npq install express --dry-run --json` is also equivalent. `--dry-run` is
 accepted but redundant in JSON mode. `--plain`, `--packageManager`, `--pkgMgr`,
 and `--disable-auto-continue` are accepted but have no effect. `--help` and

@@ -230,6 +230,11 @@ Use `--json` for a non-interactive, audit-only result suitable for CI:
 npq install express --json
 ```
 
+When npq detects a supported coding-agent environment, it automatically uses
+the same audit-only JSON mode. This applies to `npq` and to install commands
+intercepted by `npq-hero`; non-install `npq-hero` commands still pass through to
+the configured package manager. See [JSON audit output](docs/feature/json-output.md#coding-agent-detection).
+
 JSON mode never invokes the package manager. It exits `0` for a clean audit,
 `1` for findings, and `2` when the audit cannot complete. See
 [JSON audit output](docs/feature/json-output.md).

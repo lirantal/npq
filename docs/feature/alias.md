@@ -35,6 +35,22 @@ When the command is not an install (e.g. `npm audit`, `npm test`, `npm ls`, `yar
 
 This is what makes npq safe to use as a permanent alias -- non-install commands work exactly as they would without npq.
 
+### Coding-agent install audits
+
+When npq detects a supported coding-agent environment, `npq-hero` uses the
+audit-only JSON pipeline for recognized install commands only:
+
+| Invocation under a detected agent | Behavior |
+| --- | --- |
+| `npq-hero install express` | Emit the JSON audit and do not install. |
+| `npq-hero install` | Audit current project dependencies as JSON and do not install. |
+| `npq-hero test` | Pass through to the package manager. |
+| `npq-hero run build` | Pass through to the package manager. |
+
+`npq-hero` still has no flags of its own and does not expose a public `--json`
+option. Its non-install commands continue to preserve package-manager arguments
+and exit codes.
+
 ### Unsupported Node version fallback
 
 If the Node.js version is below the minimum requirement (`>=20.13.0`), `npq-hero` prints a warning and falls back to a synchronous passthrough using `spawnSync`, which also correctly preserves exit codes. This ensures the alias never silently blocks package manager usage on older runtimes.
