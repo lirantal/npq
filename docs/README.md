@@ -89,3 +89,4 @@ When adding new features or making significant changes:
 ## Implementation plans
 
 - [Custom registry support](./superpowers/plans/2026-07-11-custom-registry-support.md) - task-by-task implementation plan for issue #429.
+- [JSON audit output](./superpowers/plans/2026-08-09-json-audit-output.md) - task-by-task plan for versioned, audit-only JSON CLI output.

@@ -194,8 +194,9 @@ Regression tests preserve human `npq` and `npq-hero` behavior.
 ## Documentation and release
 
 Add a README CI example, `docs/feature/json-output.md`, a `docs/README.md`
-entry, updates to `docs/feature/exit-codes.md` and `npq --help`, and a minor
-Changesets entry.
+entry, and updates to `docs/feature/exit-codes.md` and `npq --help`. The
+feature uses a `feat:` Conventional Commit so the repository's active
+semantic-release workflow produces a minor release.
 
 ## Out of scope
 
