@@ -1,5 +1,10 @@
 'use strict'
 
+const mockIsCodingAgentEnvironment = jest.fn()
+jest.mock('../lib/helpers/codingAgentEnvironment', () => ({
+  isCodingAgentEnvironment: mockIsCodingAgentEnvironment
+}))
+
 const { CliParser } = require('../lib/cli')
 
 describe('package-manager-aware minimal argument parsing', () => {
@@ -11,6 +16,8 @@ describe('package-manager-aware minimal argument parsing', () => {
     originalNPQPkgMgr = process.env.NPQ_PKG_MGR
     process.argv = ['node', 'npq-hero']
     delete process.env.NPQ_PKG_MGR
+    mockIsCodingAgentEnvironment.mockReset()
+    mockIsCodingAgentEnvironment.mockReturnValue(false)
   })
 
   afterEach(() => {
@@ -161,7 +168,9 @@ describe('package-manager-aware minimal argument parsing', () => {
         '--registry=https://registry.example.test/npm/',
         '--userconfig=/tmp/user.npmrc',
         '--globalconfig=/tmp/global.npmrc'
-      ]
+      ],
+      installSubcommandExplicit: true,
+      json: false
     })
   })
 

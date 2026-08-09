@@ -6,6 +6,11 @@ jest.mock('node:util', () => ({
   parseArgs: mockParseArgs
 }))
 
+const mockIsCodingAgentEnvironment = jest.fn()
+jest.mock('../lib/helpers/codingAgentEnvironment', () => ({
+  isCodingAgentEnvironment: mockIsCodingAgentEnvironment
+}))
+
 const { CliParser } = require('../lib/cli')
 
 describe('CliParser', () => {
@@ -28,6 +33,8 @@ describe('CliParser', () => {
 
     // Clear mock history
     mockParseArgs.mockClear()
+    mockIsCodingAgentEnvironment.mockReset()
+    mockIsCodingAgentEnvironment.mockReturnValue(false)
   })
 
   afterEach(() => {
@@ -357,6 +364,34 @@ describe('CliParser', () => {
       })
     })
 
+    test('enables JSON mode in a coding-agent environment', () => {
+      mockIsCodingAgentEnvironment.mockReturnValue(true)
+      mockParseArgs.mockReturnValue({ values: {}, positionals: ['install', 'express'] })
+
+      expect(CliParser.parseArgsFull()).toEqual(
+        expect.objectContaining({ packages: ['express@latest'], json: true })
+      )
+    })
+
+    test('uses JSON-safe package parsing when detection enables JSON mode', () => {
+      mockIsCodingAgentEnvironment.mockReturnValue(true)
+      mockParseArgs.mockReturnValue({
+        values: {},
+        positionals: ['install', 'https://user:credential@example.test/package.tgz']
+      })
+
+      expect(() => CliParser.parseArgsFull()).toThrow('Invalid JSON package input')
+    })
+
+    test('keeps explicit JSON mode when no coding agent is detected', () => {
+      mockParseArgs.mockReturnValue({
+        values: { json: true },
+        positionals: ['install', 'express']
+      })
+
+      expect(CliParser.parseArgsFull().json).toBe(true)
+    })
+
     test.each([
       'https://user:credential@example.test/package.tgz',
       'git+https://user:credential@example.test/repository.git',
@@ -511,7 +546,9 @@ describe('CliParser', () => {
 
       expect(result).toEqual({
         packages: ['express@latest', 'lodash@latest'],
-        registryConfigArgs: []
+        registryConfigArgs: [],
+        installSubcommandExplicit: true,
+        json: false
       })
     })
 
@@ -524,7 +561,9 @@ describe('CliParser', () => {
 
       expect(result).toEqual({
         packages: [],
-        registryConfigArgs: []
+        registryConfigArgs: [],
+        installSubcommandExplicit: false,
+        json: false
       })
     })
 
@@ -537,8 +576,59 @@ describe('CliParser', () => {
 
       expect(result).toEqual({
         packages: [],
-        registryConfigArgs: []
+        registryConfigArgs: [],
+        installSubcommandExplicit: false,
+        json: false
       })
+    })
+
+    test('enables JSON only for an agent-driven install command', () => {
+      mockIsCodingAgentEnvironment.mockReturnValue(true)
+      mockParseArgs.mockReturnValue({ values: {}, positionals: ['install', 'express'] })
+
+      expect(CliParser.parseArgsMinimal()).toEqual({
+        packages: ['express@latest'],
+        registryConfigArgs: [],
+        installSubcommandExplicit: true,
+        json: true
+      })
+    })
+
+    test('keeps agent-driven non-install commands in passthrough mode', () => {
+      mockIsCodingAgentEnvironment.mockReturnValue(true)
+      mockParseArgs.mockReturnValue({ values: {}, positionals: ['run', 'build'] })
+
+      expect(CliParser.parseArgsMinimal()).toEqual({
+        packages: [],
+        registryConfigArgs: [],
+        installSubcommandExplicit: false,
+        json: false
+      })
+    })
+
+    test('marks invalid agent install input for safe JSON error routing', () => {
+      mockIsCodingAgentEnvironment.mockReturnValue(true)
+      mockParseArgs.mockReturnValue({
+        values: {},
+        positionals: ['install', 'https://user:credential@example.test/package.tgz']
+      })
+
+      expect.assertions(2)
+      try {
+        CliParser.parseArgsMinimal()
+      } catch (error) {
+        expect(error.message).toBe('Invalid JSON package input')
+        expect(error.npqJsonMode).toBe(true)
+      }
+    })
+
+    test('preserves human parsing for install package types outside JSON mode', () => {
+      mockParseArgs.mockReturnValue({
+        values: {},
+        positionals: ['install', 'https://example.test/package.tgz']
+      })
+
+      expect(() => CliParser.parseArgsMinimal()).not.toThrow()
     })
   })
 
