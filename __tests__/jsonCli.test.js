@@ -61,7 +61,10 @@ describe('runJsonCli', () => {
   })
 
   test('writes interruption once and does not let later audit completion overwrite it', async () => {
-    const write = jest.fn()
+    let drain
+    const write = jest.fn((value, callback) => {
+      drain = callback
+    })
     const output = createJsonOutput(write)
     const processTarget = createProcessTarget()
     let finishAudit
@@ -76,6 +79,7 @@ describe('runJsonCli', () => {
       { output, processTarget, runJsonAudit }
     )
     processTarget.emit('SIGINT')
+    expect(processTarget.exit).not.toHaveBeenCalled()
     const cleanReport = buildJsonReport({ packages: ['express@latest'] })
     finishAudit(cleanReport)
     const report = await run
@@ -85,6 +89,10 @@ describe('runJsonCli', () => {
     ])
     expect(write).toHaveBeenCalledTimes(1)
     expect(JSON.parse(write.mock.calls[0][0]).failures).toEqual(report.failures)
+    expect(processTarget.exit).not.toHaveBeenCalled()
+
+    drain()
+
     expect(processTarget.exit).toHaveBeenCalledTimes(1)
     expect(processTarget.exit).toHaveBeenCalledWith(2)
     expect(processTarget.exitCode).toBeUndefined()

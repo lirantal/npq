@@ -161,6 +161,45 @@ describe('JSON audit report', () => {
     expect(report.summary.errors).toBe(2)
   })
 
+  test('uses positional marshall results for duplicate requests', () => {
+    const report = buildJsonReport({
+      packages: ['duplicate@1.0.0', 'duplicate@1.0.0'],
+      marshallResults: [
+        [
+          {
+            age: {
+              marshall: 'age',
+              categoryId: 'PackageHealth',
+              warnings: [{ message: 'first attempt' }],
+              errors: []
+            }
+          }
+        ],
+        [
+          {
+            scripts: {
+              marshall: 'scripts',
+              categoryId: 'SupplyChainSecurity',
+              warnings: [],
+              errors: [{ message: 'second attempt' }]
+            }
+          }
+        ]
+      ],
+      version: '9.9.9'
+    })
+
+    expect(report.packages.map((entry) => entry.findings.map((finding) => finding.message))).toEqual([
+      ['first attempt'],
+      ['second attempt']
+    ])
+    expect(report.summary).toEqual({
+      packagesAudited: report.packages.length,
+      errors: 1,
+      warnings: 1
+    })
+  })
+
   test('normalizes unknown failure codes without raw exception fields', () => {
     const failure = createAuditFailure('UNSAFE_CODE', 'Safe failure message', {
       package: '@scope/tool@^2.0.0',

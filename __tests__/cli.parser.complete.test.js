@@ -338,6 +338,36 @@ describe('CliParser', () => {
       })
     })
 
+    test.each([
+      'https://user:credential@example.test/package.tgz',
+      'git+https://user:credential@example.test/repository.git',
+      'file:/private/project/package.tgz',
+      '../private/project',
+      'alias-name@npm:express@1.0.0'
+    ])('rejects non-registry JSON package input before normalization', (packageSpec) => {
+      mockParseArgs.mockReturnValue({
+        values: { json: true },
+        positionals: ['install', packageSpec]
+      })
+
+      expect(() => CliParser.parseArgsFull()).toThrow('Invalid JSON package input')
+    })
+
+    test.each([
+      'https://example.test/package.tgz',
+      'git+https://example.test/repository.git',
+      'file:/tmp/package.tgz',
+      '../package',
+      'alias-name@npm:express@1.0.0'
+    ])('preserves human-mode support for %s', (packageSpec) => {
+      mockParseArgs.mockReturnValue({
+        values: {},
+        positionals: ['install', packageSpec]
+      })
+
+      expect(() => CliParser.parseArgsFull()).not.toThrow()
+    })
+
     test('defaults JSON audit mode to false', () => {
       mockParseArgs.mockReturnValue({ values: {}, positionals: ['express'] })
       expect(CliParser.parseArgsFull().json).toBe(false)

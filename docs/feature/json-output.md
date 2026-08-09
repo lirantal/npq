@@ -32,6 +32,13 @@ and `--disable-auto-continue` are accepted but have no effect. `--help` and
 `--version` remain text-only early exits, so the JSON contract applies only to
 audit invocations.
 
+JSON audits accept registry package names with a tag, exact version, or semver
+range. Remote tarball URLs, Git URLs, local file or directory paths, and npm
+aliases are rejected with `INVALID_INPUT`. Rejection reports never repeat the
+unsupported input. This restriction applies both to command-line packages and
+dependencies discovered from `package.json`; human-readable mode keeps its
+existing package-spec support.
+
 ## Report contract
 
 Each audit writes exactly one JSON document followed by a newline, with no
@@ -104,6 +111,10 @@ authentication material, request headers, and unsanitized URLs.
 | `clean` | `0` | Audit completed with no findings and no failures. |
 | `findings` | `1` | Audit completed with one or more warning or error findings and no failures. |
 | `failed` | `2` | Audit could not complete reliably and reports operational failures. |
+
+On `SIGINT`, npq writes one complete `INTERRUPTED` report and waits for stdout
+to drain before exiting `2`. This guarantee also applies when stdout is a
+pipe.
 
 Use the exit status directly in CI. This pattern prints the JSON report while
 preserving npq's original exit status exactly:

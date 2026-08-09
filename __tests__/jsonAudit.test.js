@@ -20,7 +20,9 @@ describe('runJsonAudit', () => {
       expect.objectContaining({
         pkgs: ['express@^5.0.0'],
         progressManager: null,
-        promiseThrottleHelper
+        promiseThrottleHelper,
+        preserveRequestOrder: true,
+        suppressOutput: true
       })
     )
     expect(report.status).toBe('clean')
@@ -43,6 +45,67 @@ describe('runJsonAudit', () => {
       }
     ])
     expect(JSON.stringify(report)).not.toContain('/secret/path')
+  })
+
+  test.each([
+    ['tarball URL', 'unsafe@https://user:credential@example.test/package.tgz'],
+    ['git URL', 'unsafe@git+https://user:credential@example.test/repository.git'],
+    ['file path', 'unsafe@file:/private/project/package.tgz'],
+    ['directory', 'unsafe@../private/project'],
+    ['alias', 'unsafe@npm:express@1.0.0']
+  ])('rejects a project dependency using a %s without exposing it', async (label, packageSpec) => {
+    const getProjectPackages = jest.fn().mockResolvedValue([packageSpec])
+    const Marshall = jest.fn()
+
+    const report = await runJsonAudit({ packages: [] }, { getProjectPackages, Marshall })
+    const serialized = JSON.stringify(report)
+
+    expect(Marshall).not.toHaveBeenCalled()
+    expect(report.status).toBe('failed')
+    expect(report.summary).toEqual({ packagesAudited: 0, errors: 0, warnings: 0 })
+    expect(report.packages).toEqual([])
+    expect(report.failures).toEqual([
+      {
+        code: AUDIT_FAILURE_CODES.INVALID_INPUT,
+        message: 'Invalid package or option argument'
+      }
+    ])
+    expect(serialized).not.toContain('credential')
+    expect(serialized).not.toContain('/private/project')
+    expect(serialized).not.toContain('../private/project')
+  })
+
+  test('keeps duplicate package audit attempts aligned with their own findings', async () => {
+    const first = {
+      age: {
+        marshall: 'age',
+        categoryId: 'PackageHealth',
+        warnings: [{ message: 'first attempt' }],
+        errors: []
+      }
+    }
+    const second = {
+      scripts: {
+        marshall: 'scripts',
+        categoryId: 'SupplyChainSecurity',
+        warnings: [],
+        errors: [{ message: 'second attempt' }]
+      }
+    }
+    const Marshall = jest.fn().mockImplementation(() => ({
+      process: jest.fn().mockResolvedValue([[first], [second]])
+    }))
+
+    const report = await runJsonAudit(
+      { packages: ['duplicate@1.0.0', 'duplicate@1.0.0'] },
+      { Marshall }
+    )
+
+    expect(report.packages.map((entry) => entry.findings.map((finding) => finding.message))).toEqual([
+      ['first attempt'],
+      ['second attempt']
+    ])
+    expect(report.summary).toEqual({ packagesAudited: 2, errors: 1, warnings: 1 })
   })
 
   test('collects callback failures alongside partial audit results', async () => {

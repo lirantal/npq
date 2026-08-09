@@ -16,4 +16,20 @@ describe('createJsonOutput', () => {
     expect(write).toHaveBeenCalledWith(`${JSON.stringify(report)}\n`)
     expect(output.hasWritten()).toBe(true)
   })
+
+  test('reports completion only after the underlying write drains', () => {
+    let drain
+    const write = jest.fn((value, callback) => {
+      drain = callback
+    })
+    const output = createJsonOutput(write)
+    const complete = jest.fn()
+
+    expect(output.write({ status: 'clean' }, complete)).toBe(true)
+    expect(complete).not.toHaveBeenCalled()
+
+    drain()
+
+    expect(complete).toHaveBeenCalledTimes(1)
+  })
 })
