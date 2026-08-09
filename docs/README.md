@@ -94,6 +94,7 @@ When adding new features or making significant changes:
 ## Implementation plans
 
 - [Custom registry support](./superpowers/plans/2026-07-11-custom-registry-support.md) - task-by-task implementation plan for issue #429.
+- [Coding-agent JSON detection](./superpowers/plans/2026-08-09-coding-agent-json-detection.md) - test-first implementation plan for issue #426 across `npq` and `npq-hero`.
 - [JSON audit output](./superpowers/plans/2026-08-09-json-audit-output.md) - task-by-task plan for versioned, audit-only JSON CLI output.
 - [Expired-domain resolved version](./superpowers/plans/2026-07-17-expired-domain-resolved-version.md) - implementation plan for exact dependency-version resolution in expired-domain checks.
 - [Expired-domain maintainer identity warnings](./superpowers/plans/2026-07-17-expired-domain-maintainer-identities.md) - test-first implementation plan for attributable expired-domain warnings.
