@@ -49,12 +49,14 @@ jest.mock('../lib/jsonCli', () => ({
 }))
 
 const originalArgv = process.argv
+const originalExitCode = process.exitCode
+const originalSigintListeners = process.listeners('SIGINT')
 let existingSigintListeners
 
 describe('npq CLI script', () => {
   beforeEach(() => {
     process.argv = [...originalArgv]
-    process.exitCode = undefined
+    process.exitCode = originalExitCode
     existingSigintListeners = new Set(process.listeners('SIGINT'))
     // Reset modules to ensure mocks are fresh for each test.
     jest.resetModules()
@@ -67,7 +69,7 @@ describe('npq CLI script', () => {
 
   afterEach(() => {
     process.argv = originalArgv
-    process.exitCode = undefined
+    process.exitCode = originalExitCode
     for (const listener of process.listeners('SIGINT')) {
       if (!existingSigintListeners.has(listener)) {
         process.removeListener('SIGINT', listener)
@@ -201,4 +203,10 @@ describe('npq CLI script', () => {
     expect(runJsonCli).not.toHaveBeenCalled()
     expect(process.exitCode).toBe(2)
   })
+})
+
+test('restores process state after CLI routing tests', () => {
+  expect(process.argv).toBe(originalArgv)
+  expect(process.exitCode).toBe(originalExitCode)
+  expect(process.listeners('SIGINT')).toEqual(originalSigintListeners)
 })
