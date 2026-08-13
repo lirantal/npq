@@ -45,6 +45,22 @@ existing human-readable mode.
 | `CODEIUM_AGENT` | Codeium |
 | `AGENT` | Generic agent convention |
 | `AI_AGENT` | Emerging generic AI-agent convention |
+| `CLAUDE_CODE` | Claude Code |
+| `REPL_ID` | Replit runtime; ordinary Replit runtimes can also select JSON mode |
+| `OPENCODE` | OpenCode |
+| `AUGMENT_AGENT` | Auggie/Augment agent |
+| `GOOSE_PROVIDER` | Goose |
+| `JUNIE_DATA` | Junie |
+| `JUNIE_SHIM_PATH` | Junie |
+| `PATH` | Pi when it contains `.pi/agent` with `/` or `\\` separators |
+| `EDITOR` | Devin when it contains `devin`, case-insensitively |
+| `TERM_PROGRAM` | Kiro when it contains `kiro`, case-insensitively, and stdout is not a TTY |
+
+Direct signals select JSON mode when their values are non-empty strings. The
+contextual matchers select JSON mode when their stated environment patterns
+match. In particular, `REPL_ID` can also be present in an ordinary Replit
+runtime and still selects audit-only JSON mode. Kiro's non-TTY safeguard keeps
+an interactive Kiro IDE terminal from being treated as an agent subprocess.
 
 For example:
 

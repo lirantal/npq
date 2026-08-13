@@ -233,7 +233,9 @@ npq install express --json
 When npq detects a supported coding-agent environment, it automatically uses
 the same audit-only JSON mode. This applies to `npq` and to install commands
 intercepted by `npq-hero`; non-install `npq-hero` commands still pass through to
-the configured package manager. See [JSON audit output](docs/feature/json-output.md#coding-agent-detection).
+the configured package manager. See the [full coding-agent detection signal
+table](docs/feature/json-output.md#coding-agent-detection) for the supported
+signals and contextual matchers.
 
 JSON mode never invokes the package manager. It exits `0` for a clean audit,
 `1` for findings, and `2` when the audit cannot complete. See
