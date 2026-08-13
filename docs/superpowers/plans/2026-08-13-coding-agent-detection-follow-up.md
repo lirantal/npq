@@ -261,4 +261,3 @@ Confirm only the detector, its tests, documentation, changeset, and the already 
 git add .changeset/coding-agent-signal-coverage.md
 git commit -m "chore: add coding-agent detection changeset"
 ```
-

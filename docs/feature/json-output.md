@@ -28,9 +28,9 @@ npq --json
 
 ## Coding-agent detection
 
-A non-empty value in any supported coding-agent environment signal selects the
-exact existing JSON pipeline. Missing or empty signal values leave npq in its
-existing human-readable mode.
+A non-empty direct signal selects the exact existing JSON pipeline. Contextual
+matchers select JSON only when their specific environment patterns match;
+otherwise, npq remains in its existing human-readable mode.
 
 | Environment variable | Agent or convention |
 | --- | --- |
