@@ -35,6 +35,12 @@ describe('coding-agent environment detection', () => {
     expect(isCodingAgentEnvironment({ [name]: '1' })).toBe(true)
   })
 
+  test.each(expectedSignals)('rejects truthy non-string values for %s', (name) => {
+    expect(isCodingAgentEnvironment({ [name]: true })).toBe(false)
+    expect(isCodingAgentEnvironment({ [name]: 1 })).toBe(false)
+    expect(isCodingAgentEnvironment({ [name]: {} })).toBe(false)
+  })
+
   test('accepts names, paths, and identifiers as signal values', () => {
     expect(isCodingAgentEnvironment({ AGENT: 'amp' })).toBe(true)
     expect(isCodingAgentEnvironment({ CODEX_SANDBOX: '/sandbox/workspace' })).toBe(true)
