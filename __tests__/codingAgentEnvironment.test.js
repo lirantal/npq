@@ -16,7 +16,14 @@ const expectedSignals = [
   'WINDSURF_AGENT',
   'CODEIUM_AGENT',
   'AGENT',
-  'AI_AGENT'
+  'AI_AGENT',
+  'CLAUDE_CODE',
+  'REPL_ID',
+  'OPENCODE',
+  'AUGMENT_AGENT',
+  'GOOSE_PROVIDER',
+  'JUNIE_DATA',
+  'JUNIE_SHIM_PATH'
 ]
 
 describe('coding-agent environment detection', () => {
@@ -41,5 +48,36 @@ describe('coding-agent environment detection', () => {
   test('ignores missing and unrelated variables', () => {
     expect(isCodingAgentEnvironment({})).toBe(false)
     expect(isCodingAgentEnvironment({ CI: 'true', TERM_PROGRAM: 'vscode' })).toBe(false)
+  })
+
+  test('detects Pi from a POSIX agent path', () => {
+    expect(isCodingAgentEnvironment({ PATH: '/home/user/.pi/agent/bin' })).toBe(true)
+  })
+
+  test('detects Pi from a Windows agent path', () => {
+    expect(isCodingAgentEnvironment({ PATH: String.raw`C:\Users\user\.pi\agent\bin` })).toBe(true)
+  })
+
+  test('does not detect Pi from an unrelated path', () => {
+    expect(isCodingAgentEnvironment({ PATH: '/home/user/.pilot/bin' })).toBe(false)
+  })
+
+  test('detects Devin from the editor name case-insensitively', () => {
+    expect(isCodingAgentEnvironment({ EDITOR: '/usr/local/bin/DeViN' })).toBe(true)
+  })
+
+  test('does not detect Devin from an unrelated editor', () => {
+    expect(isCodingAgentEnvironment({ EDITOR: '/usr/bin/code' })).toBe(false)
+  })
+
+  test('detects Kiro only when stdout is not a TTY', () => {
+    const env = { TERM_PROGRAM: 'Kiro' }
+
+    expect(isCodingAgentEnvironment(env, { stdoutIsTTY: false })).toBe(true)
+    expect(isCodingAgentEnvironment(env, { stdoutIsTTY: true })).toBe(false)
+  })
+
+  test('does not detect Kiro from an unrelated terminal program', () => {
+    expect(isCodingAgentEnvironment({ TERM_PROGRAM: 'vscode' }, { stdoutIsTTY: false })).toBe(false)
   })
 })
