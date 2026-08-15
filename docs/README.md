@@ -85,6 +85,7 @@ When adding new features or making significant changes:
 
 ## Design specifications
 
+- [Shell-free package manager launching](./superpowers/specs/2026-08-15-package-manager-shell-free-launching-design.md) - approved design for forwarding package-manager arguments without shell command reconstruction.
 - [Custom registry support](./superpowers/specs/2026-07-11-custom-registry-support-design.md) - approved design for npm-compatible Artifactory and private registry support.
 - [Coding-agent JSON detection](./superpowers/specs/2026-08-09-coding-agent-json-detection-design.md) - approved design for automatically selecting JSON audit mode in coding-agent environments.
 - [JSON audit output](./superpowers/specs/2026-08-09-json-output-design.md) - approved design for versioned, non-interactive machine-readable audit results.
