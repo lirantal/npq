@@ -14,11 +14,42 @@ const heroBinary = path.join(root, 'bin/npq-hero.js')
 const preload = path.join(__dirname, '__fixtures__/json-process-preload.js')
 let fixtureDirectory
 let packageManagerMarker
+let packageManagerLauncher
+
+function createPackageManagerLauncher() {
+  const launcherProgram = [
+    '#!/usr/bin/env node',
+    "'use strict'",
+    '',
+    "require('node:fs').writeFileSync(",
+    `  ${JSON.stringify(packageManagerMarker)},`,
+    "  'ran'",
+    ')',
+    'process.exit(0)',
+    ''
+  ].join('\n')
+
+  if (process.platform === 'win32') {
+    const launcherScript = path.join(fixtureDirectory, 'package-manager-launcher.js')
+    packageManagerLauncher = path.join(fixtureDirectory, 'package-manager-launcher.cmd')
+    fs.writeFileSync(launcherScript, launcherProgram)
+    fs.writeFileSync(
+      packageManagerLauncher,
+      ['@echo off', `"${process.execPath}" "${launcherScript}" %*`, ''].join('\r\n')
+    )
+    return
+  }
+
+  packageManagerLauncher = path.join(fixtureDirectory, 'package-manager-launcher')
+  fs.writeFileSync(packageManagerLauncher, launcherProgram)
+  fs.chmodSync(packageManagerLauncher, 0o755)
+}
 
 function writeProject(packageJson = {}) {
   fixtureDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'npq-agent-process-'))
   packageManagerMarker = path.join(fixtureDirectory, 'package-manager-ran')
   fs.writeFileSync(path.join(fixtureDirectory, 'package.json'), JSON.stringify(packageJson))
+  createPackageManagerLauncher()
 }
 
 function childEnvironment(signal, scenario = 'clean') {
@@ -27,7 +58,7 @@ function childEnvironment(signal, scenario = 'clean') {
   env[signal.name] = signal.value
   env.NODE_OPTIONS = `${env.NODE_OPTIONS || ''} --require=${preload}`.trim()
   env.NPQ_JSON_TEST_SCENARIO = scenario
-  env.NPQ_PKG_MGR = `"${process.execPath}" -e "require('node:fs').writeFileSync('${packageManagerMarker}', 'ran')"`
+  env.NPQ_PKG_MGR = packageManagerLauncher
   return env
 }
 
@@ -62,6 +93,7 @@ afterEach(() => {
   if (fixtureDirectory) fs.rmSync(fixtureDirectory, { recursive: true, force: true })
   fixtureDirectory = undefined
   packageManagerMarker = undefined
+  packageManagerLauncher = undefined
 })
 
 describe('coding-agent executable routing', () => {
