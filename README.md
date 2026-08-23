@@ -212,6 +212,8 @@ Here are all the available environment variable names for disabling specific mar
 
 Running `npq` without an `install` / `i` / `add` subcommand (for example from a project directory with a `package.json`) audits dependencies only and does not run the package manager. The same applies to `npq <package>`: checks only, no install passthrough. Use `npq install …` when you want npq to hand off to npm (or `NPQ_PKG_MGR`) after the checks.
 
+Project-mode audits currently cover only declared direct dependencies from the current project's `package.json` (`dependencies` and `devDependencies`). They do not read lockfiles or discover transitive dependencies.
+
 ```sh
 npq install express --dry-run
 ```
