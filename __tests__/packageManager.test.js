@@ -5,9 +5,16 @@ const packageManager = require('../lib/packageManager')
 const childProcess = require('child_process')
 const originalArgv = process.argv
 
-function createMockChild(exitCode = 0) {
+function createMockChild(exitCode = 0, error) {
   const child = new EventEmitter()
-  process.nextTick(() => child.emit('close', exitCode))
+  process.nextTick(() => {
+    if (error) {
+      child.emit('error', error)
+      return
+    }
+
+    child.emit('close', exitCode)
+  })
   return child
 }
 
@@ -181,13 +188,24 @@ test('passes shell metacharacters as literal arguments without enabling a shell'
   )
 })
 
-test('uses the Windows command interpreter only as an explicit launcher', () => {
+test('uses the package manager executable and literal arguments directly on Windows', () => {
   expect(
-    packageManager.getPackageManagerLaunchSpec('npm', ['install', 'express'], 'win32')
+    packageManager.getPackageManagerLaunchSpec(
+      'npm.cmd',
+      ['install', 'name&whoami', 'quoted value'],
+      'win32'
+    )
   ).toEqual({
-    executable: process.env.ComSpec || 'cmd.exe',
-    args: ['/d', '/s', '/c', 'npm', 'install', 'express']
+    executable: 'npm.cmd',
+    args: ['install', 'name&whoami', 'quoted value']
   })
+})
+
+test('process() rejects when the child process emits an asynchronous error', async () => {
+  const spawnError = Object.assign(new Error('spawn npm ENOENT'), { code: 'ENOENT' })
+  childProcess.spawn.mockImplementation(() => createMockChild(undefined, spawnError))
+
+  await expect(packageManager.process('npm')).rejects.toBe(spawnError)
 })
 
 describe('exit code propagation', () => {
