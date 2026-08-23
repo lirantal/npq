@@ -50,9 +50,10 @@ test('package manager has a default manager configured', () => {
 test('package manager spawns successfully when provided valid package manager', async () => {
   childProcess.spawn.mockImplementation(() => createMockChild(0))
   await packageManager.process('npm')
-  expect(childProcess.spawn).toHaveBeenCalled()
-  expect(childProcess.spawn.mock.calls.length).toBe(1)
-  expect(childProcess.spawn.mock.calls[0][0]).toBe('npm')
+  expect(childProcess.spawn).toHaveBeenCalledWith('npm', [], {
+    stdio: 'inherit',
+    shell: false
+  })
 
   childProcess.spawn.mockReset()
 })
@@ -60,9 +61,10 @@ test('package manager spawns successfully when provided valid package manager', 
 test('package manager spawns successfully when retrieves default package manager', async () => {
   childProcess.spawn.mockImplementation(() => createMockChild(0))
   await packageManager.process()
-  expect(childProcess.spawn).toHaveBeenCalled()
-  expect(childProcess.spawn.mock.calls.length).toBe(1)
-  expect(childProcess.spawn.mock.calls[0][0]).toBe('npm')
+  expect(childProcess.spawn).toHaveBeenCalledWith('npm', [], {
+    stdio: 'inherit',
+    shell: false
+  })
 
   childProcess.spawn.mockReset()
 })
@@ -71,9 +73,10 @@ test('package manager spawns successfully when provided array of packages to han
   childProcess.spawn.mockImplementation(() => createMockChild(0))
   process.argv = ['node', 'script name', 'install', 'semver', 'express']
   await packageManager.process('npm')
-  expect(childProcess.spawn).toHaveBeenCalled()
-  expect(childProcess.spawn.mock.calls.length).toBe(1)
-  expect(childProcess.spawn.mock.calls[0][0]).toEqual('npm install semver express')
+  expect(childProcess.spawn).toHaveBeenCalledWith('npm', ['install', 'semver', 'express'], {
+    stdio: 'inherit',
+    shell: false
+  })
   childProcess.spawn.mockReset()
 })
 
@@ -89,9 +92,10 @@ test("package manager spawns successfully and ignore npq's own internal commands
     '--packageManager'
   ]
   await packageManager.process('npm')
-  expect(childProcess.spawn).toHaveBeenCalled()
-  expect(childProcess.spawn.mock.calls.length).toBe(1)
-  expect(childProcess.spawn.mock.calls[0][0]).toEqual('npm install semver express')
+  expect(childProcess.spawn).toHaveBeenCalledWith('npm', ['install', 'semver', 'express'], {
+    stdio: 'inherit',
+    shell: false
+  })
   childProcess.spawn.mockReset()
 })
 
@@ -99,9 +103,10 @@ test('package manager spawns with yarn when provided as parameter', async () => 
   childProcess.spawn.mockImplementation(() => createMockChild(0))
   process.argv = ['node', 'script name', 'install', 'express']
   await packageManager.process('yarn')
-  expect(childProcess.spawn).toHaveBeenCalled()
-  expect(childProcess.spawn.mock.calls.length).toBe(1)
-  expect(childProcess.spawn.mock.calls[0][0]).toEqual('yarn install express')
+  expect(childProcess.spawn).toHaveBeenCalledWith('yarn', ['install', 'express'], {
+    stdio: 'inherit',
+    shell: false
+  })
   childProcess.spawn.mockReset()
 })
 
@@ -109,9 +114,10 @@ test('package manager spawns with pnpm when provided as parameter', async () => 
   childProcess.spawn.mockImplementation(() => createMockChild(0))
   process.argv = ['node', 'script name', 'install', 'lodash']
   await packageManager.process('pnpm')
-  expect(childProcess.spawn).toHaveBeenCalled()
-  expect(childProcess.spawn.mock.calls.length).toBe(1)
-  expect(childProcess.spawn.mock.calls[0][0]).toEqual('pnpm install lodash')
+  expect(childProcess.spawn).toHaveBeenCalledWith('pnpm', ['install', 'lodash'], {
+    stdio: 'inherit',
+    shell: false
+  })
   childProcess.spawn.mockReset()
 })
 
@@ -124,9 +130,9 @@ test.each([
 
   await packageManager.process('pnpm')
 
-  expect(childProcess.spawn).toHaveBeenCalledWith(`pnpm ${args.join(' ')}`, {
+  expect(childProcess.spawn).toHaveBeenCalledWith('pnpm', args, {
     stdio: 'inherit',
-    shell: true
+    shell: false
   })
 })
 
@@ -143,10 +149,33 @@ test('package manager forwards custom registry options', async () => {
   await packageManager.process('pnpm')
 
   expect(childProcess.spawn).toHaveBeenCalledWith(
-    'pnpm install @company/tool --registry=https://artifactory.example.test/api/npm/npm/',
-    expect.objectContaining({ stdio: 'inherit', shell: true })
+    'pnpm',
+    ['install', '@company/tool', '--registry=https://artifactory.example.test/api/npm/npm/'],
+    { stdio: 'inherit', shell: false }
   )
   childProcess.spawn.mockReset()
+})
+
+test('passes shell metacharacters as literal arguments without enabling a shell', async () => {
+  childProcess.spawn.mockImplementation(() => createMockChild(0))
+  process.argv = ['node', 'npq', 'install', 'left;touch marker', 'quoted value']
+
+  await packageManager.process('npm')
+
+  expect(childProcess.spawn).toHaveBeenCalledWith(
+    'npm',
+    ['install', 'left;touch marker', 'quoted value'],
+    { stdio: 'inherit', shell: false }
+  )
+})
+
+test('uses the Windows command interpreter only as an explicit launcher', () => {
+  expect(
+    packageManager.getPackageManagerLaunchSpec('npm', ['install', 'express'], 'win32')
+  ).toEqual({
+    executable: process.env.ComSpec || 'cmd.exe',
+    args: ['/d', '/s', '/c', 'npm', 'install', 'express']
+  })
 })
 
 describe('exit code propagation', () => {

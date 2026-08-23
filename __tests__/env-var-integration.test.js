@@ -43,9 +43,9 @@ describe('NPQ_PKG_MGR Environment Variable Integration', () => {
     // Test that the package manager can spawn pnpm (which would be passed from CLI parsing)
     await packageManager.process('pnpm')
 
-    expect(childProcess.spawn).toHaveBeenCalledWith('pnpm install fastify', {
+    expect(childProcess.spawn).toHaveBeenCalledWith('pnpm', ['install', 'fastify'], {
       stdio: 'inherit',
-      shell: true
+      shell: false
     })
   })
 
@@ -54,9 +54,9 @@ describe('NPQ_PKG_MGR Environment Variable Integration', () => {
 
     await packageManager.process('yarn')
 
-    expect(childProcess.spawn).toHaveBeenCalledWith('yarn install express lodash', {
+    expect(childProcess.spawn).toHaveBeenCalledWith('yarn', ['install', 'express', 'lodash'], {
       stdio: 'inherit',
-      shell: true
+      shell: false
     })
   })
 
@@ -68,9 +68,9 @@ describe('NPQ_PKG_MGR Environment Variable Integration', () => {
 
       await packageManager.process(pm)
 
-      expect(childProcess.spawn).toHaveBeenCalledWith(`${pm} install test-package`, {
+      expect(childProcess.spawn).toHaveBeenCalledWith(pm, ['install', 'test-package'], {
         stdio: 'inherit',
-        shell: true
+        shell: false
       })
 
       childProcess.spawn.mockClear()
