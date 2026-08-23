@@ -26,6 +26,9 @@ project's `package.json` and audits them:
 npq --json
 ```
 
+Project-mode JSON audits currently cover only declared direct dependencies from the current project's `package.json` (`dependencies` and `devDependencies`).
+They do not read lockfiles or discover transitive dependencies.
+
 ## Coding-agent detection
 
 A non-empty direct signal selects the exact existing JSON pipeline. Contextual
