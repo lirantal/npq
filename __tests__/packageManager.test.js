@@ -50,6 +50,27 @@ test('package manager validation should fail if provided object', () => {
   expect(() => packageManager.validatePackageManager({ a: 'b' })).toThrow()
 })
 
+test.each([
+  ['CR', 'npm\rcalc.exe'],
+  ['LF', 'npm\ncalc.exe']
+])('package manager validation rejects executable strings containing %s', (_lineBreak, value) => {
+  expect(() => packageManager.validatePackageManager(value)).toThrow()
+})
+
+test.each([
+  ['CR', 'package\rcalc.exe'],
+  ['LF', 'package\ncalc.exe']
+])(
+  'process rejects forwarded arguments containing %s before spawning',
+  async (_lineBreak, value) => {
+    childProcess.spawn.mockImplementation(() => createMockChild(0))
+    process.argv = ['node', 'npq', 'install', value]
+
+    await expect(packageManager.process('npm')).rejects.toThrow()
+    expect(childProcess.spawn).not.toHaveBeenCalled()
+  }
+)
+
 test('package manager has a default manager configured', () => {
   expect(packageManager.getDefaultPackageManager()).toBeTruthy()
 })
@@ -190,11 +211,11 @@ test('passes shell metacharacters as literal arguments without enabling a shell'
 
 test('uses the package manager executable and literal arguments directly on Windows', () => {
   expect(
-    packageManager.getPackageManagerLaunchSpec(
-      'npm.cmd',
-      ['install', 'name&whoami', 'quoted value'],
-      'win32'
-    )
+    packageManager.getPackageManagerLaunchSpec('npm.cmd', [
+      'install',
+      'name&whoami',
+      'quoted value'
+    ])
   ).toEqual({
     executable: 'npm.cmd',
     args: ['install', 'name&whoami', 'quoted value']

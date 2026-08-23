@@ -17,6 +17,10 @@ npm run lint
 ```
 
 
+## Windows Coverage
+
+The CI workflow runs the focused package-manager `.cmd` shim regression on `windows-latest` in addition to the regular Linux test suite.
+
 ## Expectations
 
 - Add or update tests for behavior changes.

@@ -4,7 +4,7 @@
 
 **Goal:** Forward package-manager invocations as an executable plus argument array with `shell: false`, preserving literal CLI arguments and documented package-manager usage on Unix-like systems and Windows.
 
-**Architecture:** Keep `packageManager.process()` as the public entry point. Refactor `spawnPackageManager()` to build the forwarded argument array without joining it into a command string, then pass the executable and arguments through the `cross-spawn` adapter with `shell: false`. The adapter provides Windows-compatible handling for package-manager shims and escaped arguments. The low-runtime-version passthrough in `lib/helpers/cliSupportHandler.js` remains out of scope.
+**Architecture:** Keep `packageManager.process()` as the public entry point. Refactor `spawnPackageManager()` to build the forwarded argument array without joining it into a command string, then pass the executable and arguments through the `cross-spawn` adapter with `shell: false`. The adapter provides Windows-compatible handling for package-manager shims and escaped arguments; `packageManager.js` rejects carriage returns and line feeds before invocation. The low-runtime-version passthrough in `lib/helpers/cliSupportHandler.js` remains out of scope.
 
 **Tech Stack:** Node.js `child_process.spawn`, CommonJS JavaScript, Jest 30, ESLint 9, Changesets.
 
@@ -12,6 +12,7 @@
 
 - The child-process options must explicitly use `shell: false` and `stdio: 'inherit'`.
 - Forwarded CLI values must remain separate array entries in their original order.
+- Reject carriage returns and line feeds in the executable and forwarded argument values before invoking the Windows shim adapter.
 - `NPQ_PKG_MGR` and CLI package-manager options are bare executable values; embedded shell commands are no longer supported.
 - Preserve the existing filtering of `--packageManager`, `--pkgMgr`, and `--dry-run` from forwarded arguments.
 - Preserve child exit-code propagation.
@@ -25,6 +26,7 @@
 **Files:**
 - Modify: `__tests__/packageManager.test.js:42-150`
 - Modify: `__tests__/env-var-integration.test.js:34-76`
+- Modify: `__tests__/packageManager.windows.test.js`
 
 **Interfaces:**
 - Consumes: the existing `packageManager.process(packageManagerOption)` test entry point and mocked `childProcess.spawn`.
@@ -72,8 +74,7 @@ test('uses the package manager executable and literal arguments directly on Wind
   expect(
     packageManager.getPackageManagerLaunchSpec(
       'npm.cmd',
-      ['install', 'name&whoami', 'quoted value'],
-      'win32'
+      ['install', 'name&whoami', 'quoted value']
     )
   ).toEqual({
     executable: 'npm.cmd',
@@ -83,6 +84,8 @@ test('uses the package manager executable and literal arguments directly on Wind
 ```
 
 The test must assert the launch spec only; the actual `spawn()` options remain `shell: false` in the launch tests.
+
+A Windows-only integration test in `__tests__/packageManager.windows.test.js` executes a real `.cmd` shim and verifies that metacharacter arguments remain literal.
 
 - [ ] **Step 4: Run the focused tests and verify they fail for the intended reason**
 
@@ -100,6 +103,7 @@ Expected result: FAIL because the current implementation still constructs a Wind
 - Modify: `lib/packageManager.js:12-39`
 - Modify: `package.json`
 - Modify: `package-lock.json`
+- Modify: `.github/workflows/main.yml`
 
 **Interfaces:**
 - Consumes: the validated bare executable string and the raw `process.argv.slice(2)` values.
@@ -173,6 +177,9 @@ Expected result: PASS for all package-manager launch, argument-boundary, Windows
 - Modify: `package-lock.json`
 - Modify: `__tests__/packageManager.test.js`
 - Modify: `__tests__/env-var-integration.test.js`
+- Modify: `__tests__/packageManager.windows.test.js`
+- Modify: `.github/workflows/main.yml`
+- Modify: `docs/testing.md`
 
 **Interfaces:**
 - Consumes: the passing implementation and focused regression suite from Tasks 1-2.
