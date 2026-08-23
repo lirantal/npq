@@ -99,6 +99,18 @@ test("package manager spawns successfully and ignore npq's own internal commands
   childProcess.spawn.mockReset()
 })
 
+test('package manager filters the --pkgMgr alias before spawning', async () => {
+  childProcess.spawn.mockImplementation(() => createMockChild(0))
+  process.argv = ['node', 'script name', 'install', 'express', '--pkgMgr']
+
+  await packageManager.process('npm')
+
+  expect(childProcess.spawn).toHaveBeenCalledWith('npm', ['install', 'express'], {
+    stdio: 'inherit',
+    shell: false
+  })
+})
+
 test('package manager spawns with yarn when provided as parameter', async () => {
   childProcess.spawn.mockImplementation(() => createMockChild(0))
   process.argv = ['node', 'script name', 'install', 'express']

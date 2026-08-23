@@ -77,6 +77,19 @@ describe('NPQ_PKG_MGR Environment Variable Integration', () => {
     }
   })
 
+  test('passes a configured executable containing spaces as one spawn executable', async () => {
+    const configuredPackageManager = '/opt/package managers/npm'
+    process.argv = ['node', 'npq', 'install', 'express']
+
+    await packageManager.process(configuredPackageManager)
+
+    expect(childProcess.spawn).toHaveBeenCalledWith(
+      configuredPackageManager,
+      ['install', 'express'],
+      { stdio: 'inherit', shell: false }
+    )
+  })
+
   test('should demonstrate NPQ_PKG_MGR environment variable precedence logic', () => {
     // This test documents the specific logic that was implemented:
     // packageManager: process.env.NPQ_PKG_MGR || values.packageManager || values.pkgMgr || 'npm'
