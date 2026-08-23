@@ -26,10 +26,11 @@ This change is separate from lockfile handling and is limited to the package-man
 
 ## Design
 
-`spawnPackageManager()` will derive the forwarded arguments directly from `process.argv.slice(2)`, filter NPQ-owned flags as it does today, and call `child_process.spawn(executable, args, options)` with `stdio: 'inherit'` and `shell: false`.
+`spawnPackageManager()` will derive the forwarded arguments directly from `process.argv.slice(2)`, filter NPQ-owned flags as it does today, and call the `cross-spawn` adapter with `executable`, `args`, `stdio: 'inherit'`, and `shell: false`.
 
-On Windows, the launch target will use the platform-compatible package-manager launcher while retaining the same argument-array contract. The launcher choice will be isolated in a small helper so the platform-specific behavior can be tested without changing Unix behavior.
+`cross-spawn` provides the platform-compatible launcher behavior needed for Windows package-manager shims while preserving the executable-plus-argument-array contract at this module's boundary. Its Windows adapter escapes command-interpreter metacharacters when a `.cmd` or `.bat` shim must be used; `packageManager.js` does not construct a command string or invoke `cmd.exe` directly.
 
+Spawn errors will reject the returned Promise so missing or non-executable package-manager values reach the existing CLI error handling rather than becoming uncaught child-process events.
 ## Testing
 
 The package-manager unit tests will verify:

@@ -2,4 +2,4 @@
 'npq': patch
 ---
 
-Forward package-manager arguments without reconstructing a shell command or enabling shell execution.
+Forward package-manager arguments as an executable and literal argument array with shell execution disabled at the npq process boundary.

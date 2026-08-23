@@ -4,7 +4,7 @@
 
 **Goal:** Forward package-manager invocations as an executable plus argument array with `shell: false`, preserving literal CLI arguments and documented package-manager usage on Unix-like systems and Windows.
 
-**Architecture:** Keep `packageManager.process()` as the public entry point. Refactor `spawnPackageManager()` to build the forwarded argument array without joining it into a command string, then use a small launch-spec helper: direct executable plus arguments on Unix-like systems, and `ComSpec`/`cmd.exe` plus launcher arguments on Windows. The low-runtime-version passthrough in `lib/helpers/cliSupportHandler.js` remains out of scope.
+**Architecture:** Keep `packageManager.process()` as the public entry point. Refactor `spawnPackageManager()` to build the forwarded argument array without joining it into a command string, then pass the executable and arguments through the `cross-spawn` adapter with `shell: false`. The adapter provides Windows-compatible handling for package-manager shims and escaped arguments. The low-runtime-version passthrough in `lib/helpers/cliSupportHandler.js` remains out of scope.
 
 **Tech Stack:** Node.js `child_process.spawn`, CommonJS JavaScript, Jest 30, ESLint 9, Changesets.
 
@@ -63,18 +63,22 @@ test('passes shell metacharacters as literal arguments without enabling a shell'
 })
 ```
 
-- [ ] **Step 3: Add the Windows launch-spec expectation**
+- [ ] **Step 3: Add the Windows direct launch-spec expectation**
 
-Add a focused test for the platform helper after the implementation exposes the helper used by `spawnPackageManager()`:
+Add a focused test that confirms Windows retains the package-manager executable and literal argument array. The `cross-spawn` adapter supplies the platform-specific shim handling at runtime:
 
 ```js
-test('uses the Windows command interpreter only as an explicit launcher', () => {
-  expect(packageManager.getPackageManagerLaunchSpec('npm', ['install', 'express'], 'win32')).toEqual(
-    {
-      executable: process.env.ComSpec || 'cmd.exe',
-      args: ['/d', '/s', '/c', 'npm', 'install', 'express']
-    }
-  )
+test('uses the package manager executable and literal arguments directly on Windows', () => {
+  expect(
+    packageManager.getPackageManagerLaunchSpec(
+      'npm.cmd',
+      ['install', 'name&whoami', 'quoted value'],
+      'win32'
+    )
+  ).toEqual({
+    executable: 'npm.cmd',
+    args: ['install', 'name&whoami', 'quoted value']
+  })
 })
 ```
 
@@ -88,30 +92,25 @@ Run:
 npm test -- --runInBand __tests__/packageManager.test.js __tests__/env-var-integration.test.js
 ```
 
-Expected result: FAIL because the current implementation passes one joined command string, uses `shell: true`, and does not expose the Windows launch-spec helper. Do not change production code before observing this failure.
+Expected result: FAIL because the current implementation still constructs a Windows `cmd.exe` command and does not propagate asynchronous spawn errors. Do not change production code before observing this failure.
 
 ### Task 2: Implement shell-free package-manager launching
 
 **Files:**
 - Modify: `lib/packageManager.js:12-39`
+- Modify: `package.json`
+- Modify: `package-lock.json`
 
 **Interfaces:**
 - Consumes: the validated bare executable string and the raw `process.argv.slice(2)` values.
-- Produces: `getPackageManagerLaunchSpec(packageManagerOption, args, platform)` and a `child_process.spawn(executable, args, options)` invocation with shell disabled.
+- Produces: `getPackageManagerLaunchSpec(packageManagerOption, args)` and a `cross-spawn` invocation with shell disabled.
 
 - [ ] **Step 1: Add the launch-spec helper**
 
 Add this static method to `lib/packageManager.js`:
 
 ```js
-static getPackageManagerLaunchSpec(packageManagerOption, args, platform = process.platform) {
-  if (platform === 'win32') {
-    return {
-      executable: process.env.ComSpec || 'cmd.exe',
-      args: ['/d', '/s', '/c', packageManagerOption, ...args]
-    }
-  }
-
+static getPackageManagerLaunchSpec(packageManagerOption, args) {
   return {
     executable: packageManagerOption,
     args
@@ -119,7 +118,7 @@ static getPackageManagerLaunchSpec(packageManagerOption, args, platform = proces
 }
 ```
 
-This keeps the Windows-compatible launcher decision isolated while retaining an argument array at the `spawn()` API boundary.
+This keeps the executable and argument-array contract isolated while delegating Windows shim escaping to `cross-spawn`.
 
 - [ ] **Step 2: Replace command reconstruction with the launch spec**
 
@@ -142,13 +141,18 @@ const { executable, args: launchArgs } = packageManager.getPackageManagerLaunchS
   args
 )
 
-const child = childProcess.spawn(executable, launchArgs, {
+const child = crossSpawn.spawn(executable, launchArgs, {
   stdio: 'inherit',
   shell: false
 })
+
+return new Promise((resolve, reject) => {
+  child.once('error', reject)
+  child.once('close', resolve)
+})
 ```
 
-Keep the existing `close` listener and Promise resolution unchanged so exit-code behavior is not bundled into this security fix.
+The launch error listener preserves the existing CLI error path for missing package-manager executables while the close listener continues to propagate package-manager exit codes.
 
 - [ ] **Step 3: Run the focused tests and verify they pass**
 
@@ -165,6 +169,8 @@ Expected result: PASS for all package-manager launch, argument-boundary, Windows
 **Files:**
 - Create: `.changeset/safe-package-manager-launch.md`
 - Modify: `lib/packageManager.js`
+- Modify: `package.json`
+- Modify: `package-lock.json`
 - Modify: `__tests__/packageManager.test.js`
 - Modify: `__tests__/env-var-integration.test.js`
 
@@ -181,7 +187,7 @@ Create `.changeset/safe-package-manager-launch.md` with:
 'npq': patch
 ---
 
-Forward package-manager arguments without reconstructing a shell command or enabling shell execution.
+Forward package-manager arguments as an executable and literal argument array with shell execution disabled at the npq process boundary.
 ```
 
 - [ ] **Step 2: Run the full test suite**
@@ -189,7 +195,8 @@ Forward package-manager arguments without reconstructing a shell command or enab
 Run:
 
 ```sh
-npm test -- --runInBand
+ROOT_TESTS=$(rg --files __tests__ -g '*.test.js')
+npm test -- --runInBand --collectCoverage=false --runTestsByPath $ROOT_TESTS
 ```
 
 Expected result: all Jest suites pass with no new failures.
@@ -210,7 +217,7 @@ Run:
 
 ```sh
 git diff --check
-git diff -- lib/packageManager.js __tests__/packageManager.test.js __tests__/env-var-integration.test.js .changeset/safe-package-manager-launch.md
+git diff -- lib/packageManager.js package.json package-lock.json __tests__/packageManager.test.js __tests__/env-var-integration.test.js .changeset/safe-package-manager-launch.md
 git status --short
 ```
 
@@ -221,6 +228,6 @@ Confirm that the diff contains no `shell: true` or joined package-manager comman
 Stage only the implementation files and changeset, then commit with:
 
 ```sh
-git add lib/packageManager.js __tests__/packageManager.test.js __tests__/env-var-integration.test.js .changeset/safe-package-manager-launch.md
+git add lib/packageManager.js package.json package-lock.json __tests__/packageManager.test.js __tests__/env-var-integration.test.js .changeset/safe-package-manager-launch.md
 git commit -m "fix: launch package managers without a shell"
 ```
