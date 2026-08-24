@@ -127,7 +127,7 @@ describe('shipped npq JSON process contract', () => {
     )
 
     expect(report.status).toBe('findings')
-    expect(report.summary).toEqual({ packagesAudited: 1, errors: 1, warnings: 0 })
+    expect(report.summary).toEqual({ packagesAudited: 1, errors: 0, warnings: 1 })
     expect(report.packages[0].requested).toBe('@scope/example@1.0.0')
   })
 

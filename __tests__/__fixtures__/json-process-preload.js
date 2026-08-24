@@ -36,6 +36,20 @@ if (scenario === 'debug') {
           scripts: {
             marshall: 'scripts',
             categoryId: 'SupplyChainSecurity',
+            warnings: [{ message: 'Install script detected' }],
+            errors: []
+          }
+        }
+      ]
+      return this.preserveRequestOrder ? this.pkgs.map(() => result) : { [this.pkgs[0]]: result }
+    }
+
+    if (scenario === 'errors') {
+      const result = [
+        {
+          scripts: {
+            marshall: 'scripts',
+            categoryId: 'SupplyChainSecurity',
             warnings: [],
             errors: [{ message: 'Install script detected' }]
           }

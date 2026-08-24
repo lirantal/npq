@@ -52,20 +52,20 @@ function writeProject(packageJson = {}) {
   createPackageManagerLauncher()
 }
 
-function childEnvironment(signal, scenario = 'clean') {
+function childEnvironment(signal, scenario = 'clean', extraEnvironment = {}) {
   const env = { ...process.env }
   for (const name of CODING_AGENT_ENVIRONMENT_VARIABLES) delete env[name]
-  env[signal.name] = signal.value
-  env.NODE_OPTIONS = `${env.NODE_OPTIONS || ''} --require=${preload}`.trim()
+  if (signal) env[signal.name] = signal.value
+  env.NODE_OPTIONS = (env.NODE_OPTIONS || '').concat(' --require=', preload).trim()
   env.NPQ_JSON_TEST_SCENARIO = scenario
   env.NPQ_PKG_MGR = packageManagerLauncher
-  return env
+  return { ...env, ...extraEnvironment }
 }
 
-function run(binary, args, signal, scenario) {
+function run(binary, args, signal, scenario, extraEnvironment = {}) {
   return spawnSync(process.execPath, [binary, ...args], {
     cwd: fixtureDirectory,
-    env: childEnvironment(signal, scenario),
+    env: childEnvironment(signal, scenario, extraEnvironment),
     encoding: 'utf8',
     timeout: 10000
   })
@@ -85,6 +85,12 @@ function expectJson(result, exitCode) {
   return report
 }
 
+function expectHumanOutput(result) {
+  expect(result.stdout).not.toBe('')
+  expect(result.stdout.endsWith('\n')).toBe(true)
+  expect(() => JSON.parse(result.stdout)).toThrow()
+}
+
 beforeEach(() => {
   writeProject({ name: 'agent-process-project', version: '1.0.0' })
 })
@@ -96,6 +102,54 @@ afterEach(() => {
   packageManagerLauncher = undefined
 })
 
+describe('non-interactive executable routing', () => {
+  test('npq blocks warning findings in ordinary non-TTY execution', () => {
+    const result = run(npqBinary, ['install', 'express'], null, 'findings')
+
+    expect(result.error).toBeUndefined()
+    expect(result.status).toBe(1)
+    expect(packageManagerRan()).toBe(false)
+    expect([result.stdout, result.stderr].join('')).toContain('non-interactive')
+  })
+
+  test('npq installs warning findings with the explicit flag', () => {
+    const result = run(
+      npqBinary,
+      ['install', 'express', '--allow-non-interactive-install'],
+      null,
+      'findings'
+    )
+
+    expect(result.error).toBeUndefined()
+    expect(result.status).toBe(0)
+    expect(packageManagerRan()).toBe(true)
+  })
+
+  test('npq blocks error findings even with the explicit flag', () => {
+    const result = run(
+      npqBinary,
+      ['install', 'express', '--allow-non-interactive-install'],
+      null,
+      'errors'
+    )
+
+    expect(result.error).toBeUndefined()
+    expect(result.status).toBe(1)
+    expect(packageManagerRan()).toBe(false)
+  })
+
+  test('npq-hero installs warning findings with the environment opt-in and no countdown', () => {
+    const result = run(heroBinary, ['install', 'express'], null, 'findings', {
+      NPQ_ALLOW_NON_INTERACTIVE_INSTALL: 'true'
+    })
+
+    expect(result.error).toBeUndefined()
+    expect(result.status).toBe(0)
+    expect(result.stdout).not.toContain("press 'y' to proceed")
+    expect(packageManagerRan()).toBe(true)
+  })
+})
+
 describe('coding-agent executable routing', () => {
   test.each([
     { name: 'CLAUDECODE', value: '1' },
@@ -103,25 +157,27 @@ describe('coding-agent executable routing', () => {
     { name: 'AGENT', value: 'amp' },
     { name: 'AI_AGENT', value: 'true' }
   ])('npq runs an authorized install when $name is present', (signal) => {
-    const result = run(npqBinary, ['install', 'express'], signal)
+    const result = run(npqBinary, ['install', 'express'], signal, 'findings')
 
     expect(result.error).toBeUndefined()
     expect(result.status).toBe(0)
     expect(result.stderr).toBe('')
-    expect(result.stdout).toBe('')
+    expectHumanOutput(result)
     expect(packageManagerRan()).toBe(true)
   })
 
   test('npq-hero runs an authorized agent install through package-manager passthrough', () => {
-    const result = run(heroBinary, ['install', 'express'], {
-      name: 'CURSOR_AGENT',
-      value: '1'
-    })
+    const result = run(
+      heroBinary,
+      ['install', 'express'],
+      { name: 'CURSOR_AGENT', value: '1' },
+      'findings'
+    )
 
     expect(result.error).toBeUndefined()
     expect(result.status).toBe(0)
     expect(result.stderr).toBe('')
-    expect(result.stdout).toBe('')
+    expectHumanOutput(result)
     expect(packageManagerRan()).toBe(true)
   })
 
@@ -130,12 +186,14 @@ describe('coding-agent executable routing', () => {
       path.join(fixtureDirectory, 'package.json'),
       JSON.stringify({ dependencies: { express: '^5.0.0' } })
     )
-    const result = run(heroBinary, ['install'], { name: 'GEMINI_CLI', value: '1' })
+    const result = run(heroBinary, ['install'], { name: 'GEMINI_CLI', value: '1' }, 'findings')
 
     expect(result.error).toBeUndefined()
     expect(result.status).toBe(0)
     expect(result.stderr).toBe('')
-    expect(result.stdout).toBe('')
+    expectHumanOutput(result)
+    expect(result.stdout).toContain('Install script detected')
+    expect(result.stdout).toContain('Total packages: 1')
     expect(packageManagerRan()).toBe(true)
   })
 
@@ -145,6 +203,32 @@ describe('coding-agent executable routing', () => {
     expect(result.error).toBeUndefined()
     expect(result.status).toBe(0)
     expect(packageManagerRan()).toBe(true)
+  })
+
+  test('npq blocks error findings under coding-agent install routing', () => {
+    const result = run(
+      npqBinary,
+      ['install', 'express'],
+      { name: 'CODEX_THREAD_ID', value: 'thread-123' },
+      'errors'
+    )
+
+    expect(result.error).toBeUndefined()
+    expect(result.status).toBe(1)
+    expect(packageManagerRan()).toBe(false)
+  })
+
+  test('explicit JSON remains audit-only under a coding-agent environment', () => {
+    const result = run(
+      npqBinary,
+      ['install', 'express', '--json'],
+      { name: 'CODEX_THREAD_ID', value: 'thread-123' },
+      'findings'
+    )
+    const report = expectJson(result, 1)
+
+    expect(report.status).toBe('findings')
+    expect(packageManagerRan()).toBe(false)
   })
 
   test('npq-hero sanitizes invalid agent install input without passthrough', () => {
