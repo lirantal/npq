@@ -87,6 +87,7 @@ When adding new features or making significant changes:
 
 - [Non-interactive install safety](./superpowers/specs/2026-08-24-non-interactive-install-safety-design.md) - approved design for fail-closed non-TTY installs with explicit automation and coding-agent opt-ins.
 
+- [Non-interactive install safety](./superpowers/plans/2026-08-24-non-interactive-install-safety.md) - test-first plan for fail-closed non-TTY install routing and coding-agent passthrough.
 - [Shell-free package manager launching](./superpowers/specs/2026-08-15-package-manager-shell-free-launching-design.md) - approved design for forwarding package-manager arguments without shell command reconstruction.
 - [Custom registry support](./superpowers/specs/2026-07-11-custom-registry-support-design.md) - approved design for npm-compatible Artifactory and private registry support.
 - [Coding-agent JSON detection](./superpowers/specs/2026-08-09-coding-agent-json-detection-design.md) - approved design for automatically selecting JSON audit mode in coding-agent environments.
@@ -96,6 +97,7 @@ When adding new features or making significant changes:
 
 ## Implementation plans
 
+- [Non-interactive install safety](./superpowers/plans/2026-08-24-non-interactive-install-safety.md) - test-first plan for fail-closed non-TTY install routing and coding-agent passthrough.
 - [Shell-free package manager launching](./superpowers/plans/2026-08-15-package-manager-shell-free-launching.md) - test-first plan for launching package managers without shell command reconstruction.
 - [Custom registry support](./superpowers/plans/2026-07-11-custom-registry-support.md) - task-by-task implementation plan for issue #429.
 - [Coding-agent JSON detection](./superpowers/plans/2026-08-09-coding-agent-json-detection.md) - test-first implementation plan for issue #426 across `npq` and `npq-hero`.
