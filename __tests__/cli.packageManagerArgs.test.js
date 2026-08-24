@@ -10,12 +10,15 @@ const { CliParser } = require('../lib/cli')
 describe('package-manager-aware minimal argument parsing', () => {
   let originalArgv
   let originalNPQPkgMgr
+  let originalAllowNonInteractiveInstall
 
   beforeEach(() => {
     originalArgv = process.argv
     originalNPQPkgMgr = process.env.NPQ_PKG_MGR
+    originalAllowNonInteractiveInstall = process.env.NPQ_ALLOW_NON_INTERACTIVE_INSTALL
     process.argv = ['node', 'npq-hero']
     delete process.env.NPQ_PKG_MGR
+    delete process.env.NPQ_ALLOW_NON_INTERACTIVE_INSTALL
     mockIsCodingAgentEnvironment.mockReset()
     mockIsCodingAgentEnvironment.mockReturnValue(false)
   })
@@ -26,6 +29,11 @@ describe('package-manager-aware minimal argument parsing', () => {
       delete process.env.NPQ_PKG_MGR
     } else {
       process.env.NPQ_PKG_MGR = originalNPQPkgMgr
+    }
+    if (originalAllowNonInteractiveInstall === undefined) {
+      delete process.env.NPQ_ALLOW_NON_INTERACTIVE_INSTALL
+    } else {
+      process.env.NPQ_ALLOW_NON_INTERACTIVE_INSTALL = originalAllowNonInteractiveInstall
     }
   })
 
@@ -172,6 +180,23 @@ describe('package-manager-aware minimal argument parsing', () => {
       installSubcommandExplicit: true,
       json: false,
       allowNonInteractiveInstall: false
+    })
+  })
+
+  test('authorizes explicit hero installs from NPQ_ALLOW_NON_INTERACTIVE_INSTALL', () => {
+    process.env.NPQ_ALLOW_NON_INTERACTIVE_INSTALL = 'true'
+
+    const result = parseMinimal({
+      packageManager: 'npm',
+      args: ['install', 'express']
+    })
+
+    expect(result).toEqual({
+      packages: ['express@latest'],
+      registryConfigArgs: [],
+      installSubcommandExplicit: true,
+      json: false,
+      allowNonInteractiveInstall: true
     })
   })
 

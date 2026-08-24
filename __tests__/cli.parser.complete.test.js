@@ -383,6 +383,62 @@ describe('CliParser', () => {
       delete process.env.NPQ_ALLOW_NON_INTERACTIVE_INSTALL
     })
 
+    test('explicit JSON wins over the non-interactive install CLI flag', () => {
+      mockParseArgs.mockReturnValue({
+        values: { json: true, 'allow-non-interactive-install': true },
+        positionals: ['install', 'express']
+      })
+
+      expect(CliParser.parseArgsFull()).toEqual(
+        expect.objectContaining({ json: true, allowNonInteractiveInstall: false })
+      )
+    })
+
+    test('explicit JSON keeps audit-only behavior when the non-interactive install CLI flag is set', () => {
+      mockParseArgs.mockReturnValue({
+        values: { json: true, 'allow-non-interactive-install': true },
+        positionals: ['install', 'express']
+      })
+
+      expect(CliParser.parseArgsFull()).toEqual(
+        expect.objectContaining({
+          json: true,
+          allowNonInteractiveInstall: false
+        })
+      )
+    })
+
+    test('explicit JSON wins over the non-interactive install environment opt-in', () => {
+      process.env.NPQ_ALLOW_NON_INTERACTIVE_INSTALL = 'true'
+      mockParseArgs.mockReturnValue({
+        values: { json: true },
+        positionals: ['install', 'express']
+      })
+
+      expect(CliParser.parseArgsFull()).toEqual(
+        expect.objectContaining({ json: true, allowNonInteractiveInstall: false })
+      )
+
+      delete process.env.NPQ_ALLOW_NON_INTERACTIVE_INSTALL
+    })
+
+    test('explicit JSON keeps audit-only behavior when NPQ_ALLOW_NON_INTERACTIVE_INSTALL=true', () => {
+      process.env.NPQ_ALLOW_NON_INTERACTIVE_INSTALL = 'true'
+      mockParseArgs.mockReturnValue({
+        values: { json: true },
+        positionals: ['install', 'express']
+      })
+
+      expect(CliParser.parseArgsFull()).toEqual(
+        expect.objectContaining({
+          json: true,
+          allowNonInteractiveInstall: false
+        })
+      )
+
+      delete process.env.NPQ_ALLOW_NON_INTERACTIVE_INSTALL
+    })
+
     test('uses coding-agent detection as authorization for explicit installs', () => {
       mockIsCodingAgentEnvironment.mockReturnValue(true)
       mockParseArgs.mockReturnValue({ values: {}, positionals: ['install', 'express'] })
