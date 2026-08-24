@@ -275,6 +275,7 @@ describe('CliParser', () => {
         dryRun: true,
         plain: true,
         json: false,
+        allowNonInteractiveInstall: false,
         disableAutoContinue: false,
         registryConfigArgs: [],
         installSubcommandExplicit: true
@@ -358,18 +359,58 @@ describe('CliParser', () => {
         dryRun: false,
         plain: false,
         json: true,
+        allowNonInteractiveInstall: false,
         disableAutoContinue: false,
         registryConfigArgs: [],
         installSubcommandExplicit: true
       })
     })
 
-    test('enables JSON mode in a coding-agent environment', () => {
+    test('enables ordinary non-interactive installation from the CLI flag', () => {
+      mockParseArgs.mockReturnValue({
+        values: { 'allow-non-interactive-install': true },
+        positionals: ['install', 'express']
+      })
+
+      expect(CliParser.parseArgsFull().allowNonInteractiveInstall).toBe(true)
+    })
+
+    test('enables ordinary non-interactive installation from the environment', () => {
+      process.env.NPQ_ALLOW_NON_INTERACTIVE_INSTALL = 'true'
+      mockParseArgs.mockReturnValue({ values: {}, positionals: ['install', 'express'] })
+
+      expect(CliParser.parseArgsFull().allowNonInteractiveInstall).toBe(true)
+      delete process.env.NPQ_ALLOW_NON_INTERACTIVE_INSTALL
+    })
+
+    test('uses coding-agent detection as authorization for explicit installs', () => {
       mockIsCodingAgentEnvironment.mockReturnValue(true)
       mockParseArgs.mockReturnValue({ values: {}, positionals: ['install', 'express'] })
 
       expect(CliParser.parseArgsFull()).toEqual(
-        expect.objectContaining({ packages: ['express@latest'], json: true })
+        expect.objectContaining({
+          json: false,
+          allowNonInteractiveInstall: true,
+          installSubcommandExplicit: true
+        })
+      )
+    })
+
+    test('keeps a coding-agent audit without an install command in JSON mode', () => {
+      mockIsCodingAgentEnvironment.mockReturnValue(true)
+      mockParseArgs.mockReturnValue({ values: {}, positionals: ['express'] })
+
+      expect(CliParser.parseArgsFull()).toEqual(
+        expect.objectContaining({ json: true, allowNonInteractiveInstall: false })
+      )
+    })
+
+    test('explicit JSON wins over coding-agent install authorization', () => {
+      mockIsCodingAgentEnvironment.mockReturnValue(true)
+      mockParseArgs.mockReturnValue({ values: { json: true }, positionals: ['install', 'express'] })
+
+      expect(CliParser.parseArgsFull()).toEqual(
+        expect.objectContaining({ json: true, allowNonInteractiveInstall: false })
       )
     })
 
@@ -548,7 +589,8 @@ describe('CliParser', () => {
         packages: ['express@latest', 'lodash@latest'],
         registryConfigArgs: [],
         installSubcommandExplicit: true,
-        json: false
+        json: false,
+        allowNonInteractiveInstall: false
       })
     })
 
@@ -563,7 +605,8 @@ describe('CliParser', () => {
         packages: [],
         registryConfigArgs: [],
         installSubcommandExplicit: false,
-        json: false
+        json: false,
+        allowNonInteractiveInstall: false
       })
     })
 
@@ -578,11 +621,12 @@ describe('CliParser', () => {
         packages: [],
         registryConfigArgs: [],
         installSubcommandExplicit: false,
-        json: false
+        json: false,
+        allowNonInteractiveInstall: false
       })
     })
 
-    test('enables JSON only for an agent-driven install command', () => {
+    test('authorizes a coding-agent install without selecting JSON output mode', () => {
       mockIsCodingAgentEnvironment.mockReturnValue(true)
       mockParseArgs.mockReturnValue({ values: {}, positionals: ['install', 'express'] })
 
@@ -590,7 +634,8 @@ describe('CliParser', () => {
         packages: ['express@latest'],
         registryConfigArgs: [],
         installSubcommandExplicit: true,
-        json: true
+        json: false,
+        allowNonInteractiveInstall: true
       })
     })
 
@@ -602,7 +647,8 @@ describe('CliParser', () => {
         packages: [],
         registryConfigArgs: [],
         installSubcommandExplicit: false,
-        json: false
+        json: false,
+        allowNonInteractiveInstall: false
       })
     })
 
@@ -676,6 +722,7 @@ describe('CliParser', () => {
         dryRun: true,
         plain: true,
         json: false,
+        allowNonInteractiveInstall: false,
         disableAutoContinue: false,
         registryConfigArgs: [],
         installSubcommandExplicit: true
@@ -701,6 +748,7 @@ describe('CliParser', () => {
         dryRun: true,
         plain: true,
         json: false,
+        allowNonInteractiveInstall: false,
         disableAutoContinue: true,
         registryConfigArgs: [],
         installSubcommandExplicit: true

@@ -170,7 +170,8 @@ describe('package-manager-aware minimal argument parsing', () => {
         '--globalconfig=/tmp/global.npmrc'
       ],
       installSubcommandExplicit: true,
-      json: false
+      json: false,
+      allowNonInteractiveInstall: false
     })
   })
 
