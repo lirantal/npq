@@ -18,6 +18,10 @@ const { promiseThrottleHelper } = require('../lib/helpers/promiseThrottler')
 const { createJsonOutput } = require('../lib/helpers/jsonOutput')
 const { runJsonCli, writeInvalidJsonInvocation } = require('../lib/jsonCli')
 const { isCodingAgentEnvironment } = require('../lib/helpers/codingAgentEnvironment')
+const {
+  getInstallAction,
+  createNonInteractiveInstallError
+} = require('../lib/helpers/installPolicy')
 const RegistryConfig = require('../lib/helpers/registryConfig')
 const RegistryClient = require('../lib/helpers/registryClient')
 
@@ -39,8 +43,8 @@ if (cliArgs && cliArgs.json) {
   runJsonCli(cliArgs, { output: jsonOutput })
 } else if (cliArgs) {
   const auditOnly = cliArgs.dryRun || !cliArgs.installSubcommandExplicit
-  const isInteractive = cliSupport.isInteractiveTerminal() && !cliArgs.plain
-  const spinner = isInteractive ? new Spinner({ text: 'Initiating...' }) : null
+  const isInteractive = cliSupport.isInteractiveTerminal()
+  const spinner = isInteractive && !cliArgs.plain ? new Spinner({ text: 'Initiating...' }) : null
 
   if (spinner) {
     spinner.start()
@@ -127,30 +131,32 @@ if (cliArgs && cliArgs.json) {
         return undefined
       }
 
-      if (result && result.countErrors > 0) {
-        console.log()
+      const action = getInstallAction({
+        countErrors: result?.countErrors || 0,
+        countWarnings: result?.countWarnings || 0,
+        isInteractive,
+        disableAutoContinue: cliArgs.disableAutoContinue,
+        allowNonInteractiveInstall: cliArgs.allowNonInteractiveInstall
+      })
+
+      if (action === 'reject') {
+        throw createNonInteractiveInstallError()
+      }
+
+      if (action === 'prompt') {
         return cliPrompt.prompt({
           name: 'install',
           message: 'Continue install ?',
           default: false
         })
-      } else {
-        if (result && result.countWarnings > 0) {
-          console.log()
-          // Check if auto-continue is disabled via CLI flag or environment variable
-          if (cliArgs.disableAutoContinue) {
-            return cliPrompt.prompt({
-              name: 'install',
-              message: 'Continue install ?',
-              default: false
-            })
-          }
-          return cliPrompt.autoContinue({
-            name: 'install',
-            message: 'Auto-continue with install in... ',
-            timeInSeconds: 15
-          })
-        }
+      }
+
+      if (action === 'countdown') {
+        return cliPrompt.autoContinue({
+          name: 'install',
+          message: 'Auto-continue with install in... ',
+          timeInSeconds: 15
+        })
       }
 
       return { install: true }
@@ -174,6 +180,8 @@ if (cliArgs && cliArgs.json) {
       let errorCode = -1
       if (typeof error.code === 'number') {
         errorCode = error.code
+      } else if (typeof error.exitCode === 'number') {
+        errorCode = error.exitCode
       } else if (error.code === 'ABORT_ERR') {
         errorCode = 1
       } else if (error.code === 'USER_ABORT') {

@@ -102,35 +102,41 @@ describe('coding-agent executable routing', () => {
     { name: 'CODEX_THREAD_ID', value: 'thread-123' },
     { name: 'AGENT', value: 'amp' },
     { name: 'AI_AGENT', value: 'true' }
-  ])('npq emits JSON when $name is present', (signal) => {
+  ])('npq runs an authorized install when $name is present', (signal) => {
     const result = run(npqBinary, ['install', 'express'], signal)
-    const report = expectJson(result, 0)
 
-    expect(report.status).toBe('clean')
-    expect(packageManagerRan()).toBe(false)
+    expect(result.error).toBeUndefined()
+    expect(result.status).toBe(0)
+    expect(result.stderr).toBe('')
+    expect(result.stdout).toBe('')
+    expect(packageManagerRan()).toBe(true)
   })
 
-  test('npq-hero audits an agent install without passthrough', () => {
+  test('npq-hero runs an authorized agent install through package-manager passthrough', () => {
     const result = run(heroBinary, ['install', 'express'], {
       name: 'CURSOR_AGENT',
       value: '1'
     })
-    const report = expectJson(result, 0)
 
-    expect(report.packages[0].requested).toBe('express@latest')
-    expect(packageManagerRan()).toBe(false)
+    expect(result.error).toBeUndefined()
+    expect(result.status).toBe(0)
+    expect(result.stderr).toBe('')
+    expect(result.stdout).toBe('')
+    expect(packageManagerRan()).toBe(true)
   })
 
-  test('npq-hero audits project dependencies for an agent install without operands', () => {
+  test('npq-hero preserves package-manager passthrough for an agent install without operands', () => {
     fs.writeFileSync(
       path.join(fixtureDirectory, 'package.json'),
       JSON.stringify({ dependencies: { express: '^5.0.0' } })
     )
     const result = run(heroBinary, ['install'], { name: 'GEMINI_CLI', value: '1' })
-    const report = expectJson(result, 0)
 
-    expect(report.packages[0].requested).toBe('express@^5.0.0')
-    expect(packageManagerRan()).toBe(false)
+    expect(result.error).toBeUndefined()
+    expect(result.status).toBe(0)
+    expect(result.stderr).toBe('')
+    expect(result.stdout).toBe('')
+    expect(packageManagerRan()).toBe(true)
   })
 
   test('npq-hero preserves non-install passthrough under agent detection', () => {

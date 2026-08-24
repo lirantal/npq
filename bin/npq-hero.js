@@ -17,6 +17,10 @@ const RegistryClient = require('../lib/helpers/registryClient')
 const { createJsonOutput } = require('../lib/helpers/jsonOutput')
 const { runJsonCli, writeInvalidJsonInvocation } = require('../lib/jsonCli')
 const { isCodingAgentEnvironment } = require('../lib/helpers/codingAgentEnvironment')
+const {
+  getInstallAction,
+  createNonInteractiveInstallError
+} = require('../lib/helpers/installPolicy')
 
 const PACKAGE_MANAGER_TOOL = process.env.NPQ_PKG_MGR
 const DISABLE_AUTO_CONTINUE = process.env.NPQ_DISABLE_AUTO_CONTINUE === 'true'
@@ -35,10 +39,10 @@ try {
 if (cliArgs && cliArgs.json) {
   runJsonCli(cliArgs, { output: createJsonOutput() })
 } else if (cliArgs) {
+  const isInteractive = cliSupport.isInteractiveTerminal()
   const silentModeNoPackages = !cliArgs || !cliArgs.packages || cliArgs.packages.length === 0
-
-  const isInteractive = cliSupport.isInteractiveTerminal() && !silentModeNoPackages
-  const spinner = isInteractive ? new Spinner({ text: 'Initiating...' }) : null
+  const spinner =
+    isInteractive && !silentModeNoPackages ? new Spinner({ text: 'Initiating...' }) : null
 
   if (spinner) {
     spinner.start()
@@ -93,30 +97,32 @@ if (cliArgs && cliArgs.json) {
       return undefined
     })
     .then((result) => {
-      if (result && result.countErrors > 0) {
-        console.log()
+      const action = getInstallAction({
+        countErrors: result?.countErrors || 0,
+        countWarnings: result?.countWarnings || 0,
+        isInteractive,
+        disableAutoContinue: DISABLE_AUTO_CONTINUE,
+        allowNonInteractiveInstall: cliArgs.allowNonInteractiveInstall
+      })
+
+      if (action === 'reject') {
+        throw createNonInteractiveInstallError()
+      }
+
+      if (action === 'prompt') {
         return cliPrompt.prompt({
           name: 'install',
           message: 'Continue install ?',
           default: false
         })
-      } else {
-        if (result && result.countWarnings > 0) {
-          console.log()
-          // Check if auto-continue is disabled via environment variable
-          if (DISABLE_AUTO_CONTINUE) {
-            return cliPrompt.prompt({
-              name: 'install',
-              message: 'Continue install ?',
-              default: false
-            })
-          }
-          return cliPrompt.autoContinue({
-            name: 'install',
-            message: 'Auto-continue with install in... ',
-            timeInSeconds: 15
-          })
-        }
+      }
+
+      if (action === 'countdown') {
+        return cliPrompt.autoContinue({
+          name: 'install',
+          message: 'Auto-continue with install in... ',
+          timeInSeconds: 15
+        })
       }
 
       return { install: true }
@@ -140,6 +146,8 @@ if (cliArgs && cliArgs.json) {
       let errorCode = -1
       if (typeof error.code === 'number') {
         errorCode = error.code
+      } else if (typeof error.exitCode === 'number') {
+        errorCode = error.exitCode
       } else if (error.code === 'ABORT_ERR') {
         errorCode = 1
       } else if (error.code === 'USER_ABORT') {

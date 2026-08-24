@@ -241,14 +241,17 @@ describe('npq CLI script', () => {
     const { CliParser } = require('../lib/cli')
     const { reportResults } = require('../lib/helpers/reportResults')
     const cliPrompt = require('../lib/helpers/cliPrompt.js')
+    const { isInteractiveTerminal } = require('../lib/helpers/cliSupportHandler')
     const consoleLog = jest.spyOn(console, 'log').mockImplementation(() => {})
 
+    isInteractiveTerminal.mockReturnValue(true)
     CliParser.parseArgsFull.mockReturnValue({
       packages: ['@company/tool'],
       packageManager: 'npm',
       plain: true,
       dryRun: false,
       disableAutoContinue: false,
+      allowNonInteractiveInstall: false,
       installSubcommandExplicit: true
     })
     reportResults.mockReturnValue({
@@ -266,6 +269,63 @@ describe('npq CLI script', () => {
     expect(consoleLog).toHaveBeenCalledWith('Packages with issues found:')
     expect(cliPrompt.autoContinue).toHaveBeenCalled()
   })
+
+  test('rejects non-TTY warning findings without invoking the package manager', async () => {
+    const { CliParser } = require('../lib/cli')
+    const cliPrompt = require('../lib/helpers/cliPrompt.js')
+    const pkgMgr = require('../lib/packageManager')
+    const { reportResults } = require('../lib/helpers/reportResults')
+    const { isInteractiveTerminal } = require('../lib/helpers/cliSupportHandler')
+
+    isInteractiveTerminal.mockReturnValue(false)
+    CliParser.parseArgsFull.mockReturnValue({
+      packages: ['express'],
+      packageManager: 'npm',
+      plain: true,
+      dryRun: false,
+      json: false,
+      disableAutoContinue: false,
+      allowNonInteractiveInstall: false,
+      installSubcommandExplicit: true
+    })
+    reportResults.mockReturnValue({ countErrors: 0, countWarnings: 1 })
+
+    require('../bin/npq.js')
+    await new Promise(setImmediate)
+
+    expect(cliPrompt.autoContinue).not.toHaveBeenCalled()
+    expect(pkgMgr.process).not.toHaveBeenCalled()
+    expect(CliParser.exit).toHaveBeenCalledWith(expect.objectContaining({ errorCode: 1 }))
+  })
+
+  test('allows opted-in non-TTY warning findings without prompting', async () => {
+    const { CliParser } = require('../lib/cli')
+    const cliPrompt = require('../lib/helpers/cliPrompt.js')
+    const pkgMgr = require('../lib/packageManager')
+    const { reportResults } = require('../lib/helpers/reportResults')
+    const { isInteractiveTerminal } = require('../lib/helpers/cliSupportHandler')
+
+    isInteractiveTerminal.mockReturnValue(false)
+    CliParser.parseArgsFull.mockReturnValue({
+      packages: ['express'],
+      packageManager: 'npm',
+      plain: true,
+      dryRun: false,
+      json: false,
+      disableAutoContinue: false,
+      allowNonInteractiveInstall: true,
+      installSubcommandExplicit: true
+    })
+    reportResults.mockReturnValue({ countErrors: 0, countWarnings: 1 })
+
+    require('../bin/npq.js')
+    await new Promise(setImmediate)
+
+    expect(cliPrompt.prompt).not.toHaveBeenCalled()
+    expect(cliPrompt.autoContinue).not.toHaveBeenCalled()
+    expect(pkgMgr.process).toHaveBeenCalledWith('npm')
+  })
+
   test('routes explicit-install JSON requests away from the human pipeline', async () => {
     const { CliParser } = require('../lib/cli')
     const { Spinner } = require('../lib/helpers/cliSpinner')

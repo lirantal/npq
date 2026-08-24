@@ -93,31 +93,36 @@ describe('npq-hero routing', () => {
     jest.restoreAllMocks()
   })
 
-  test('routes an agent install through JSON without invoking the package manager', async () => {
+  test('routes an authorized agent install through the package-manager pipeline', async () => {
     const cliArgs = {
       packages: ['express@latest'],
       registryConfigArgs: [],
       installSubcommandExplicit: true,
-      json: true
+      json: false,
+      allowNonInteractiveInstall: true
     }
     CliParser.parseArgsMinimal.mockReturnValue(cliArgs)
+    reportResults.mockReturnValue({ countErrors: 0, countWarnings: 1 })
 
     require('../bin/npq-hero.js')
-    await new Promise(process.nextTick)
+    await new Promise(setImmediate)
 
     expect(isCodingAgentEnvironment).toHaveBeenCalledTimes(1)
     expect(CliParser.parseArgsMinimal).toHaveBeenCalledWith({ codingAgentEnvironment: true })
-    expect(runJsonCli).toHaveBeenCalledWith(cliArgs, {
-      output: expect.objectContaining({ write: expect.any(Function) })
-    })
-    expect(packageManager.process).not.toHaveBeenCalled()
+    expect(RegistryConfig.load).toHaveBeenCalledWith({ argv: [] })
+    expect(RegistryClient).toHaveBeenCalled()
+    expect(Marshall).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pkgs: ['express@latest'],
+        registryClient: expect.any(Object)
+      })
+    )
+    expect(reportResults).toHaveBeenCalled()
+    expect(packageManager.process).toHaveBeenCalled()
+    expect(runJsonCli).not.toHaveBeenCalled()
     expect(Spinner).not.toHaveBeenCalled()
-    expect(Marshall).not.toHaveBeenCalled()
-    expect(reportResults).not.toHaveBeenCalled()
     expect(cliPrompt.prompt).not.toHaveBeenCalled()
     expect(cliPrompt.autoContinue).not.toHaveBeenCalled()
-    expect(RegistryConfig.load).not.toHaveBeenCalled()
-    expect(RegistryClient).not.toHaveBeenCalled()
   })
 
   test('keeps an agent non-install command in the human passthrough pipeline', async () => {

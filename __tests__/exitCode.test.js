@@ -67,7 +67,8 @@ const mockNpqCliArgs = {
   plain: false,
   json: false,
   disableAutoContinue: false,
-  installSubcommandExplicit: true
+  installSubcommandExplicit: true,
+  allowNonInteractiveInstall: false
 }
 
 jest.mock('../lib/cli', () => ({
@@ -179,6 +180,76 @@ describe('npq exit code propagation', () => {
     await flushPromises()
 
     expect(process.exitCode).toBe(0)
+  })
+
+  test('exits with code 1 for non-TTY warning findings without invoking package manager', async () => {
+    jest.resetModules()
+    jest.clearAllMocks()
+    mockProcessExit.mockClear()
+    process.exitCode = originalExitCode
+
+    const { CliParser } = require('../lib/cli')
+    CliParser.parseArgsFull.mockImplementation(() => ({
+      packages: ['express'],
+      packageManager: 'npm',
+      dryRun: false,
+      plain: true,
+      json: false,
+      disableAutoContinue: false,
+      allowNonInteractiveInstall: false,
+      installSubcommandExplicit: true
+    }))
+
+    const { reportResults } = require('../lib/helpers/reportResults')
+    reportResults.mockReturnValue({
+      countErrors: 0,
+      countWarnings: 1,
+      resultsForPlainTextPrint: '',
+      summaryForPlainTextPrint: ''
+    })
+    const pkgMgr = require('../lib/packageManager')
+
+    require('../bin/npq.js')
+    await flushPromises()
+
+    expect(CliParser.exit).toHaveBeenCalledWith(expect.objectContaining({ errorCode: 1 }))
+    expect(pkgMgr.process).not.toHaveBeenCalled()
+  })
+
+  test('uses package manager exit code for opted-in non-TTY warning findings', async () => {
+    jest.resetModules()
+    jest.clearAllMocks()
+    mockProcessExit.mockClear()
+    process.exitCode = originalExitCode
+    mockPkgMgrProcessResolvedValue = 7
+
+    const { CliParser } = require('../lib/cli')
+    CliParser.parseArgsFull.mockImplementation(() => ({
+      packages: ['express'],
+      packageManager: 'npm',
+      dryRun: false,
+      plain: true,
+      json: false,
+      disableAutoContinue: false,
+      allowNonInteractiveInstall: true,
+      installSubcommandExplicit: true
+    }))
+
+    const { reportResults } = require('../lib/helpers/reportResults')
+    reportResults.mockReturnValue({
+      countErrors: 0,
+      countWarnings: 1,
+      resultsForPlainTextPrint: '',
+      summaryForPlainTextPrint: ''
+    })
+    const pkgMgr = require('../lib/packageManager')
+
+    require('../bin/npq.js')
+    await flushPromises()
+
+    expect(CliParser.exit).not.toHaveBeenCalled()
+    expect(pkgMgr.process).toHaveBeenCalledWith('npm')
+    expect(process.exitCode).toBe(7)
   })
 
   test('does not invoke package manager when install subcommand is not explicit', async () => {
