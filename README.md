@@ -31,7 +31,7 @@ Media coverage about npq:
 
 ## About
 
-Once npq is installed, you can safely* install packages:
+Once npq is installed, you can safely\* install packages:
 
 ```bash
 npq install express
@@ -39,12 +39,12 @@ npq install express
 
 `npq` will perform the following steps to sanity check that the package is safe by employing syntactic heuristics and querying a CVE database:
 
-* Consult the [snyk.io database of publicly disclosed vulnerabilities](https://snyk.io/vuln) to check if a security vulnerability exists for this package and its version.
-* Package age on npm
-* Package download count as a popularity metric
-* Package has a README file
-* Package has a LICENSE file
-* Package has pre/post install scripts
+- Consult the [snyk.io database of publicly disclosed vulnerabilities](https://snyk.io/vuln) to check if a security vulnerability exists for this package and its version.
+- Package age on npm
+- Package download count as a popularity metric
+- Package has a README file
+- Package has a LICENSE file
+- Package has pre/post install scripts
 
 **IMPORTANT**: npq by default uses an auto-continue mode when warnings are detected (no errors), waiting 15 seconds before proceeding with the installation. You can disable this behavior via the `--disable-auto-continue` CLI flag or the `NPQ_DISABLE_AUTO_CONTINUE=true` environment variable to enforce a strict review and security hardened installs. See [the auto-continue documentation](docs/feature/auto-continue.md) for more details.
 
@@ -62,7 +62,7 @@ When npq completes its signal checks it hands over the actual package install jo
 npm install -g npq
 ```
 
-*Note: we recommend installing with `npm` rather than `yarn`. That way, `npq` can automatically install shell aliases for you.*
+_Note: we recommend installing with `npm` rather than `yarn`. That way, `npq` can automatically install shell aliases for you._
 
 You can also install `npq` via [Homebrew](https://brew.sh) on macOS or Linux:
 
@@ -114,7 +114,7 @@ alias yarn="NPQ_PKG_MGR=yarn npq-hero"
 NPQ_PKG_MGR=yarn yarn run npq-hero
 ```
 
-or 
+or
 
 ```bash
 NPQ_PKG_MGR=yarn yarn exec npq-hero
@@ -137,23 +137,23 @@ Note: `npq` by default will offload all commands and their arguments to the `npm
 
 ## Marshalls
 
-| Marshall Name | Description | Notes
-| --- | --- | ---
-| age | Will show a warning for a package if its age on npm is less than 22 days | Checks a package creation date, not a specific version
-| author | Validates the resolved version’s publisher (`_npmUser`), flags a **new** maintainer on the package (first publish by that email within 21 days), **dormant maintainer** gaps (warning if over ~6 months since their last publish on that package, error if over ~9 months), and very **recent** publishes | See [docs/feature/author-marshall.md](docs/feature/author-marshall.md)
-| downloads | Will show a warning for a package if its download count in the last month is less than 20 | Reports `not evaluated` for custom-registry packages instead of querying the public npm downloads service
-| readme | Will show a warning if a package has no README or it has been detected as a security placeholder package by npm staff
-| repo | Will show a warning if a package has been found without a valid and working repository URL | Checks the latest version for a repository URL
-| scripts | Will show a warning if a package has a pre/post install script which could potentially be malicious
-| snyk | Will show a warning if a package has been found with vulnerabilities in Snyk's database | For Snyk to work you need to either have the `snyk` npm package installed with a valid API token, or make the token available in the `SNYK_TOKEN` environment variable, and npq will use it
-| license | Will show a warning if a package has been found without a license field | Checks the latest version for a license
-| expired domains | Normalizes and checks complete maintainer email hosts, then corroborates a simple two-label DNS failure through authoritative RDAP before warning | Multipart and otherwise inconclusive results are reported as not evaluated; see [expired-domain marshall documentation](docs/feature/expired-domains.md)
-| signatures | Will compare the package's signature as it shows on the registry's packument with signing keys published by the selected registry | Reports `not evaluated` if the selected registry does not expose signing keys
-| provenance | Will verify the package's attestations of provenance metadata for the published package, and **error** on [provenance regression](docs/feature/provenance.md) (an older semver had registry provenance metadata but the version you install does not) | Reports `not evaluated` if the selected registry does not expose signing keys or attestations
-| version-maturity | Will show an error if the specific version being installed was published less than 7 days ago | Suggests the highest older semver outside npq's 30-day version-recency window when one is available
-| newBin | Will show a warning if the package version being installed introduces a new command-line binary (via the `bin` field in `package.json`) that was not present in its previous version. | Helps identify potentially unexpected new executables being added to your `node_modules/.bin/` directory.
-| typosquatting | Will show a warning if the package name is similar to a popular package name, which could indicate a potential typosquatting attack. | Helps identify packages that may be trying to trick users into installing them by mimicking popular package names.
-| deprecation | Will show a warning if the package version is deprecated on npm or if its GitHub repository has been archived. | Helps identify packages that are no longer maintained or recommended for use. Set `GITHUB_TOKEN` environment variable for higher GitHub API rate limits.
+| Marshall Name    | Description                                                                                                                                                                                                                                                                                               | Notes                                                                                                                                                                                       |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| age              | Will show a warning for a package if its age on npm is less than 22 days                                                                                                                                                                                                                                  | Checks a package creation date, not a specific version                                                                                                                                      |
+| author           | Validates the resolved version’s publisher (`_npmUser`), flags a **new** maintainer on the package (first publish by that email within 21 days), **dormant maintainer** gaps (warning if over ~6 months since their last publish on that package, error if over ~9 months), and very **recent** publishes | See [docs/feature/author-marshall.md](docs/feature/author-marshall.md)                                                                                                                      |
+| downloads        | Will show a warning for a package if its download count in the last month is less than 20                                                                                                                                                                                                                 | Reports `not evaluated` for custom-registry packages instead of querying the public npm downloads service                                                                                   |
+| readme           | Will show a warning if a package has no README or it has been detected as a security placeholder package by npm staff                                                                                                                                                                                     |
+| repo             | Will show a warning if a package has been found without a valid and working repository URL                                                                                                                                                                                                                | Checks the latest version for a repository URL                                                                                                                                              |
+| scripts          | Will show a warning if a package has a pre/post install script which could potentially be malicious                                                                                                                                                                                                       |
+| snyk             | Will show a warning if a package has been found with vulnerabilities in Snyk's database                                                                                                                                                                                                                   | For Snyk to work you need to either have the `snyk` npm package installed with a valid API token, or make the token available in the `SNYK_TOKEN` environment variable, and npq will use it |
+| license          | Will show a warning if a package has been found without a license field                                                                                                                                                                                                                                   | Checks the latest version for a license                                                                                                                                                     |
+| expired domains  | Normalizes and checks complete maintainer email hosts, then corroborates a simple two-label DNS failure through authoritative RDAP before warning                                                                                                                                                         | Multipart and otherwise inconclusive results are reported as not evaluated; see [expired-domain marshall documentation](docs/feature/expired-domains.md)                                    |
+| signatures       | Will compare the package's signature as it shows on the registry's packument with signing keys published by the selected registry                                                                                                                                                                         | Reports `not evaluated` if the selected registry does not expose signing keys                                                                                                               |
+| provenance       | Will verify the package's attestations of provenance metadata for the published package, and **error** on [provenance regression](docs/feature/provenance.md) (an older semver had registry provenance metadata but the version you install does not)                                                     | Reports `not evaluated` if the selected registry does not expose signing keys or attestations                                                                                               |
+| version-maturity | Will show an error if the specific version being installed was published less than 7 days ago                                                                                                                                                                                                             | Suggests the highest older semver outside npq's 30-day version-recency window when one is available                                                                                         |
+| newBin           | Will show a warning if the package version being installed introduces a new command-line binary (via the `bin` field in `package.json`) that was not present in its previous version.                                                                                                                     | Helps identify potentially unexpected new executables being added to your `node_modules/.bin/` directory.                                                                                   |
+| typosquatting    | Will show a warning if the package name is similar to a popular package name, which could indicate a potential typosquatting attack.                                                                                                                                                                      | Helps identify packages that may be trying to trick users into installing them by mimicking popular package names.                                                                          |
+| deprecation      | Will show a warning if the package version is deprecated on npm or if its GitHub repository has been archived.                                                                                                                                                                                            | Helps identify packages that are no longer maintained or recommended for use. Set `GITHUB_TOKEN` environment variable for higher GitHub API rate limits.                                    |
 
 ### Older release suggestions
 
@@ -186,13 +186,12 @@ Example, to disable the Snyk vulnerability marshall:
 MARSHALL_DISABLE_SNYK=1 npq install express
 ```
 
-
 #### Available Marshall Environment Variables
 
 Here are all the available environment variable names for disabling specific marshalls:
 
 | Marshall Name    | Environment Variable                          | Description                                         |
-|------------------|-----------------------------------------------|-----------------------------------------------------|
+| ---------------- | --------------------------------------------- | --------------------------------------------------- |
 | age              | `MARSHALL_DISABLE_AGE`                        | Disable package age checks                          |
 | author           | `MARSHALL_DISABLE_AUTHOR`                     | Disable package author verification                 |
 | downloads        | `MARSHALL_DISABLE_DOWNLOADS`                  | Disable download count checks                       |
@@ -232,16 +231,43 @@ Use `--json` for a non-interactive, audit-only result suitable for CI:
 npq install express --json
 ```
 
-When npq detects a supported coding-agent environment, it automatically uses
-the same audit-only JSON mode. This applies to `npq` and to install commands
-intercepted by `npq-hero`; non-install `npq-hero` commands still pass through to
-the configured package manager. See the [full coding-agent detection signal
+When npq detects a supported coding-agent environment, non-install audits still
+use the same audit-only JSON mode automatically. Explicit `npq install ...` and
+recognized `npq-hero install ...` commands keep the normal audit/install
+pipeline instead, using coding-agent detection as an authorization for
+warning-only installs. See the [full coding-agent detection signal
 table](docs/feature/json-output.md#coding-agent-detection) for the supported
 signals and contextual matchers.
 
 JSON mode never invokes the package manager. It exits `0` for a clean audit,
 `1` for findings, and `2` when the audit cannot complete. See
 [JSON audit output](docs/feature/json-output.md).
+
+### Non-interactive installs
+
+npq never uses the warning countdown when standard input is not interactive. If
+an audit reports warnings or errors in CI, npq exits nonzero and does not
+invoke the package manager.
+
+For ordinary automation that intentionally wants warning-only installs to
+continue, opt in explicitly:
+
+```sh
+npq install express --allow-non-interactive-install
+NPQ_ALLOW_NON_INTERACTIVE_INSTALL=true npq install express
+```
+
+When you use `npq-hero` or an aliased package manager, the ordinary opt-in is
+environment-only because the wrapper does not expose its own CLI flags:
+
+```sh
+NPQ_ALLOW_NON_INTERACTIVE_INSTALL=true npm install express
+```
+
+Detected coding-agent environments are treated as an explicit opt-in for
+`npq install express` and `npq-hero install express`, so agent-driven
+package-manager installs continue without the extra flag. Explicit `--json`
+remains audit-only and never invokes the package manager.
 
 ### Disable auto-continue countdown
 
@@ -290,25 +316,25 @@ When auto-continue is disabled, npq will always prompt for explicit confirmation
 
 1. **What is the difference between `npq` and `npq-hero`?**
 
-* `npq` is meant to be its own stand-alone CLI so it has command line flags like `--dry-run` and others (see `npq --help`). However, when you want to alias the `npm` CLI to NPQ you should use `npq-hero` as the executable of the alias to npm (e.g: `alias npm=npq`), which means `npq-hero` can't have its own command-line flags because they could conflict with the `npm` executable.
+- `npq` is meant to be its own stand-alone CLI so it has command line flags like `--dry-run` and others (see `npq --help`). However, when you want to alias the `npm` CLI to NPQ you should use `npq-hero` as the executable of the alias to npm (e.g: `alias npm=npq`), which means `npq-hero` can't have its own command-line flags because they could conflict with the `npm` executable.
 
 2. **Can I use NPQ without having npm or yarn?**
 
-* NPQ will audit a package for possible security issues, but it isn't a replacement for npm or yarn. When you choose to continue installing the package, it will offload the installation process to your choice of either npm or yarn.
+- NPQ will audit a package for possible security issues, but it isn't a replacement for npm or yarn. When you choose to continue installing the package, it will offload the installation process to your choice of either npm or yarn.
 
 3. **How is NPQ different from npm audit?**
 
-* `npm install` will install a module even if it has vulnerabilities; NPQ will display the issues detected, and prompt the user for confirmation on whether to proceed installing it.
-* NPQ will run synthetic checks, called [marshalls](https://github.com/lirantal/npq#marshalls), on the characteristics of a module, such as whether the module you are going to install has a `pre-install` script which can be potentially harmful for your system and prompt you whether to install it. Whereas `npm audit` will not perform any such checks, and only consults a vulnerability database for known security issues.
-* `npm audit` is closer in functionality to what Snyk does, rather than what NPQ does.
+- `npm install` will install a module even if it has vulnerabilities; NPQ will display the issues detected, and prompt the user for confirmation on whether to proceed installing it.
+- NPQ will run synthetic checks, called [marshalls](https://github.com/lirantal/npq#marshalls), on the characteristics of a module, such as whether the module you are going to install has a `pre-install` script which can be potentially harmful for your system and prompt you whether to install it. Whereas `npm audit` will not perform any such checks, and only consults a vulnerability database for known security issues.
+- `npm audit` is closer in functionality to what Snyk does, rather than what NPQ does.
 
 4. **Do I require a Snyk API key in order to use NPQ?**
 
-* It's not required. If NPQ is unable to detect a Snyk API key for the user running NPQ, then it will skip the database vulnerabilities check. We do, however, greatly encourage you to use Snyk, and connect it with NPQ for broader security.
+- It's not required. If NPQ is unable to detect a Snyk API key for the user running NPQ, then it will skip the database vulnerabilities check. We do, however, greatly encourage you to use Snyk, and connect it with NPQ for broader security.
 
 5. **Why is NPQ connecting to external domains like gmail.com or personal websites during installation?**
 
-* This is not telemetry. NPQ does not collect any usage data. When auditing a package, NPQ fetches the maintainers/authors of the dependency and checks their email addresses to verify they are valid and not associated with expired domains. Expired domains can be abused by attackers for account takeover (ATO) attacks to compromise packages with malicious versions. Hence, NPQ may make DNS requests to domains like `gmail.com` or personal domains found in maintainer emails. After a simple two-label domain returns NXDOMAIN and its top-level domain resolves, NPQ may fetch the official IANA RDAP bootstrap and query the selected authoritative HTTPS RDAP service, sending only the normalized two-label domain. Additionally, NPQ makes HTTP requests to `osv.dev` to fetch security vulnerability data (or uses Snyk if configured, as a prioritized option).
+- This is not telemetry. NPQ does not collect any usage data. When auditing a package, NPQ fetches the maintainers/authors of the dependency and checks their email addresses to verify they are valid and not associated with expired domains. Expired domains can be abused by attackers for account takeover (ATO) attacks to compromise packages with malicious versions. Hence, NPQ may make DNS requests to domains like `gmail.com` or personal domains found in maintainer emails. After a simple two-label domain returns NXDOMAIN and its top-level domain resolves, NPQ may fetch the official IANA RDAP bootstrap and query the selected authoritative HTTPS RDAP service, sending only the normalized two-label domain. Additionally, NPQ makes HTTP requests to `osv.dev` to fetch security vulnerability data (or uses Snyk if configured, as a prioritized option).
 
 ## Documentation
 

@@ -57,7 +57,7 @@ Packages with issues found:
  ┌─
  │ >  express@latest
  │
- │ ⚠ Supply Chain Security · Unable to verify provenance: the package was published without any attestations 
+ │ ⚠ Supply Chain Security · Unable to verify provenance: the package was published without any attestations
  └─
 
 Summary:
@@ -83,12 +83,12 @@ The countdown displays the remaining seconds, updating in real-time by using bac
 
 ### During Countdown
 
-| Action | Behavior | Exit Code |
-|--------|----------|-----------|
-| **Wait** | Installation proceeds automatically after countdown | `0` (success) |
-| **Press 'y' or 'Y'** | Skips countdown and proceeds immediately with installation | `0` (success) |
-| **Ctrl+C** | Aborts installation immediately | `1` (user abort) |
-| **Other Keys** | Ignored (no visual output) | - |
+| Action               | Behavior                                                   | Exit Code        |
+| -------------------- | ---------------------------------------------------------- | ---------------- |
+| **Wait**             | Installation proceeds automatically after countdown        | `0` (success)    |
+| **Press 'y' or 'Y'** | Skips countdown and proceeds immediately with installation | `0` (success)    |
+| **Ctrl+C**           | Aborts installation immediately                            | `1` (user abort) |
+| **Other Keys**       | Ignored (no visual output)                                 | -                |
 
 ### Graceful Abortion
 
@@ -108,25 +108,32 @@ autoContinue({ name, message, timeInSeconds = 5 })
 ```
 
 **Parameters:**
+
 - `name`: Property name for the returned result object
 - `message`: Text displayed before the countdown
 - `timeInSeconds`: Duration of countdown (default: 5, npq uses 15)
 
 **Returns:**
+
 - `Promise<Object>`: Resolves to `{ [name]: true }` on completion
 - **Throws**: `USER_ABORT` error if user presses Ctrl+C
 
 ### TTY Detection and Behavior
 
 #### Interactive Terminals (TTY)
+
 - **Stdin Control**: Sets raw mode to capture individual keypresses
 - **Keypress Filtering**: Only responds to Ctrl+C (ASCII 3), ignores others
 - **Clean Restoration**: Restores normal stdin behavior after completion
 
 #### Non-Interactive Environments
-- **Fallback Mode**: Standard countdown without stdin manipulation
-- **Test Compatibility**: Works in CI/CD and testing environments
-- **Same Visual Output**: Maintains consistent user experience
+
+The countdown is available only when stdin and stdout are interactive TTYs.
+Outside a TTY, warning-only findings fail closed and the package manager is not
+invoked unless `--allow-non-interactive-install` or
+`NPQ_ALLOW_NON_INTERACTIVE_INSTALL=true` is set. A detected coding-agent
+environment is also authorized for explicit install commands. Error findings
+always remain fail-closed in non-interactive execution.
 
 ### Error Handling
 
@@ -152,7 +159,7 @@ Currently, the auto-continue feature uses hardcoded values:
 ### In npq Workflow
 
 1. **Package Analysis**: Security marshalls check package safety
-2. **Result Evaluation**: 
+2. **Result Evaluation**:
    - **Errors > 0**: Manual prompt ("Continue install?")
    - **Warnings > 0, Errors = 0**: Auto-continue countdown
    - **No Issues**: Immediate installation
@@ -171,6 +178,7 @@ Currently, the auto-continue feature uses hardcoded values:
 **Enhancement**: Users can now press 'y' or 'Y' during the countdown to immediately proceed with installation without waiting for the timer to complete.
 
 **Benefits**:
+
 - Faster workflow for users who want to proceed immediately
 - Clear instruction displayed above countdown
 - Maintains all existing functionality (Ctrl+C abort, automatic completion)
@@ -179,7 +187,8 @@ Currently, the auto-continue feature uses hardcoded values:
 
 **Problem**: Previously, typing during countdown would display characters and corrupt the countdown display (e.g., `11311187^C%`).
 
-**Solution**: 
+**Solution**:
+
 - Raw mode stdin capture prevents character echo
 - Keypress filtering ignores non-control characters
 - Clean countdown display maintained
@@ -189,6 +198,7 @@ Currently, the auto-continue feature uses hardcoded values:
 **Problem**: Ctrl+C during countdown caused TypeError crashes.
 
 **Solution**:
+
 - Proper signal handling with graceful error throwing
 - Consistent error codes and messaging
 - Clean terminal state restoration

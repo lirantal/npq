@@ -35,29 +35,29 @@ A non-empty direct signal selects the exact existing JSON pipeline. Contextual
 matchers select JSON only when their specific environment patterns match;
 otherwise, npq remains in its existing human-readable mode.
 
-| Environment variable | Agent or convention |
-| --- | --- |
-| `CLAUDECODE` | Claude Code |
-| `CLAUDE_CODE_CHILD_SESSION` | Claude Code direct tool or hook child |
-| `CURSOR_AGENT` | Cursor |
-| `PI_CODING_AGENT` | Pi |
-| `CODEX_SANDBOX` | Codex |
-| `CODEX_THREAD_ID` | Codex |
-| `GEMINI_CLI` | Gemini CLI |
-| `WINDSURF_AGENT` | Windsurf |
-| `CODEIUM_AGENT` | Codeium |
-| `AGENT` | Generic agent convention |
-| `AI_AGENT` | Emerging generic AI-agent convention |
-| `CLAUDE_CODE` | Claude Code |
-| `REPL_ID` | Replit runtime; ordinary Replit runtimes can also select JSON mode |
-| `OPENCODE` | OpenCode |
-| `AUGMENT_AGENT` | Auggie/Augment agent |
-| `GOOSE_PROVIDER` | Goose |
-| `JUNIE_DATA` | Junie |
-| `JUNIE_SHIM_PATH` | Junie |
-| `PATH` | Pi when it contains `.pi/agent` with `/` or `\\` separators |
-| `EDITOR` | Devin when it contains `devin`, case-insensitively |
-| `TERM_PROGRAM` | Kiro when it contains `kiro`, case-insensitively, and stdout is not a TTY |
+| Environment variable        | Agent or convention                                                       |
+| --------------------------- | ------------------------------------------------------------------------- |
+| `CLAUDECODE`                | Claude Code                                                               |
+| `CLAUDE_CODE_CHILD_SESSION` | Claude Code direct tool or hook child                                     |
+| `CURSOR_AGENT`              | Cursor                                                                    |
+| `PI_CODING_AGENT`           | Pi                                                                        |
+| `CODEX_SANDBOX`             | Codex                                                                     |
+| `CODEX_THREAD_ID`           | Codex                                                                     |
+| `GEMINI_CLI`                | Gemini CLI                                                                |
+| `WINDSURF_AGENT`            | Windsurf                                                                  |
+| `CODEIUM_AGENT`             | Codeium                                                                   |
+| `AGENT`                     | Generic agent convention                                                  |
+| `AI_AGENT`                  | Emerging generic AI-agent convention                                      |
+| `CLAUDE_CODE`               | Claude Code                                                               |
+| `REPL_ID`                   | Replit runtime; ordinary Replit runtimes can also select JSON mode        |
+| `OPENCODE`                  | OpenCode                                                                  |
+| `AUGMENT_AGENT`             | Auggie/Augment agent                                                      |
+| `GOOSE_PROVIDER`            | Goose                                                                     |
+| `JUNIE_DATA`                | Junie                                                                     |
+| `JUNIE_SHIM_PATH`           | Junie                                                                     |
+| `PATH`                      | Pi when it contains `.pi/agent` with `/` or `\\` separators               |
+| `EDITOR`                    | Devin when it contains `devin`, case-insensitively                        |
+| `TERM_PROGRAM`              | Kiro when it contains `kiro`, case-insensitively, and stdout is not a TTY |
 
 Direct signals select JSON mode when their values are non-empty strings. The
 contextual matchers select JSON mode when their stated environment patterns
@@ -73,11 +73,13 @@ AGENT=goose npq express
 AI_AGENT=true npq-hero install express
 ```
 
-These commands are audit-only: they do not prompt, auto-continue, or invoke a
-package manager. Under a detected agent, `npq-hero` selects JSON mode only for
-recognized install commands; non-install commands continue to pass through to
-the configured package manager. `npq --help` and `npq --version` remain text
-early exits. The version 1 schema does not expose the detected agent identity.
+Explicit `--json` is always audit-only: these commands do not prompt,
+auto-continue, or invoke a package manager. For automatic coding-agent
+detection, non-install audits remain JSON/audit-only, while explicit
+`npq install express` and `npq-hero install express` commands use the normal
+audit/install pipeline and may pass through warning-only installs without a
+countdown. `npq --help` and `npq --version` remain text early exits. The
+version 1 schema does not expose the detected agent identity.
 
 `npq install express --dry-run --json` is also equivalent. `--dry-run` is
 accepted but redundant in JSON mode. `--plain`, `--packageManager`, `--pkgMgr`,
@@ -159,11 +161,11 @@ authentication material, request headers, and unsanitized URLs.
 
 ## Status and exit codes
 
-| Status | Exit code | Meaning |
-|---|---:|---|
-| `clean` | `0` | Audit completed with no findings and no failures. |
-| `findings` | `1` | Audit completed with one or more warning or error findings and no failures. |
-| `failed` | `2` | Audit could not complete reliably and reports operational failures. |
+| Status     | Exit code | Meaning                                                                     |
+| ---------- | --------: | --------------------------------------------------------------------------- |
+| `clean`    |       `0` | Audit completed with no findings and no failures.                           |
+| `findings` |       `1` | Audit completed with one or more warning or error findings and no failures. |
+| `failed`   |       `2` | Audit could not complete reliably and reports operational failures.         |
 
 On `SIGINT`, npq writes one complete `INTERRUPTED` report and waits for stdout
 to drain before exiting `2`. This guarantee also applies when stdout is a
@@ -183,14 +185,14 @@ exit "$status"
 
 ## Stable failure codes
 
-| Code | Meaning |
-|---|---|
-| `INVALID_INPUT` | A package or JSON-mode argument cannot be parsed. |
-| `PROJECT_MANIFEST_ERROR` | Project dependency discovery failed. |
-| `PACKAGE_LOOKUP_FAILED` | Required registry metadata could not be retrieved. |
-| `AUDIT_CHECK_FAILED` | A marshall threw instead of returning findings. |
-| `INTERRUPTED` | The audit received `SIGINT`. |
-| `INTERNAL_ERROR` | No more specific public code applies. |
+| Code                     | Meaning                                            |
+| ------------------------ | -------------------------------------------------- |
+| `INVALID_INPUT`          | A package or JSON-mode argument cannot be parsed.  |
+| `PROJECT_MANIFEST_ERROR` | Project dependency discovery failed.               |
+| `PACKAGE_LOOKUP_FAILED`  | Required registry metadata could not be retrieved. |
+| `AUDIT_CHECK_FAILED`     | A marshall threw instead of returning findings.    |
+| `INTERRUPTED`            | The audit received `SIGINT`.                       |
+| `INTERNAL_ERROR`         | No more specific public code applies.              |
 
 ## Schema and compatibility
 

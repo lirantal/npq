@@ -37,19 +37,24 @@ This is what makes npq safe to use as a permanent alias -- non-install commands 
 
 ### Coding-agent install audits
 
-When npq detects a supported coding-agent environment, `npq-hero` uses the
-audit-only JSON pipeline for recognized install commands only:
+When npq detects a supported coding-agent environment, recognized
+`npq-hero` install commands keep the normal audit/report/install pipeline. The
+detected agent acts as an explicit authorization for warning-only,
+non-interactive installs, while errors still fail closed:
 
-| Invocation under a detected agent | Behavior |
-| --- | --- |
-| `npq-hero install express` | Emit the JSON audit and do not install. |
-| `npq-hero install` | Audit current project dependencies as JSON and do not install. |
-| `npq-hero test` | Pass through to the package manager. |
-| `npq-hero run build` | Pass through to the package manager. |
+| Invocation under a detected agent | Behavior                                                                                                                                                             |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npq-hero install express`        | Run the normal audit/report/install pipeline; warning-only findings install directly with no countdown, error findings fail closed.                                  |
+| `npq-hero install`                | Run the normal audit/report/install pipeline for current project dependencies; warning-only findings install directly with no countdown, error findings fail closed. |
+| `npq-hero test`                   | Pass through to the package manager.                                                                                                                                 |
+| `npq-hero run build`              | Pass through to the package manager.                                                                                                                                 |
 
 `npq-hero` still has no flags of its own and does not expose a public `--json`
-option. Its non-install commands continue to preserve package-manager arguments
-and exit codes.
+option. Ordinary non-interactive warning-only installs can therefore opt in
+only through `NPQ_ALLOW_NON_INTERACTIVE_INSTALL=true`; there is no
+`npq-hero`-specific CLI flag. Its non-install commands continue to preserve
+package-manager arguments and exit codes. The coding-agent signal list and
+matching rules remain the same as the [JSON audit output reference](./json-output.md#coding-agent-detection).
 
 ### Unsupported Node version fallback
 
@@ -67,6 +72,7 @@ alias yarn="NPQ_PKG_MGR=yarn npq-hero"
 ```
 
 The postinstall script:
+
 - Detects your shell from the `$SHELL` environment variable
 - Checks if aliases are already present to avoid duplicates
 - Only runs when installing via npm (not yarn, due to stdin limitations)
@@ -136,21 +142,22 @@ A critical requirement for the alias feature is that npq must preserve the exit 
 
 ### Examples of exit code behavior
 
-| Scenario | Exit Code |
-|----------|-----------|
-| `npm install express` succeeds | `0` |
-| `npm audit` finds vulnerabilities | `1` |
-| `npm run build` fails | non-zero (whatever the script returns) |
-| User aborts at the npq prompt (Ctrl+C) | `1` |
-| npq encounters an internal error | `-1` |
-| Unsupported Node version (with `npq`) | `-1` |
+| Scenario                               | Exit Code                              |
+| -------------------------------------- | -------------------------------------- |
+| `npm install express` succeeds         | `0`                                    |
+| `npm audit` finds vulnerabilities      | `1`                                    |
+| `npm run build` fails                  | non-zero (whatever the script returns) |
+| User aborts at the npq prompt (Ctrl+C) | `1`                                    |
+| npq encounters an internal error       | `-1`                                   |
+| Unsupported Node version (with `npq`)  | `-1`                                   |
 
 ## Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `NPQ_PKG_MGR` | Package manager to delegate to | `npm` |
-| `NPQ_DISABLE_AUTO_CONTINUE` | Set to `true` to always prompt instead of auto-continuing on warnings | `false` |
+| Variable                            | Description                                                                        | Default |
+| ----------------------------------- | ---------------------------------------------------------------------------------- | ------- |
+| `NPQ_PKG_MGR`                       | Package manager to delegate to                                                     | `npm`   |
+| `NPQ_DISABLE_AUTO_CONTINUE`         | Set to `true` to always prompt instead of auto-continuing on warnings              | `false` |
+| `NPQ_ALLOW_NON_INTERACTIVE_INSTALL` | Set to `true` to allow warning-only installs without a TTY for ordinary automation | `false` |
 
 ## Command Detection
 
@@ -212,13 +219,13 @@ npx jest __tests__/scripts.test.js
 
 ## Key Source Files
 
-| File | Purpose |
-|------|---------|
-| `bin/npq-hero.js` | Alias-compatible entry point, no own CLI flags |
-| `bin/npq.js` | Standalone CLI entry point with full flag support |
-| `lib/packageManager.js` | Spawns the package manager, returns exit code promise |
-| `lib/cli.js` | Argument parsing, install command detection |
-| `lib/helpers/cliSupportHandler.js` | Node version check, sync passthrough fallback |
-| `scripts/postinstall.js` | Automatic alias setup on `npm install -g npq` |
-| `scripts/preuninstall.js` | Alias removal on uninstall |
-| `scripts/scriptHelpers.js` | Shell detection, alias strings, profile file helpers |
+| File                               | Purpose                                               |
+| ---------------------------------- | ----------------------------------------------------- |
+| `bin/npq-hero.js`                  | Alias-compatible entry point, no own CLI flags        |
+| `bin/npq.js`                       | Standalone CLI entry point with full flag support     |
+| `lib/packageManager.js`            | Spawns the package manager, returns exit code promise |
+| `lib/cli.js`                       | Argument parsing, install command detection           |
+| `lib/helpers/cliSupportHandler.js` | Node version check, sync passthrough fallback         |
+| `scripts/postinstall.js`           | Automatic alias setup on `npm install -g npq`         |
+| `scripts/preuninstall.js`          | Alias removal on uninstall                            |
+| `scripts/scriptHelpers.js`         | Shell detection, alias strings, profile file helpers  |
