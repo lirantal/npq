@@ -20,7 +20,7 @@ When `npq-hero` detects an install command (`install`, `i`, `add`, and common mi
 1. Extracts the package names from the arguments
 2. Runs all enabled security marshalls against those packages
 3. Reports any errors or warnings found
-4. Prompts the user for confirmation (if errors) or auto-continues after a countdown (if only warnings)
+4. In interactive terminals, prompts for confirmation on errors or auto-continues after a warning countdown; outside a TTY, findings fail closed unless explicitly authorized
 5. Spawns the real package manager with the original arguments
 6. Preserves the package manager's exit code as the process exit code
 
@@ -44,8 +44,8 @@ non-interactive installs, while errors still fail closed:
 
 | Invocation under a detected agent | Behavior                                                                                                                                                             |
 | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npq-hero install express`        | Run the normal audit/report/install pipeline; warning-only findings install directly with no countdown, error findings fail closed.                                  |
-| `npq-hero install`                | Run the normal audit/report/install pipeline for current project dependencies; warning-only findings install directly with no countdown, error findings fail closed. |
+| `npq-hero install express`        | Run the normal audit/report/install pipeline; warning-only findings install directly without a countdown in non-interactive execution; interactive TTYs retain the normal countdown, while error findings fail closed.                                  |
+| `npq-hero install`                | Run the normal audit/report/install pipeline for current project dependencies; warning-only findings install directly without a countdown in non-interactive execution; interactive TTYs retain the normal countdown, while error findings fail closed. |
 | `npq-hero test`                   | Pass through to the package manager.                                                                                                                                 |
 | `npq-hero run build`              | Pass through to the package manager.                                                                                                                                 |
 

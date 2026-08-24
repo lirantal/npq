@@ -81,8 +81,7 @@ Explicit `--json` is always audit-only: these commands do not prompt,
 auto-continue, or invoke a package manager. For automatic coding-agent
 detection, non-install audits remain JSON/audit-only, while explicit
 `npq install express` and `npq-hero install express` commands continue through
-the normal audit/install pipeline and may pass through warning-only installs
-without a countdown. `npq --help` and `npq --version` remain text early exits.
+the normal audit/install pipeline and may pass through warning-only installs without a countdown in non-interactive execution; interactive TTYs retain the normal countdown. `npq --help` and `npq --version` remain text early exits.
 The version 1 schema does not expose the detected agent identity.
 
 `npq install express --dry-run --json` is also equivalent. `--dry-run` is
