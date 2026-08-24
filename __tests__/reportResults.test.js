@@ -2,6 +2,7 @@
 
 // Mock environment variables for testing
 const originalEnv = process.env
+const originalStdinIsTTY = process.stdin.isTTY
 const originalIsTTY = process.stdout.isTTY
 
 beforeEach(() => {
@@ -30,6 +31,7 @@ beforeEach(() => {
 
 afterEach(() => {
   process.env = originalEnv
+  process.stdin.isTTY = originalStdinIsTTY
   process.stdout.isTTY = originalIsTTY
 })
 
@@ -38,6 +40,7 @@ describe('cliSupportHandler', () => {
     test('should return false when CI environment variable is set', () => {
       process.env.CI = 'true'
       // Ensure TTY is set to true so we're testing CI detection specifically
+      process.stdin.isTTY = true
       process.stdout.isTTY = true
 
       const { isInteractiveTerminal } = require('../lib/helpers/cliSupportHandler')
@@ -48,6 +51,7 @@ describe('cliSupportHandler', () => {
     test('should return false when GITHUB_ACTIONS environment variable is set', () => {
       process.env.GITHUB_ACTIONS = 'true'
       // Ensure TTY is set to true so we're testing CI detection specifically
+      process.stdin.isTTY = true
       process.stdout.isTTY = true
 
       const { isInteractiveTerminal } = require('../lib/helpers/cliSupportHandler')
@@ -58,6 +62,7 @@ describe('cliSupportHandler', () => {
     test('should return false when GITLAB_CI environment variable is set', () => {
       process.env.GITLAB_CI = 'true'
       // Ensure TTY is set to true so we're testing CI detection specifically
+      process.stdin.isTTY = true
       process.stdout.isTTY = true
 
       const { isInteractiveTerminal } = require('../lib/helpers/cliSupportHandler')
@@ -68,6 +73,7 @@ describe('cliSupportHandler', () => {
     test('should return false when TRAVIS environment variable is set', () => {
       process.env.TRAVIS = 'true'
       // Ensure TTY is set to true so we're testing CI detection specifically
+      process.stdin.isTTY = true
       process.stdout.isTTY = true
 
       const { isInteractiveTerminal } = require('../lib/helpers/cliSupportHandler')
@@ -78,6 +84,7 @@ describe('cliSupportHandler', () => {
     test('should return false when CIRCLECI environment variable is set', () => {
       process.env.CIRCLECI = 'true'
       // Ensure TTY is set to true so we're testing CI detection specifically
+      process.stdin.isTTY = true
       process.stdout.isTTY = true
 
       const { isInteractiveTerminal } = require('../lib/helpers/cliSupportHandler')
@@ -90,6 +97,7 @@ describe('cliSupportHandler', () => {
       process.env.TRAVIS = 'true'
       process.env.CIRCLECI = 'true'
       // Ensure TTY is set to true so we're testing CI detection specifically
+      process.stdin.isTTY = true
       process.stdout.isTTY = true
 
       const { isInteractiveTerminal } = require('../lib/helpers/cliSupportHandler')
@@ -110,6 +118,7 @@ describe('cliSupportHandler', () => {
 
       // Mock process.stdout.isTTY to return true
       const originalIsTTY = process.stdout.isTTY
+      process.stdin.isTTY = true
       process.stdout.isTTY = true
 
       const { isInteractiveTerminal } = require('../lib/helpers/cliSupportHandler')
@@ -133,14 +142,41 @@ describe('cliSupportHandler', () => {
       delete process.env.DRONE
 
       // Mock process.stdout.isTTY to return false
-      const originalIsTTY = process.stdout.isTTY
+      const originalStdoutIsTTY = process.stdout.isTTY
+      const originalStdinIsTTY = process.stdin.isTTY
+      process.stdin.isTTY = true
       process.stdout.isTTY = false
 
       const { isInteractiveTerminal } = require('../lib/helpers/cliSupportHandler')
       const result = isInteractiveTerminal()
 
       // Restore original value
-      process.stdout.isTTY = originalIsTTY
+      process.stdout.isTTY = originalStdoutIsTTY
+      process.stdin.isTTY = originalStdinIsTTY
+
+      expect(result).toBe(false)
+    })
+
+    test('should return false when stdin is not TTY even without CI variables', () => {
+      delete process.env.CI
+      delete process.env.GITHUB_ACTIONS
+      delete process.env.GITLAB_CI
+      delete process.env.TRAVIS
+      delete process.env.CIRCLECI
+      delete process.env.JENKINS_URL
+      delete process.env.BUILDKITE
+      delete process.env.DRONE
+
+      const originalStdoutIsTTY = process.stdout.isTTY
+      const originalStdinIsTTY = process.stdin.isTTY
+      process.stdin.isTTY = false
+      process.stdout.isTTY = true
+
+      const { isInteractiveTerminal } = require('../lib/helpers/cliSupportHandler')
+      const result = isInteractiveTerminal()
+
+      process.stdout.isTTY = originalStdoutIsTTY
+      process.stdin.isTTY = originalStdinIsTTY
 
       expect(result).toBe(false)
     })
@@ -202,6 +238,7 @@ describe('cliSupportHandler', () => {
 
     test('should output styled error message in interactive terminal', () => {
       // Set up interactive terminal
+      process.stdin.isTTY = true
       process.stdout.isTTY = true
 
       const { noSupportError } = require('../lib/helpers/cliSupportHandler')
@@ -227,6 +264,7 @@ describe('cliSupportHandler', () => {
 
     test('should call process.exit when failFast is true', () => {
       const mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {})
+      process.stdin.isTTY = true
       process.stdout.isTTY = true
 
       const { noSupportError } = require('../lib/helpers/cliSupportHandler')
@@ -238,6 +276,7 @@ describe('cliSupportHandler', () => {
 
     test('should not call process.exit when failFast is false', () => {
       const mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {})
+      process.stdin.isTTY = true
       process.stdout.isTTY = true
 
       const { noSupportError } = require('../lib/helpers/cliSupportHandler')
@@ -415,6 +454,7 @@ describe('reportResults', () => {
   test('should set useRichFormatting to false in CI mode', () => {
     process.env.CI = 'true'
     // Ensure TTY is set to true so we're testing CI detection specifically
+    process.stdin.isTTY = true
     process.stdout.isTTY = true
 
     const { reportResults } = require('../lib/helpers/reportResults')
@@ -436,6 +476,7 @@ describe('reportResults', () => {
 
     // Mock process.stdout.isTTY
     const originalIsTTY = process.stdout.isTTY
+    process.stdin.isTTY = true
     process.stdout.isTTY = true
 
     const { reportResults } = require('../lib/helpers/reportResults')
@@ -450,6 +491,7 @@ describe('reportResults', () => {
   test('should include package names in plain text format', () => {
     process.env.CI = 'true'
     // Ensure TTY is set to true so we're testing CI detection specifically
+    process.stdin.isTTY = true
     process.stdout.isTTY = true
 
     const { reportResults } = require('../lib/helpers/reportResults')
@@ -462,6 +504,7 @@ describe('reportResults', () => {
   test('should include error and warning labels in plain text format', () => {
     process.env.CI = 'true'
     // Ensure TTY is set to true so we're testing CI detection specifically
+    process.stdin.isTTY = true
     process.stdout.isTTY = true
 
     const { reportResults } = require('../lib/helpers/reportResults')
@@ -646,6 +689,7 @@ describe('older release suggestions', () => {
     const originalGetWindowSize = process.stdout.getWindowSize
     const originalIsTTY = process.stdout.isTTY
     process.stdout.getWindowSize = () => [55]
+    process.stdin.isTTY = true
     process.stdout.isTTY = true
 
     const { reportResults } = require('../lib/helpers/reportResults')
@@ -689,6 +733,7 @@ describe('reportResults helper functions', () => {
       throw new Error('Terminal size detection failed')
     })
 
+    process.stdin.isTTY = true
     process.stdout.isTTY = true
 
     const testResults = {
@@ -723,6 +768,7 @@ describe('reportResults helper functions', () => {
     // Mock process.stdout.isTTY to true but don't define getWindowSize
     const originalGetWindowSize = process.stdout.getWindowSize
     delete process.stdout.getWindowSize
+    process.stdin.isTTY = true
     process.stdout.isTTY = true
 
     const testResults = {
@@ -759,6 +805,7 @@ describe('reportResults helper functions', () => {
     const mockGetWindowSize = jest.spyOn(process.stdout, 'getWindowSize')
     mockGetWindowSize.mockReturnValue([40])
 
+    process.stdin.isTTY = true
     process.stdout.isTTY = true
 
     const testResults = {
@@ -796,6 +843,7 @@ describe('reportResults helper functions', () => {
   })
 
   test('should handle text wrapping edge cases', () => {
+    process.stdin.isTTY = true
     process.stdout.isTTY = true
 
     const testResults = {
@@ -823,6 +871,7 @@ describe('reportResults helper functions', () => {
   })
 
   test('should handle malicious package detection edge cases', () => {
+    process.stdin.isTTY = true
     process.stdout.isTTY = true
 
     const testResults = {
@@ -846,6 +895,7 @@ describe('reportResults helper functions', () => {
   })
 
   test('should handle multiple error arrays with malicious package in later array', () => {
+    process.stdin.isTTY = true
     process.stdout.isTTY = true
 
     const testResults = {

@@ -1,6 +1,11 @@
 'use strict'
 
-const { prompt } = require('../lib/helpers/cliPrompt')
+jest.mock('node:timers/promises', () => ({
+  setTimeout: jest.fn(() => Promise.resolve())
+}))
+
+const { setTimeout: mockSetTimeout } = require('node:timers/promises')
+const { prompt, autoContinue } = require('../lib/helpers/cliPrompt')
 const readline = require('node:readline/promises')
 
 // Mock readline module
@@ -270,127 +275,154 @@ describe('cliPrompt', () => {
   })
 
   describe('autoContinue', () => {
-    const { autoContinue } = require('../lib/helpers/cliPrompt')
     let mockWrite, originalWrite
+    let originalIsTTY
+    let originalSetRawMode
+    let originalResume
+    let originalPause
+    let originalOn
+    let originalRemoveListener
 
     beforeEach(() => {
+      mockSetTimeout.mockClear()
+
       // Mock process.stdout.write to capture output
       originalWrite = process.stdout.write
       mockWrite = jest.fn()
       process.stdout.write = mockWrite
-
-      // Mock setTimeout to speed up tests
-      jest.useFakeTimers()
+      originalIsTTY = process.stdin.isTTY
+      originalSetRawMode = process.stdin.setRawMode
+      originalResume = process.stdin.resume
+      originalPause = process.stdin.pause
+      originalOn = process.stdin.on
+      originalRemoveListener = process.stdin.removeListener
+      process.stdin.isTTY = true
+      process.stdin.setRawMode = jest.fn()
+      process.stdin.resume = jest.fn()
+      process.stdin.pause = jest.fn()
+      process.stdin.on = jest.fn()
+      process.stdin.removeListener = jest.fn()
     })
 
     afterEach(() => {
       // Restore original stdout.write
       process.stdout.write = originalWrite
-      jest.useRealTimers()
+      process.stdin.isTTY = originalIsTTY
+      process.stdin.setRawMode = originalSetRawMode
+      process.stdin.resume = originalResume
+      process.stdin.pause = originalPause
+      process.stdin.on = originalOn
+      process.stdin.removeListener = originalRemoveListener
+    })
+
+    test('rejects without output or timers outside a TTY', async () => {
+      const originalTTY = process.stdin.isTTY
+      process.stdin.isTTY = false
+
+      try {
+        await expect(
+          autoContinue({ name: 'install', message: 'Install in ', timeInSeconds: 15 })
+        ).rejects.toMatchObject({ code: 'NON_INTERACTIVE_INSTALL', exitCode: 1 })
+
+        expect(mockWrite).not.toHaveBeenCalled()
+        expect(mockSetTimeout).not.toHaveBeenCalled()
+      } finally {
+        process.stdin.isTTY = originalTTY
+      }
     })
 
     test('should return object with specified property name', async () => {
-      const promise = autoContinue({
+      const result = await autoContinue({
         name: 'install',
         message: 'Auto-installing in ',
         timeInSeconds: 2
       })
-
-      // Fast-forward all timers
-      jest.runAllTimers()
-
-      const result = await promise
       expect(result).toEqual({ install: true })
+      expect(mockSetTimeout).toHaveBeenCalledTimes(2)
+      expect(mockSetTimeout).toHaveBeenCalledWith(1000)
     })
 
     test('should handle custom timeInSeconds', async () => {
-      const promise = autoContinue({
+      const result = await autoContinue({
         name: 'proceed',
         message: 'Proceeding in ',
         timeInSeconds: 3
       })
-
-      // Fast-forward all timers
-      jest.runAllTimers()
-
-      const result = await promise
       expect(result).toEqual({ proceed: true })
+      expect(mockSetTimeout).toHaveBeenCalledTimes(3)
     })
 
     test('should use default timeInSeconds of 5 when not specified', async () => {
-      const promise = autoContinue({
+      const result = await autoContinue({
         name: 'default',
         message: 'Starting in '
       })
-
-      // Fast-forward all timers
-      jest.runAllTimers()
-
-      const result = await promise
       expect(result).toEqual({ default: true })
+      expect(mockSetTimeout).toHaveBeenCalledTimes(5)
     }, 10000) // 10 second timeout
 
     test('should write countdown to stdout', async () => {
-      const promise = autoContinue({
+      await autoContinue({
         name: 'test',
         message: 'Testing in ',
         timeInSeconds: 3
       })
 
-      // Fast-forward all timers
-      jest.runAllTimers()
-
-      await promise
-
       // Should write initial message with starting number and instruction
       expect(mockWrite).toHaveBeenCalledWith("Testing in 3 (press 'y' to proceed)")
+      const instructionText = " (press 'y' to proceed)"
+      expect(mockWrite).toHaveBeenCalledWith(
+        `${'\b'.repeat(1 + instructionText.length)}2${instructionText}`
+      )
+      expect(mockWrite).toHaveBeenCalledWith(
+        `${'\b'.repeat(1 + instructionText.length)}1${instructionText}`
+      )
+      expect(mockSetTimeout).toHaveBeenCalledTimes(3)
     })
 
     test('should handle single digit countdown correctly', async () => {
-      const promise = autoContinue({
+      await autoContinue({
         name: 'test',
         message: 'Starting in ',
         timeInSeconds: 2
       })
 
-      // Fast-forward all timers
-      jest.runAllTimers()
-
-      await promise
-
       // Should write initial message with instruction
       expect(mockWrite).toHaveBeenCalledWith("Starting in 2 (press 'y' to proceed)")
+      const instructionText = " (press 'y' to proceed)"
+      expect(mockWrite).toHaveBeenCalledWith(
+        `${'\b'.repeat(1 + instructionText.length)}1${instructionText}`
+      )
+      expect(mockSetTimeout).toHaveBeenCalledTimes(2)
     })
 
     test('should handle double digit to single digit countdown with padding', async () => {
-      const promise = autoContinue({
+      await autoContinue({
         name: 'test',
         message: 'Waiting ',
         timeInSeconds: 10
       })
 
-      // Fast-forward all timers
-      jest.runAllTimers()
-
-      await promise
-
       // Should write initial message with double digit and instruction
       expect(mockWrite).toHaveBeenCalledWith("Waiting 10 (press 'y' to proceed)")
+      const instructionText = " (press 'y' to proceed)"
+      expect(mockWrite).toHaveBeenCalledWith(
+        `${'\b'.repeat(2 + instructionText.length)}9${instructionText}`
+      )
+      expect(mockWrite).toHaveBeenCalledWith(
+        `${'\b'.repeat(1 + instructionText.length)}1${instructionText}`
+      )
+      expect(mockSetTimeout).toHaveBeenCalledTimes(10)
     }, 15000) // 15 second timeout
 
     test('should call console.log at the end', async () => {
       const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation(() => {})
 
-      const promise = autoContinue({
+      await autoContinue({
         name: 'test',
         message: 'Done in ',
         timeInSeconds: 1
       })
-
-      // Fast-forward all timers
-      jest.runAllTimers()
-
-      await promise
 
       // Should only call console.log at the end with empty line (no separate instruction line)
       expect(mockConsoleLog).toHaveBeenCalledWith('')
@@ -398,21 +430,13 @@ describe('cliPrompt', () => {
     })
 
     test('should handle default parameters', async () => {
-      const promise = autoContinue()
-
-      // Fast-forward all timers
-      jest.runAllTimers()
-
-      const result = await promise
+      const result = await autoContinue()
 
       // Should handle undefined name gracefully
       expect(result).toEqual({ undefined: true })
     }, 10000) // 10 second timeout
 
     test('should handle Ctrl+C during autoContinue countdown', async () => {
-      // Use fake timers for this test
-      jest.useFakeTimers()
-
       // Mock process.stdin for this test
       const originalIsTTY = process.stdin.isTTY
       const originalSetRawMode = process.stdin.setRawMode
@@ -437,9 +461,6 @@ describe('cliPrompt', () => {
       try {
         const promise = autoContinue({ name: 'test', message: 'Testing... ', timeInSeconds: 3 })
 
-        // Advance timers a bit to let the function start
-        jest.advanceTimersByTime(100)
-
         // Simulate Ctrl+C keypress
         if (dataListener) {
           // Simulate Ctrl+C (ASCII 3)
@@ -447,13 +468,8 @@ describe('cliPrompt', () => {
           dataListener(ctrlC)
         }
 
-        // Fast-forward remaining timers
-        jest.runAllTimers()
-
         await expect(promise).rejects.toThrow('Operation aborted by user')
       } finally {
-        // Restore timers and original methods
-        jest.useRealTimers()
         process.stdin.isTTY = originalIsTTY
         process.stdin.setRawMode = originalSetRawMode
         process.stdin.resume = originalResume
@@ -464,9 +480,6 @@ describe('cliPrompt', () => {
     }, 10000)
 
     test('should handle "y" key to proceed immediately during countdown', async () => {
-      // Use fake timers for this test
-      jest.useFakeTimers()
-
       // Mock process.stdin for this test
       const originalIsTTY = process.stdin.isTTY
       const originalSetRawMode = process.stdin.setRawMode
@@ -491,24 +504,16 @@ describe('cliPrompt', () => {
       try {
         const promise = autoContinue({ name: 'test', message: 'Testing... ', timeInSeconds: 10 })
 
-        // Advance timers a bit to let the function start
-        jest.advanceTimersByTime(100)
-
         // Simulate "y" keypress (ASCII 121)
         if (dataListener) {
           const yKey = Buffer.from([121])
           dataListener(yKey)
         }
 
-        // Fast-forward remaining timers
-        jest.runAllTimers()
-
         const result = await promise
 
         expect(result).toEqual({ test: true })
       } finally {
-        // Restore timers and original methods
-        jest.useRealTimers()
         process.stdin.isTTY = originalIsTTY
         process.stdin.setRawMode = originalSetRawMode
         process.stdin.resume = originalResume
