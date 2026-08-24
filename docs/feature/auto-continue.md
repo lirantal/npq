@@ -16,7 +16,7 @@ The auto-continue feature activates when:
 
 ## Disabling Auto-Continue
 
-To disable the auto-continue countdown and always require explicit confirmation:
+To disable the auto-continue countdown and require explicit confirmation in an interactive terminal:
 
 ### Using the CLI Flag
 
@@ -45,7 +45,10 @@ Add to your shell profile (`.bashrc`, `.zshrc`, etc.) to make the setting perman
 export NPQ_DISABLE_AUTO_CONTINUE=true
 ```
 
-When auto-continue is disabled, npq will prompt with a standard yes/no confirmation instead of the countdown timer, giving you full control over when packages are installed.
+When auto-continue is disabled, npq prompts with a standard yes/no confirmation
+instead of the countdown timer in an interactive terminal. Outside a TTY,
+warning-only findings remain fail-closed unless an explicit non-interactive
+install opt-in or coding-agent authorization applies.
 
 ## User Experience
 
@@ -157,11 +160,10 @@ Currently, the auto-continue feature uses hardcoded values:
 ## Usage Context
 
 ### In npq Workflow
-
 1. **Package Analysis**: Security marshalls check package safety
 2. **Result Evaluation**:
-   - **Errors > 0**: Manual prompt ("Continue install?")
-   - **Warnings > 0, Errors = 0**: Auto-continue countdown
+   - **Errors > 0**: Prompt in a TTY; fail closed outside a TTY
+   - **Warnings > 0, Errors = 0**: Auto-continue countdown in a TTY; fail closed outside a TTY unless explicitly authorized
    - **No Issues**: Immediate installation
 3. **User Decision**: During countdown, user can abort or let it proceed
 

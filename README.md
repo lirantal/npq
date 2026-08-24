@@ -271,7 +271,7 @@ remains audit-only and never invokes the package manager.
 
 ### Disable auto-continue countdown
 
-By default, when npq detects only warnings (no errors), it automatically proceeds with installation after a 15-second countdown. To disable this behavior and always require explicit confirmation:
+By default, when npq detects only warnings (no errors), it automatically proceeds with installation after a 15-second countdown. To disable this behavior and require explicit confirmation in an interactive terminal:
 
 **Using the CLI flag:**
 
@@ -292,7 +292,10 @@ Or set it permanently in your shell profile (`.bashrc`, `.zshrc`, etc.):
 export NPQ_DISABLE_AUTO_CONTINUE=true
 ```
 
-When auto-continue is disabled, npq will always prompt for explicit confirmation before proceeding with installation, even when only warnings are detected.
+When auto-continue is disabled, npq prompts for explicit confirmation in an
+interactive terminal. Non-interactive warning-only installs remain fail-closed
+unless the explicit non-interactive install opt-in or coding-agent authorization
+applies.
 
 ## Learn Node.js Security
 

@@ -41,7 +41,8 @@ if (scenario === 'debug') {
           }
         }
       ]
-      return this.preserveRequestOrder ? this.pkgs.map(() => result) : { [this.pkgs[0]]: result }
+      const packageResults = this.pkgs.length > 0 ? { [this.pkgs[0]]: result } : {}
+      return this.preserveRequestOrder ? this.pkgs.map(() => result) : packageResults
     }
 
     if (scenario === 'errors') {
@@ -55,7 +56,8 @@ if (scenario === 'debug') {
           }
         }
       ]
-      return this.preserveRequestOrder ? this.pkgs.map(() => result) : { [this.pkgs[0]]: result }
+      const packageResults = this.pkgs.length > 0 ? { [this.pkgs[0]]: result } : {}
+      return this.preserveRequestOrder ? this.pkgs.map(() => result) : packageResults
     }
 
     return this.preserveRequestOrder ? this.pkgs.map(() => []) : {}

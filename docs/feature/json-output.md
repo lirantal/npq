@@ -31,9 +31,12 @@ They do not read lockfiles or discover transitive dependencies.
 
 ## Coding-agent detection
 
-A non-empty direct signal selects the exact existing JSON pipeline. Contextual
-matchers select JSON only when their specific environment patterns match;
-otherwise, npq remains in its existing human-readable mode.
+For npq, automatic coding-agent detection selects JSON/audit-only mode for
+invocations without an explicit install subcommand. Explicit install commands
+remain in the normal human-readable audit/install pipeline so agent-driven
+installs can preserve package-manager behavior. npq-hero uses detection to
+authorize explicit install passthrough and keeps non-install commands as
+package-manager passthrough.
 
 | Environment variable        | Agent or convention                                                       |
 | --------------------------- | ------------------------------------------------------------------------- |
@@ -59,11 +62,12 @@ otherwise, npq remains in its existing human-readable mode.
 | `EDITOR`                    | Devin when it contains `devin`, case-insensitively                        |
 | `TERM_PROGRAM`              | Kiro when it contains `kiro`, case-insensitively, and stdout is not a TTY |
 
-Direct signals select JSON mode when their values are non-empty strings. The
-contextual matchers select JSON mode when their stated environment patterns
-match. In particular, `REPL_ID` can also be present in an ordinary Replit
-runtime and still selects audit-only JSON mode. Kiro's non-TTY safeguard keeps
-an interactive Kiro IDE terminal from being treated as an agent subprocess.
+Direct signals count as detected when their values are non-empty strings. The
+contextual matchers count as detected when their stated environment patterns
+match. In particular, REPL_ID can also be present in an ordinary Replit
+runtime and still selects JSON mode for non-install npq audits. The Kiro
+non-TTY safeguard keeps an interactive Kiro IDE terminal from being treated as
+an agent subprocess.
 
 For example:
 

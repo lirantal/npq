@@ -8,6 +8,7 @@ cliSupport.isEnvSupport() || (cliSupport.noSupportError() && cliSupport.packageM
 const pkgMgr = require('../lib/packageManager')
 const Marshall = require('../lib/marshall')
 const { CliParser } = require('../lib/cli')
+const { getProjectPackages } = require('../lib/helpers/sourcePackages')
 const cliPrompt = require('../lib/helpers/cliPrompt.js')
 const { reportResults } = require('../lib/helpers/reportResults')
 const { Spinner } = require('../lib/helpers/cliSpinner')
@@ -40,24 +41,38 @@ if (cliArgs && cliArgs.json) {
   runJsonCli(cliArgs, { output: createJsonOutput() })
 } else if (cliArgs) {
   const isInteractive = cliSupport.isInteractiveTerminal()
-  const silentModeNoPackages = !cliArgs || !cliArgs.packages || cliArgs.packages.length === 0
+  const silentModeNoPackages = !cliArgs.installSubcommandExplicit && cliArgs.packages.length === 0
   const spinner =
     isInteractive && !silentModeNoPackages ? new Spinner({ text: 'Initiating...' }) : null
 
   if (spinner) {
     spinner.start()
   }
-
   RegistryConfig.load({ argv: cliArgs.registryConfigArgs || [] })
     .then((registryConfig) => {
       const registryClient = new RegistryClient(registryConfig)
-      const marshall = new Marshall({
-        pkgs: cliArgs.packages,
-        registryClient,
-        progressManager: spinner,
-        promiseThrottleHelper
+      const packagePromise =
+        cliArgs.installSubcommandExplicit && cliArgs.packages.length === 0
+          ? getProjectPackages()
+          : Promise.resolve(cliArgs.packages)
+
+      return packagePromise.then((packages) => {
+        if (packages && packages.error) {
+          CliParser.exit({
+            errorCode: typeof packages.error.code === 'number' ? packages.error.code : -1,
+            message: packages.message,
+            spinner
+          })
+        }
+
+        const marshall = new Marshall({
+          pkgs: packages,
+          registryClient,
+          progressManager: spinner,
+          promiseThrottleHelper
+        })
+        return marshall.process()
       })
-      return marshall.process()
     })
     .then((marshallResults) => {
       if (spinner) {

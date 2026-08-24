@@ -156,7 +156,7 @@ A critical requirement for the alias feature is that npq must preserve the exit 
 | Variable                            | Description                                                                        | Default |
 | ----------------------------------- | ---------------------------------------------------------------------------------- | ------- |
 | `NPQ_PKG_MGR`                       | Package manager to delegate to                                                     | `npm`   |
-| `NPQ_DISABLE_AUTO_CONTINUE`         | Set to `true` to always prompt instead of auto-continuing on warnings              | `false` |
+| `NPQ_DISABLE_AUTO_CONTINUE`         | Set to `true` to prompt in interactive terminals instead of auto-continuing on warnings | `false` |
 | `NPQ_ALLOW_NON_INTERACTIVE_INSTALL` | Set to `true` to allow warning-only installs without a TTY for ordinary automation | `false` |
 
 ## Command Detection

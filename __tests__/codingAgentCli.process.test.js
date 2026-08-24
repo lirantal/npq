@@ -193,6 +193,7 @@ describe('coding-agent executable routing', () => {
     expect(result.stderr).toBe('')
     expectHumanOutput(result)
     expect(result.stdout).toContain('Install script detected')
+    expect(result.stdout).toContain('express@^5.0.0')
     expect(result.stdout).toContain('Total packages: 1')
     expect(packageManagerRan()).toBe(true)
   })
