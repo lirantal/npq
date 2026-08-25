@@ -6,17 +6,10 @@ const path = require('node:path')
 const packageManager = require('../lib/packageManager')
 
 const originalArgv = process.argv
-const originalMarker = process.env.NPQ_TEST_MARKER
 const temporaryDirectories = []
 
 afterAll(() => {
   process.argv = originalArgv
-
-  if (originalMarker === undefined) {
-    delete process.env.NPQ_TEST_MARKER
-  } else {
-    process.env.NPQ_TEST_MARKER = originalMarker
-  }
 
   for (const directory of temporaryDirectories) {
     fs.rmSync(directory, { recursive: true, force: true })
@@ -39,7 +32,8 @@ describeWindows('Windows package-manager launching', () => {
       [
         "'use strict'",
         "const fs = require('node:fs')",
-        'fs.writeFileSync(process.env.NPQ_TEST_MARKER, JSON.stringify(process.argv.slice(2)))',
+        `const markerPath = ${JSON.stringify(markerPath)}`,
+        'fs.writeFileSync(markerPath, JSON.stringify(process.argv.slice(2)))',
         ''
       ].join('\r\n')
     )
@@ -49,7 +43,6 @@ describeWindows('Windows package-manager launching', () => {
       ['@echo off', `"${process.execPath}" "%~dp0capture.js" %*`, ''].join('\r\n')
     )
 
-    process.env.NPQ_TEST_MARKER = markerPath
     process.argv = [
       'node',
       'npq',
