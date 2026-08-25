@@ -232,7 +232,15 @@ test('package manager double-escapes arguments for Windows command shims', async
     })
 
     childProcess.spawn.mockImplementation(() => createMockChild(0))
-    process.argv = ['node', 'npq', 'install', 'safe&value', 'safe|value', '(grouped)']
+    process.argv = [
+      'node',
+      'npq',
+      'install',
+      'safe&value',
+      'safe|value',
+      '(grouped)',
+      '100%literal'
+    ]
 
     await windowsPackageManager.process('package-manager.cmd')
 
@@ -240,6 +248,7 @@ test('package manager double-escapes arguments for Windows command shims', async
     expect(launchArgs[3]).toContain('^^^&')
     expect(launchArgs[3]).toContain('^^^|')
     expect(launchArgs[3]).toContain('^^^(grouped^^^)')
+    expect(launchArgs[3]).toContain('100^%literal')
   } finally {
     Object.defineProperty(process, 'platform', {
       value: originalPlatform,
