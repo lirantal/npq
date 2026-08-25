@@ -245,9 +245,9 @@ test('package manager double-escapes arguments for Windows command shims', async
     await windowsPackageManager.process('package-manager.cmd')
 
     const [, launchArgs] = childProcess.spawn.mock.calls[0]
-    expect(launchArgs[3]).toContain('^^^&')
-    expect(launchArgs[3]).toContain('^^^|')
-    expect(launchArgs[3]).toContain('^^^(grouped^^^)')
+    expect(launchArgs[3]).toContain('^^^^^^^&')
+    expect(launchArgs[3]).toContain('^^^^^^^|')
+    expect(launchArgs[3]).toContain('^^^^^^^(grouped^^^^^^^)')
     expect(launchArgs[3]).toContain('100^%literal')
   } finally {
     Object.defineProperty(process, 'platform', {
