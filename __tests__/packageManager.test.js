@@ -221,6 +221,42 @@ test('passes shell metacharacters as literal arguments without enabling a shell'
   )
 })
 
+test('package manager delegates Windows command-shim escaping to cross-spawn', async () => {
+  const originalPlatform = process.platform
+  Object.defineProperty(process, 'platform', { value: 'win32', configurable: true })
+
+  try {
+    let windowsPackageManager
+    jest.isolateModules(() => {
+      windowsPackageManager = require('../lib/packageManager')
+    })
+
+    childProcess.spawn.mockImplementation(() => createMockChild(0))
+    process.argv = [
+      'node',
+      'npq',
+      'install',
+      'safe&value',
+      'safe|value',
+      '(grouped)',
+      '100%literal'
+    ]
+
+    await windowsPackageManager.process('package-manager.cmd')
+
+    const [, launchArgs] = childProcess.spawn.mock.calls[0]
+    expect(launchArgs[3]).toContain('^&')
+    expect(launchArgs[3]).toContain('^|')
+    expect(launchArgs[3]).toContain('^(grouped^)')
+    expect(launchArgs[3]).toContain('100^%literal')
+  } finally {
+    Object.defineProperty(process, 'platform', {
+      value: originalPlatform,
+      configurable: true
+    })
+  }
+})
+
 test('uses the package manager executable and literal arguments directly on Windows', () => {
   expect(
     packageManager.getPackageManagerLaunchSpec('npm.cmd', [
