@@ -394,6 +394,50 @@ describe('Author Marshall', () => {
     })
   })
 
+  describe('severity precedence between dormant maintainer and version recency', () => {
+    test('a dormant Warning does not hide the version recency Error', async () => {
+      const u = npmUser('Vic', 'vic@example.com')
+      const pakument = {
+        versions: {
+          '1.0.0': { version: '1.0.0', _npmUser: u },
+          '2.0.0': { version: '2.0.0', _npmUser: u }
+        },
+        time: {
+          '1.0.0': daysAgo(203),
+          '2.0.0': daysAgo(3)
+        }
+      }
+      const marshall = createMarshall(pakument, '2.0.0')
+      const error = await marshall
+        .validate({ packageName: 'pkg', packageVersion: '2.0.0' })
+        .catch((err) => err)
+      expect(error).not.toBeInstanceOf(Warning)
+      expect(error.message).toBe(
+        'This version was published only 3 days ago by Vic <vic@example.com>'
+      )
+    })
+
+    test('a dormant Error is reported for a version within 7 days', async () => {
+      const u = npmUser('Wes', 'wes@example.com')
+      const pakument = {
+        versions: {
+          '1.0.0': { version: '1.0.0', _npmUser: u },
+          '2.0.0': { version: '2.0.0', _npmUser: u }
+        },
+        time: {
+          '1.0.0': daysAgo(303),
+          '2.0.0': daysAgo(3)
+        }
+      }
+      const marshall = createMarshall(pakument, '2.0.0')
+      await expect(
+        marshall.validate({ packageName: 'pkg', packageVersion: '2.0.0' })
+      ).rejects.toThrow(
+        /Wes <wes@example.com> had not published this package for 300 days before this release \(more than 9 months dormant\)/
+      )
+    })
+  })
+
   describe('trusted publishing (OIDC) identity', () => {
     const configA = 'oidc:fc1de4ec-4bbe-4ba2-af6c-b0bef036a519'
     const configB = 'oidc:89d7315e-b90e-4351-a67f-775fa36a295f'
