@@ -14,7 +14,7 @@ Older approaches sometimes **mixed** “first publish ever” with “published 
 
 **Publisher identity:** Publishers are matched by `_npmUser.email`, except for [trusted publishing](https://docs.npmjs.com/trusted-publishers) (OIDC) releases. npm attributes every trusted publishing release to the same `GitHub Actions <npm-oidc-no-reply@github.com>` identity, so those releases are matched by the package's trusted publisher configuration (`_npmUser.trustedPublisher.oidcConfigId`, with or without its `oidc:` prefix) instead. Moving a package to trusted publishing, or pointing it at a different trusted publisher configuration, therefore counts as a **new** publisher. Someone who takes over an account could set up trusted publishing from their own repository, so these releases are not exempt.
 
-**Check order:** The marshall runs **new author → dormant maintainer → version recency**. The **first** thrown `Error` or `Warning` ends validation. So if two signals would both apply (for example, a dormant **Warning** and a recency **Error`), whichever runs **first** in that order is what you see unless the earlier check does not throw.
+**Check order:** The marshall runs **new author → dormant maintainer → version recency** and reports a single finding: the **first** `Error` in that order, otherwise the **first** `Warning`. So a dormant **Warning** never hides a recency **Error**: a version published 3 days ago after a 200-day gap reports the recency **Error**. When both checks find an **Error**, the dormant **Error** is reported because it runs first.
 
 ---
 
@@ -66,16 +66,15 @@ Older approaches sometimes **mixed** “first publish ever” with “published 
 
 **Rules:**
 
-- The strict logic only runs when the installed version is **at most 45 days** old (older versions skip this block).
 - **≤ 7 days** old → **Error** (treated as high concern).
 - **8–30 days** old → **Warning** (moderate concern; may still proceed depending on npq prompts and auto-continue behavior).
-- **31–45 days** old → no error or warning from this block.
+- **31 days or older** → no error or warning from this check.
 
 **Example D — Error:** `lodash@x.y.z` was published **3 days** ago by a well-known maintainer. Author history might be boring; the marshall still **errors** because the artifact is extremely fresh.
 
 **Example E — Warning:** Published **20 days** ago → **Warning** only (not an error).
 
-**Example F — No recency flag:** Published **50 days** ago → outside the 45-day window for this check; no recency error/warning from the Author Marshall.
+**Example F — No recency flag:** Published **50 days** ago → outside the 30-day window for this check; no recency error/warning from the Author Marshall.
 
 ---
 
@@ -85,7 +84,7 @@ Older approaches sometimes **mixed** “first publish ever” with “published 
 |------|----------|
 | **New author check** | “Is this the publisher’s **first** version on this package **and** was that first publish **within 21 days**?” |
 | **Dormant maintainer check** | “Was this version published within **30 days**, did the **same publisher** publish this package **before**, and was the gap before **this** release **> 6 months** (warning) or **> 9 months** (error)?” |
-| **Version recency check** | “Was this **version** published within **7 / 30 / 45 days**?” |
+| **Version recency check** | “Was this **version** published within **7 / 30 days**?” |
 
 They are **complementary**: one stresses **trust in a new publisher on this package**, another **inactivity then a new release by the same identity**, and the last stresses **maturity of the release** itself.
 
@@ -117,10 +116,10 @@ They are **complementary**: one stresses **trust in a new publisher on this pack
    If there is no prior version for that publisher identity, **or** the first matching version **is** the installed version, then if `pakument.time[packageVersion]` exists, compute age in whole days. If **≤ 21 days**, throw the **new author** `Error`.
 
 6. **Dormant maintainer check**  
-   If the installed version was published **at most 30 days** ago and there is a **strictly earlier** `pakument.time[…]` for the **same publisher identity** on this package, compute the gap in whole days from that **latest** such prior instant to the installed version’s time. If gap **> 274** → `Error`; else if gap **> 183** → `Warning`. If `time[packageVersion]` is missing or invalid, this block is skipped.
+   If the installed version was published **at most 30 days** ago and there is a **strictly earlier** `pakument.time[…]` for the **same publisher identity** on this package, compute the gap in whole days from that **latest** such prior instant to the installed version’s time. If gap **> 274** → `Error`; else if gap **> 183** → a `Warning` that is reported only if the recency check below finds no `Error`. If `time[packageVersion]` is missing or invalid, this block is skipped.
 
 7. **Version recency check**  
-   Compute days since `pakument.time[packageVersion]` (same date string as above). If **≤ 45** days, apply **≤ 7** → `Error`, **≤ 30** → `Warning` (the 7-day branch runs first, so very fresh releases are errors, not warnings).
+   Compute days since `pakument.time[packageVersion]` (same date string as above). **≤ 7** → `Error`; otherwise a held dormant `Warning` is reported if there is one; otherwise **≤ 30** → `Warning`.
 
 8. **Success**  
    If nothing threw, the marshall returns the version’s publish date string for downstream use.
