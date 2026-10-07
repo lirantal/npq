@@ -7,10 +7,12 @@ The **Author Marshall** is a supply-chain check that runs while npq audits a pac
 That matters because common risk patterns on npm include:
 
 1. **Account takeover or maintainer change** — Someone new starts publishing versions of a package that used to belong to someone else. If their **first** release under that identity is **brand new**, you may want to pause before installing.
-2. **Dormant maintainer** — The **same** npm user (matched by `_npmUser.email`) published this package before, then had a **long gap** with no releases attributed to them on this package, then published again. That pattern can align with neglected credentials or account reuse.
+2. **Dormant maintainer** — The **same** publisher (see **Publisher identity** below) published this package before, then had a **long gap** with no releases attributed to them on this package, then published again. That pattern can align with neglected credentials or account reuse.
 3. **Very fresh releases** — A tarball published **days ago** has had little time for community review, security tooling, or reputation to catch problems. That risk exists even for long-tenured maintainers.
 
 Older approaches sometimes **mixed** “first publish ever” with “published yesterday,” which produced **noise** for healthy packages. The Author Marshall **separates** publisher history, **gaps between releases by the same publisher**, and **absolute age of the tarball**, with explicit day thresholds.
+
+**Publisher identity:** Publishers are matched by `_npmUser.email`, except for [trusted publishing](https://docs.npmjs.com/trusted-publishers) (OIDC) releases. npm attributes every trusted publishing release to the same `GitHub Actions <npm-oidc-no-reply@github.com>` identity, so those releases are matched by the package's trusted publisher configuration (`_npmUser.trustedPublisher.oidcConfigId`, with or without its `oidc:` prefix) instead. Moving a package to trusted publishing, or pointing it at a different trusted publisher configuration, therefore counts as a **new** publisher. Someone who takes over an account could set up trusted publishing from their own repository, so these releases are not exempt.
 
 **Check order:** The marshall runs **new author → dormant maintainer → version recency**. The **first** thrown `Error` or `Warning` ends validation. So if two signals would both apply (for example, a dormant **Warning** and a recency **Error`), whichever runs **first** in that order is what you see unless the earlier check does not throw.
 
@@ -20,7 +22,7 @@ Older approaches sometimes **mixed** “first publish ever” with “published 
 
 ### 1. New author (first publish for this user on this package)
 
-**Intent:** Flag situations where the version you install is the **first** version ever published to this package by this npm user (matched by `_npmUser.email`), **and** that publish is **recent**.
+**Intent:** Flag situations where the version you install is the **first** version ever published to this package by this publisher (see **Publisher identity** above), **and** that publish is **recent**.
 
 **Rule (simplified):** If the installed version is that user’s first publish for the package **and** it was published **within the last 21 days**, npq throws an **Error** and blocks the install flow like other marshall errors.
 
@@ -32,22 +34,27 @@ Older approaches sometimes **mixed** “first publish ever” with “published 
 
 ---
 
-### 2. Dormant maintainer (same email, long gap before this release)
+### 2. Dormant maintainer (same publisher, long gap before a recent release)
 
-**Intent:** Flag when the publishing user had a **previous** release on **this package** with the **same** `_npmUser.email`, then a **long calendar gap** before the **timestamp** of the version you install.
+**Intent:** Flag when the publisher had a **previous** release on **this package** under the **same** identity, then a **long calendar gap** before the **timestamp** of the version you install, **and** the version you install is **recent**.
 
-**How the gap is measured:** Among all versions in `pakument.versions` with that email, take the **latest** `pakument.time[version]` that is **strictly before** `pakument.time[installedVersion]`. The gap is the difference in those two instants, expressed in **whole days** (same rounding style as elsewhere in this marshall). Other maintainers may publish in between; only versions with the **same email** count toward this maintainer’s last prior publish.
+**Why only recent versions:** Like the new-author check, this signal matters at release time. A version that has been public for longer than npq's 30-day version recency window has had time to be noticed and unpublished, while long-standing maintainers often release less than twice a year. The trade-off: installing a compromised version more than 30 days after its release does not raise the dormant alert.
+
+**How the gap is measured:** Among all versions in `pakument.versions` with that publisher identity, take the **latest** `pakument.time[version]` that is **strictly before** `pakument.time[installedVersion]`. The gap is the difference in those two instants, expressed in **whole days** (same rounding style as elsewhere in this marshall). Other maintainers may publish in between; only versions with the **same publisher identity** count toward this maintainer’s last prior publish.
 
 **Rules (strict boundaries):**
 
-- **No** prior publish by this email before this version’s time → this check does nothing (first release by this identity on the package, or not enough `time` data).
+- Version published **more than 30 days** ago → this check does nothing.
+- **No** prior publish by this identity before this version’s time → this check does nothing (first release by this identity on the package, or not enough `time` data).
 - Gap **> 274 days** (~9 months, `Math.round(365.25 × 0.75)`) → **Error** (“more than 9 months dormant”).
 - Else gap **> 183 days** (~6 months, `Math.round(365.25 / 2)`) → **Warning** (“more than 6 months dormant”).
 - At **exactly** 183 or 274 days, the **stricter** tier does **not** apply (`>` not `≥`).
 
-**Example G — Warning:** Last release by `dev@…` on this package was **200 days** before the current version’s publish time → **Warning** with the maintainer name, email, and gap in days.
+**Example G — Warning:** The version was published **20 days** ago, and the last release by `dev@…` on this package was **200 days** before it → **Warning** with the maintainer name, email, and gap in days.
 
-**Example H — Error:** Gap **300 days** → **Error** with the same details.
+**Example H — Error:** Same, with a gap of **300 days** → **Error** with the same details.
+
+**Example J — Not flagged:** The version was published **two years** ago, a year after the maintainer’s previous release → no dormant alert, because the version is outside the 30-day window.
 
 **Example I — Other maintainer in the middle:** `1.0.0` by Alice, `2.0.0` by Bob, `3.0.0` by Alice again. For `3.0.0`, Alice’s gap is from **`1.0.0`**, not from Bob’s release.
 
@@ -77,7 +84,7 @@ Older approaches sometimes **mixed** “first publish ever” with “published 
 | Lens | Question |
 |------|----------|
 | **New author check** | “Is this the publisher’s **first** version on this package **and** was that first publish **within 21 days**?” |
-| **Dormant maintainer check** | “Did this **same email** publish this package **before**, and was the gap before **this** release **> 6 months** (warning) or **> 9 months** (error)?” |
+| **Dormant maintainer check** | “Was this version published within **30 days**, did the **same publisher** publish this package **before**, and was the gap before **this** release **> 6 months** (warning) or **> 9 months** (error)?” |
 | **Version recency check** | “Was this **version** published within **7 / 30 / 45 days**?” |
 
 They are **complementary**: one stresses **trust in a new publisher on this package**, another **inactivity then a new release by the same identity**, and the last stresses **maturity of the release** itself.
@@ -98,19 +105,19 @@ They are **complementary**: one stresses **trust in a new publisher on this pack
    Uses `packageRepoUtils.getSemVer` so the check applies to the **resolved** version (e.g. after resolving a range or tag), not only the string the user typed.
 
 3. **Resolve the publishing user**  
-   Reads `pakument.versions[packageVersion]._npmUser`.  
+   Reads `pakument.versions[packageVersion]._npmUser`, and derives the publisher identity from its email or trusted publisher configuration.  
    - Missing user or email → **Error** (“Could not determine publishing user…”).  
    - Email must pass a **simple format regex** (see Colin’s “reasonable email regex” note in code); invalid → **Error**.
 
 4. **Find “first version for this user”**  
-   The code scans `pakument.versions` and keeps the **first** entry whose `_npmUser.email` matches the current publisher’s email (iteration follows `Object.values` order).  
-   - **Note:** Registry JSON does not guarantee that iteration order matches strict chronological publish order; the condition used in code is aligned with “first matching version record for this email in that traversal,” combined with `firstVersionForUser.version === packageVersion` for the strict “this install is that first record” case.
+   The code scans `pakument.versions` and keeps the **first** entry whose publisher identity matches the current publisher’s identity (iteration follows `Object.values` order).  
+   - **Note:** Registry JSON does not guarantee that iteration order matches strict chronological publish order; the condition used in code is aligned with “first matching version record for this publisher identity in that traversal,” combined with `firstVersionForUser.version === packageVersion` for the strict “this install is that first record” case.
 
 5. **New author check**  
-   If there is no prior version for that email, **or** the first matching version **is** the installed version, then if `pakument.time[packageVersion]` exists, compute age in whole days. If **≤ 21 days**, throw the **new author** `Error`.
+   If there is no prior version for that publisher identity, **or** the first matching version **is** the installed version, then if `pakument.time[packageVersion]` exists, compute age in whole days. If **≤ 21 days**, throw the **new author** `Error`.
 
 6. **Dormant maintainer check**  
-   If there is a **strictly earlier** `pakument.time[…]` for the **same email** on this package, compute the gap in whole days from that **latest** such prior instant to the installed version’s time. If gap **> 274** → `Error`; else if gap **> 183** → `Warning`. If `time[packageVersion]` is missing or invalid, this block is skipped.
+   If the installed version was published **at most 30 days** ago and there is a **strictly earlier** `pakument.time[…]` for the **same publisher identity** on this package, compute the gap in whole days from that **latest** such prior instant to the installed version’s time. If gap **> 274** → `Error`; else if gap **> 183** → `Warning`. If `time[packageVersion]` is missing or invalid, this block is skipped.
 
 7. **Version recency check**  
    Compute days since `pakument.time[packageVersion]` (same date string as above). If **≤ 45** days, apply **≤ 7** → `Error`, **≤ 30** → `Warning` (the 7-day branch runs first, so very fresh releases are errors, not warnings).
@@ -126,7 +133,7 @@ They are **complementary**: one stresses **trust in a new publisher on this pack
 
 ### User-visible messages
 
-Errors and warnings include the publisher **name and email** (and for dormant maintainer, the **gap in days**) so humans can verify who npm attributes the release to. Teams with strict PII policies may want to account for that in logs or shared terminals.
+Errors and warnings include the publisher **name and email** (plus the trusted publisher configuration ID for new-author and dormant alerts on trusted publishing releases, and for dormant maintainer, the **gap in days**) so humans can verify who npm attributes the release to. Teams with strict PII policies may want to account for that in logs or shared terminals.
 
 ---
 

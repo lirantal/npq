@@ -9,6 +9,15 @@ function npmUser(name = 'Alice', email = DEFAULT_EMAIL) {
   return { name, email }
 }
 
+// npm attributes every trusted publishing (OIDC) release to this shared identity
+function trustedPublisherUser(oidcConfigId) {
+  return {
+    name: 'GitHub Actions',
+    email: 'npm-oidc-no-reply@github.com',
+    trustedPublisher: { id: 'github', oidcConfigId }
+  }
+}
+
 function daysAgo(days) {
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
 }
@@ -190,9 +199,9 @@ describe('Author Marshall', () => {
       ).resolves.toBe(published)
     })
 
-    test('throws Warning when gap is over 6 months (~184 days) and version is outside recency window', async () => {
-      const prior = daysAgo(284)
-      const current = daysAgo(100)
+    test('throws Warning when gap is over 6 months (~184 days) for a version inside the recency window', async () => {
+      const prior = daysAgo(204)
+      const current = daysAgo(20)
       const pakument = {
         versions: {
           '1.0.0': { version: '1.0.0', _npmUser: npmUser('Mia', 'mia@example.com') },
@@ -214,9 +223,9 @@ describe('Author Marshall', () => {
       )
     })
 
-    test('throws Error when gap is over 9 months (~275 days) and version is outside recency window', async () => {
-      const prior = daysAgo(375)
-      const current = daysAgo(100)
+    test('throws Error when gap is over 9 months (~275 days) for a version inside the recency window', async () => {
+      const prior = daysAgo(295)
+      const current = daysAgo(20)
       const pakument = {
         versions: {
           '1.0.0': { version: '1.0.0', _npmUser: npmUser('Noa', 'noa@example.com') },
@@ -236,8 +245,8 @@ describe('Author Marshall', () => {
     })
 
     test('does not flag when inter-release gap is exactly 183 days (strict boundary)', async () => {
-      const prior = daysAgo(283)
-      const current = daysAgo(100)
+      const prior = daysAgo(203)
+      const current = daysAgo(20)
       const pakument = {
         versions: {
           '1.0.0': { version: '1.0.0', _npmUser: npmUser('Pia', 'pia@example.com') },
@@ -249,14 +258,15 @@ describe('Author Marshall', () => {
         }
       }
       const marshall = createMarshall(pakument, '2.0.0')
+      // Falls through to the version recency warning instead of the dormant warning
       await expect(
         marshall.validate({ packageName: 'pkg', packageVersion: '2.0.0' })
-      ).resolves.toBe(current)
+      ).rejects.toThrow('This version was published only 20 days ago by Pia <pia@example.com>')
     })
 
     test('Warning only when gap is exactly 274 days (strict boundary for 9-month error)', async () => {
-      const prior = daysAgo(324)
-      const current = daysAgo(50)
+      const prior = daysAgo(294)
+      const current = daysAgo(20)
       const pakument = {
         versions: {
           '1.0.0': { version: '1.0.0', _npmUser: npmUser('Quin', 'quin@example.com') },
@@ -288,9 +298,9 @@ describe('Author Marshall', () => {
           '3.0.0': { version: '3.0.0', _npmUser: alice }
         },
         time: {
-          '1.0.0': daysAgo(500),
-          '2.0.0': daysAgo(400),
-          '3.0.0': daysAgo(100)
+          '1.0.0': daysAgo(420),
+          '2.0.0': daysAgo(320),
+          '3.0.0': daysAgo(20)
         }
       }
       const marshall = createMarshall(pakument, '3.0.0')
@@ -310,9 +320,10 @@ describe('Author Marshall', () => {
           '2.0.0': { version: '2.0.0', _npmUser: u }
         },
         time: {
-          '1.0.0': daysAgo(500),
-          '2.0.0': daysAgo(300),
-          '3.0.0': daysAgo(100)
+          '1.0.0': daysAgo(425),
+          '2.0.0': daysAgo(225),
+          // Older than the 21-day new-author window, which follows versions map order
+          '3.0.0': daysAgo(25)
         }
       }
       const marshall = createMarshall(pakument, '3.0.0')
@@ -320,6 +331,151 @@ describe('Author Marshall', () => {
         marshall.validate({ packageName: 'pkg', packageVersion: '3.0.0' })
       ).rejects.toThrow(
         /Ron <ron@example.com> had not published this package for 200 days before this release \(more than 6 months dormant\)/
+      )
+    })
+
+    test('flags a dormant gap when the version is exactly 30 days old (recency window boundary)', async () => {
+      const u = npmUser('Sam', 'sam@example.com')
+      const pakument = {
+        versions: {
+          '1.0.0': { version: '1.0.0', _npmUser: u },
+          '2.0.0': { version: '2.0.0', _npmUser: u }
+        },
+        time: {
+          '1.0.0': daysAgo(330),
+          '2.0.0': daysAgo(30)
+        }
+      }
+      const marshall = createMarshall(pakument, '2.0.0')
+      await expect(
+        marshall.validate({ packageName: 'pkg', packageVersion: '2.0.0' })
+      ).rejects.toThrow(
+        /Sam <sam@example.com> had not published this package for 300 days before this release \(more than 9 months dormant\)/
+      )
+    })
+
+    test('does not flag a dormant gap once the version is 31 days old (outside recency window)', async () => {
+      const u = npmUser('Tia', 'tia@example.com')
+      const current = daysAgo(31)
+      const pakument = {
+        versions: {
+          '1.0.0': { version: '1.0.0', _npmUser: u },
+          '2.0.0': { version: '2.0.0', _npmUser: u }
+        },
+        time: {
+          '1.0.0': daysAgo(400),
+          '2.0.0': current
+        }
+      }
+      const marshall = createMarshall(pakument, '2.0.0')
+      await expect(
+        marshall.validate({ packageName: 'pkg', packageVersion: '2.0.0' })
+      ).resolves.toBe(current)
+    })
+
+    test('does not flag a long-established version released after a long gap', async () => {
+      // e.g. escape-string-regexp@5.0.0: released in 2021, about a year after 4.0.0
+      const u = npmUser('Uma', 'uma@example.com')
+      const current = daysAgo(2000)
+      const pakument = {
+        versions: {
+          '4.0.0': { version: '4.0.0', _npmUser: u },
+          '5.0.0': { version: '5.0.0', _npmUser: u }
+        },
+        time: {
+          '4.0.0': daysAgo(2359),
+          '5.0.0': current
+        }
+      }
+      const marshall = createMarshall(pakument, '5.0.0')
+      await expect(
+        marshall.validate({ packageName: 'pkg', packageVersion: '5.0.0' })
+      ).resolves.toBe(current)
+    })
+  })
+
+  describe('trusted publishing (OIDC) identity', () => {
+    const configA = 'oidc:fc1de4ec-4bbe-4ba2-af6c-b0bef036a519'
+    const configB = 'oidc:89d7315e-b90e-4351-a67f-775fa36a295f'
+
+    test('treats a package moving to trusted publishing as a new publisher', async () => {
+      const pakument = {
+        versions: {
+          '1.0.0': { version: '1.0.0', _npmUser: npmUser() },
+          '2.0.0': { version: '2.0.0', _npmUser: trustedPublisherUser(configA) }
+        },
+        time: {
+          '1.0.0': daysAgo(100),
+          '2.0.0': daysAgo(10)
+        }
+      }
+      const marshall = createMarshall(pakument, '2.0.0')
+      await expect(
+        marshall.validate({ packageName: 'pkg', packageVersion: '2.0.0' })
+      ).rejects.toThrow(
+        `The user GitHub Actions <npm-oidc-no-reply@github.com> (trusted publisher ${configA}) published this package for the first time only 10 days ago`
+      )
+    })
+
+    test('treats a changed trusted publisher configuration as a new publisher', async () => {
+      // Every trusted publishing release shares the same npm email, so the email alone would
+      // hide an account takeover that points trusted publishing at another repository
+      const pakument = {
+        versions: {
+          '1.0.0': { version: '1.0.0', _npmUser: trustedPublisherUser(configA) },
+          '2.0.0': { version: '2.0.0', _npmUser: trustedPublisherUser(configB) }
+        },
+        time: {
+          '1.0.0': daysAgo(100),
+          '2.0.0': daysAgo(5)
+        }
+      }
+      const marshall = createMarshall(pakument, '2.0.0')
+      await expect(
+        marshall.validate({ packageName: 'pkg', packageVersion: '2.0.0' })
+      ).rejects.toThrow(
+        `The user GitHub Actions <npm-oidc-no-reply@github.com> (trusted publisher ${configB}) published this package for the first time only 5 days ago`
+      )
+    })
+
+    test('matches the same trusted publisher configuration with or without the oidc: prefix', async () => {
+      const unprefixed = configA.replace(/^oidc:/, '')
+      const pakument = {
+        versions: {
+          '1.0.0': { version: '1.0.0', _npmUser: trustedPublisherUser(unprefixed) },
+          '2.0.0': { version: '2.0.0', _npmUser: trustedPublisherUser(configA) }
+        },
+        time: {
+          '1.0.0': daysAgo(100),
+          '2.0.0': daysAgo(5)
+        }
+      }
+      const marshall = createMarshall(pakument, '2.0.0')
+      await expect(
+        marshall.validate({ packageName: 'pkg', packageVersion: '2.0.0' })
+      ).rejects.toThrow(
+        'This version was published only 5 days ago by GitHub Actions <npm-oidc-no-reply@github.com>'
+      )
+    })
+
+    test('measures dormancy per trusted publisher configuration', async () => {
+      const pakument = {
+        versions: {
+          '1.0.0': { version: '1.0.0', _npmUser: trustedPublisherUser(configA) },
+          '1.1.0': { version: '1.1.0', _npmUser: trustedPublisherUser(configB) },
+          '1.2.0': { version: '1.2.0', _npmUser: trustedPublisherUser(configA) }
+        },
+        time: {
+          '1.0.0': daysAgo(320),
+          '1.1.0': daysAgo(100),
+          '1.2.0': daysAgo(20)
+        }
+      }
+      const marshall = createMarshall(pakument, '1.2.0')
+      await expect(
+        marshall.validate({ packageName: 'pkg', packageVersion: '1.2.0' })
+      ).rejects.toThrow(
+        `The maintainer GitHub Actions <npm-oidc-no-reply@github.com> (trusted publisher ${configA}) had not published this package for 300 days before this release (more than 9 months dormant)`
       )
     })
   })
