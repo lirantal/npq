@@ -54,9 +54,9 @@ Older approaches sometimes **mixed** “first publish ever” with “published 
 
 **Example H — Error:** Same, with a gap of **300 days** → **Error** with the same details.
 
-**Example J — Not flagged:** The version was published **two years** ago, a year after the maintainer’s previous release → no dormant alert, because the version is outside the 30-day window.
-
 **Example I — Other maintainer in the middle:** `1.0.0` by Alice, `2.0.0` by Bob, `3.0.0` by Alice again. For `3.0.0`, Alice’s gap is from **`1.0.0`**, not from Bob’s release.
+
+**Example J — Not flagged:** The version was published **two years** ago, a year after the maintainer’s previous release → no dormant alert, because the version is outside the 30-day window.
 
 ---
 
