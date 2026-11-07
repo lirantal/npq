@@ -19,8 +19,8 @@ npq package description: marshall your npm/npm package installs with high qualit
 
 ## Registry version selection
 
-`lib/helpers/resolveManifest.js` is the shared selection path for version-sensitive
-marshalls, author checks, and `RegistryClient.getManifest()`. It uses
+`lib/helpers/resolveManifest.js` is the shared selection path for registry-manifest
+checks, including author checks, and `RegistryClient.getManifest()`. It uses
 `npm-package-arg` and `npm-pick-manifest` to distinguish exact versions, ranges,
 and tags and to apply npm's default-tag, engine, deprecation, and date preferences.
 The registry client's flattened npm configuration is supplied to the resolver.
@@ -30,6 +30,9 @@ Selection operates on a copy of the packument because npm's selector normalizes
 manifest fields. Missing targets or manifests raise `EREGISTRYRESOLVE`, a registry
 audit failure that must not be downgraded to an optional check or a passing result.
 Never use semver coercion as a fallback for choosing the version to audit.
+
+The Snyk/OSV vulnerability marshall handles selectors separately and does not use
+this shared resolver.
 
 This selection is a registry-metadata check, not an installation plan. Installation
 still receives the original arguments. Existing lockfiles, overrides, other package
