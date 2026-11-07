@@ -103,6 +103,31 @@ afterEach(() => {
 })
 
 describe('non-interactive executable routing', () => {
+  test.each([
+    [npqBinary, 'resolution-shadow', '2.x'],
+    [heroBinary, 'resolution-shadow', '2.x'],
+    [npqBinary, 'resolution-latest', '2.x'],
+    [heroBinary, 'resolution-latest', '2.x'],
+    [npqBinary, 'resolution-shadow', 'missing-tag'],
+    [heroBinary, 'resolution-shadow', 'missing-tag'],
+    [npqBinary, 'resolution-shadow', '2.9.0']
+  ])('%s blocks %s for %s before launching the package manager', (binary, scenario, spec) => {
+    const result = run(binary, ['install', `resolution-fixture@${spec}`], null, scenario, {
+      NPQ_ALLOW_NON_INTERACTIVE_INSTALL: 'true'
+    })
+    expect(result.error).toBeUndefined()
+    expect(result.status).toBeGreaterThan(0)
+    expect(packageManagerRan()).toBe(false)
+    expect(result.stdout + result.stderr).toMatch(/postinstall|Unable to resolve version/)
+  })
+
+  test('a clean resolved manifest still reaches the package manager', () => {
+    const result = run(npqBinary, ['install', 'resolution-fixture@2.x'], null, 'resolution-clean')
+    expect(result.error).toBeUndefined()
+    expect(result.status).toBe(0)
+    expect(packageManagerRan()).toBe(true)
+  })
+
   test('npq blocks warning findings in ordinary non-TTY execution', () => {
     const result = run(npqBinary, ['install', 'express'], null, 'findings')
 

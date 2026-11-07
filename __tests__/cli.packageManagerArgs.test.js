@@ -53,7 +53,7 @@ describe('package-manager-aware minimal argument parsing', () => {
       args: ['--filter', 'workspace', 'add', 'express']
     })
 
-    expect(result.packages).toEqual(['express@latest'])
+    expect(result.packages).toEqual(['express@*'])
   })
 
   test('excludes a trailing pnpm filter selector from packages', () => {
@@ -62,7 +62,7 @@ describe('package-manager-aware minimal argument parsing', () => {
       args: ['add', 'express', '--filter', 'workspace']
     })
 
-    expect(result.packages).toEqual(['express@latest'])
+    expect(result.packages).toEqual(['express@*'])
   })
 
   test('excludes a pnpm filter between package operands', () => {
@@ -71,7 +71,7 @@ describe('package-manager-aware minimal argument parsing', () => {
       args: ['add', 'express', '--filter', 'workspace', 'lodash']
     })
 
-    expect(result.packages).toEqual(['express@latest', 'lodash@latest'])
+    expect(result.packages).toEqual(['express@*', 'lodash@*'])
   })
 
   test.each([
@@ -80,7 +80,7 @@ describe('package-manager-aware minimal argument parsing', () => {
   ])('supports the pnpm %s filter form', (_form, args) => {
     const result = parseMinimal({ packageManager: 'pnpm', args })
 
-    expect(result.packages).toEqual(['express@latest'])
+    expect(result.packages).toEqual(['express@*'])
   })
 
   test('supports multiple pnpm filters', () => {
@@ -98,7 +98,7 @@ describe('package-manager-aware minimal argument parsing', () => {
       ]
     })
 
-    expect(result.packages).toEqual(['express@latest'])
+    expect(result.packages).toEqual(['express@*'])
   })
 
   test.each(['workspace...', '...workspace'])('excludes the pnpm %s selector', (selector) => {
@@ -107,7 +107,7 @@ describe('package-manager-aware minimal argument parsing', () => {
       args: ['--filter', selector, 'add', 'express']
     })
 
-    expect(result.packages).toEqual(['express@latest'])
+    expect(result.packages).toEqual(['express@*'])
   })
 
   test('does not treat a filter selector named install as the command', () => {
@@ -116,7 +116,7 @@ describe('package-manager-aware minimal argument parsing', () => {
       args: ['--filter', 'install', 'add', 'express']
     })
 
-    expect(result.packages).toEqual(['express@latest'])
+    expect(result.packages).toEqual(['express@*'])
   })
 
   test('does not treat a pnpm selector after install as a package', () => {
@@ -134,7 +134,7 @@ describe('package-manager-aware minimal argument parsing', () => {
       args: ['add', 'install', '--filter', 'workspace']
     })
 
-    expect(result.packages).toEqual(['install@latest'])
+    expect(result.packages).toEqual(['install@*'])
   })
 
   test('keeps filtered non-install commands in passthrough mode', () => {
@@ -171,7 +171,7 @@ describe('package-manager-aware minimal argument parsing', () => {
     })
 
     expect(result).toEqual({
-      packages: ['@company/tool@latest'],
+      packages: ['@company/tool@*'],
       registryConfigArgs: [
         '--registry=https://registry.example.test/npm/',
         '--userconfig=/tmp/user.npmrc',
@@ -192,7 +192,7 @@ describe('package-manager-aware minimal argument parsing', () => {
     })
 
     expect(result).toEqual({
-      packages: ['express@latest'],
+      packages: ['express@*'],
       registryConfigArgs: [],
       installSubcommandExplicit: true,
       json: false,
@@ -207,7 +207,7 @@ describe('package-manager-aware minimal argument parsing', () => {
   ])('preserves %s package parsing', (_label, packageManager, args) => {
     const result = parseMinimal({ packageManager, args })
 
-    expect(result.packages).toEqual(['express@latest'])
+    expect(result.packages).toEqual(['express@*'])
   })
 
   test.each(['npm', 'yarn'])('does not apply the pnpm filter schema to %s', (packageManager) => {

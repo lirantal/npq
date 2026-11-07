@@ -10,7 +10,7 @@ function packageData(maintainers) {
   return {
     'dist-tags': { latest: '1.0.0' },
     versions: {
-      '1.0.0': { maintainers }
+      '1.0.0': { version: '1.0.0', maintainers }
     }
   }
 }
@@ -19,10 +19,19 @@ function packageDataWithVersionedMaintainers() {
   return {
     'dist-tags': { latest: '2.0.0', next: '3.0.0' },
     versions: {
-      '1.0.0': { maintainers: [{ name: 'exact', email: 'dev@exact.example.dev' }] },
-      '1.1.0': { maintainers: [{ name: 'range', email: 'dev@range.example.dev' }] },
-      '2.0.0': { maintainers: [{ name: 'latest', email: 'dev@latest.example.dev' }] },
-      '3.0.0': { maintainers: [{ name: 'next', email: 'dev@next.example.dev' }] }
+      '1.0.0': {
+        version: '1.0.0',
+        maintainers: [{ name: 'exact', email: 'dev@exact.example.dev' }]
+      },
+      '1.1.0': {
+        version: '1.1.0',
+        maintainers: [{ name: 'range', email: 'dev@range.example.dev' }]
+      },
+      '2.0.0': {
+        version: '2.0.0',
+        maintainers: [{ name: 'latest', email: 'dev@latest.example.dev' }]
+      },
+      '3.0.0': { version: '3.0.0', maintainers: [{ name: 'next', email: 'dev@next.example.dev' }] }
     }
   }
 }
@@ -46,6 +55,16 @@ function createMarshall({ getPackageInfo, resolve, rdapLookup } = {}) {
   })
 }
 
+// DNS fixtures supply metadata directly; production resolution receives a name.
+function validateFixture(marshall, pkg) {
+  if (typeof pkg.packageName === 'object') {
+    const data = pkg.packageName
+    marshall.packageRepoUtils.getPackageInfo = jest.fn().mockResolvedValue(data)
+    return marshall.validate({ ...pkg, packageName: 'test-package' })
+  }
+  return marshall.validate(pkg)
+}
+
 describe('Expired domains test suites', () => {
   test('has the right title', () => {
     expect(createMarshall().title()).toEqual('Detecting expired domains for authors account...')
@@ -60,7 +79,7 @@ describe('Expired domains test suites', () => {
       getPackageInfo: jest.fn().mockRejectedValue(failure)
     })
 
-    await expect(testMarshall.validate({ packageName: 'example' })).rejects.toBe(failure)
+    await expect(validateFixture(testMarshall, { packageName: 'example' })).rejects.toBe(failure)
   })
 
   test.each([
@@ -71,7 +90,7 @@ describe('Expired domains test suites', () => {
     const resolve = jest.fn().mockResolvedValue(['ns1.example.com'])
     const testMarshall = createMarshall({ resolve })
 
-    await testMarshall.validate({
+    await validateFixture(testMarshall, {
       packageName: packageDataWithVersionedMaintainers(),
       packageVersion
     })
@@ -80,16 +99,25 @@ describe('Expired domains test suites', () => {
     expect(resolve).not.toHaveBeenCalledWith('latest.example.dev', 'NS')
   })
 
-  test('is not evaluated for an unresolvable selector', async () => {
+  test('fails closed for an unresolvable selector', async () => {
     const resolve = jest.fn()
     const testMarshall = createMarshall({ resolve })
 
     await expect(
-      testMarshall.validate({
+      validateFixture(testMarshall, {
         packageName: packageDataWithVersionedMaintainers(),
         packageVersion: 'unknown'
       })
-    ).rejects.toThrow(NotEvaluated)
+    ).rejects.toMatchObject({ code: 'EREGISTRYRESOLVE' })
+    expect(resolve).not.toHaveBeenCalled()
+  })
+
+  test('fails closed when package data has no versions', async () => {
+    const resolve = jest.fn()
+    const testMarshall = createMarshall({ resolve })
+    await expect(
+      validateFixture(testMarshall, { packageName: {}, packageVersion: 'latest' })
+    ).rejects.toMatchObject({ code: 'EREGISTRYRESOLVE' })
     expect(resolve).not.toHaveBeenCalled()
   })
 
@@ -103,20 +131,22 @@ describe('Expired domains test suites', () => {
     const testMarshall = createMarshall({ resolve })
 
     await expect(
-      testMarshall.validate({ packageName: packageData([maintainer]), packageVersion: 'latest' })
+      validateFixture(testMarshall, {
+        packageName: packageData([maintainer]),
+        packageVersion: 'latest'
+      })
     ).rejects.toThrow(NotEvaluated)
     expect(resolve).not.toHaveBeenCalled()
   })
 
   test.each([
     ['latest version has no maintainers data', packageData(undefined)],
-    ['maintainers list is empty', packageData([])],
-    ['package data has no versions', {}]
+    ['maintainers list is empty', packageData([])]
   ])('is not evaluated when the %s', async (_name, data) => {
     const testMarshall = createMarshall()
 
     await expect(
-      testMarshall.validate({ packageName: data, packageVersion: 'latest' })
+      validateFixture(testMarshall, { packageName: data, packageVersion: 'latest' })
     ).rejects.toThrow(NotEvaluated)
   })
 
@@ -130,7 +160,7 @@ describe('Expired domains test suites', () => {
     const testMarshall = createMarshall({ resolve })
 
     await expect(
-      testMarshall.validate({
+      validateFixture(testMarshall, {
         packageName: packageData([{ name: 'maintainer', email: 'dev@missing-domain.com' }]),
         packageVersion: 'latest'
       })
@@ -150,7 +180,7 @@ describe('Expired domains test suites', () => {
       const testMarshall = createMarshall({ resolve })
 
       await expect(
-        testMarshall.validate({
+        validateFixture(testMarshall, {
           packageName: packageData([{ name: 'maintainer', email: 'dev@public-domain.com' }]),
           packageVersion: 'latest'
         })
@@ -169,9 +199,12 @@ describe('Expired domains test suites', () => {
     const ctx = { pkgs: [], marshalls: {} }
     testMarshall.init(ctx)
 
+    testMarshall.packageRepoUtils.getPackageInfo = jest
+      .fn()
+      .mockResolvedValue(packageData([{ name: 'maintainer', email: 'dev@missing-domain.com' }]))
     await testMarshall.checkPackage(
       {
-        packageName: packageData([{ name: 'maintainer', email: 'dev@missing-domain.com' }]),
+        packageName: 'test-package',
         packageString: 'example-package'
       },
       ctx
@@ -202,7 +235,7 @@ describe('Expired domains test suites', () => {
     const testMarshall = createMarshall({ resolve })
 
     await expect(
-      testMarshall.validate({
+      validateFixture(testMarshall, {
         packageName: packageData([
           { name: 'b', email: 'dev@b-domain.com' },
           { name: 'invalid', email: '' },
@@ -233,7 +266,7 @@ describe('Expired domains test suites', () => {
     const testMarshall = createMarshall({ resolve })
 
     await expect(
-      testMarshall.validate({
+      validateFixture(testMarshall, {
         packageName: packageData([
           { name: 'B first', email: 'first@b-domain.com' },
           { name: 'invalid', email: '' },
@@ -259,7 +292,7 @@ describe('Expired domains test suites', () => {
     const testMarshall = createMarshall({ resolve })
 
     await expect(
-      testMarshall.validate({
+      validateFixture(testMarshall, {
         packageName: packageData([
           {
             name: 'Trusted\nMaintainer\u001b[31m',
@@ -284,7 +317,7 @@ describe('Expired domains test suites', () => {
     const testMarshall = createMarshall({ resolve, rdapLookup })
 
     await expect(
-      testMarshall.validate({
+      validateFixture(testMarshall, {
         packageName: packageData([{ name: 'maintainer', email: 'dev@public-domain.com' }]),
         packageVersion: 'latest'
       })
@@ -305,7 +338,7 @@ describe('Expired domains test suites', () => {
     const testMarshall = createMarshall({ resolve, rdapLookup })
 
     await expect(
-      testMarshall.validate({
+      validateFixture(testMarshall, {
         packageName: packageData([{ name: 'maintainer', email: 'dev@public-domain.com' }]),
         packageVersion: 'latest'
       })
@@ -318,7 +351,7 @@ describe('Expired domains test suites', () => {
     const testMarshall = createMarshall({ resolve, rdapLookup })
 
     await expect(
-      testMarshall.validate({
+      validateFixture(testMarshall, {
         packageName: packageData([{ name: 'maintainer', email: 'dev@public-domain.com' }]),
         packageVersion: 'latest'
       })
@@ -330,7 +363,7 @@ describe('Expired domains test suites', () => {
     const resolve = jest.fn().mockResolvedValue(['ns1.example.com'])
     const testMarshall = createMarshall({ resolve })
 
-    await testMarshall.validate({
+    await validateFixture(testMarshall, {
       packageName: packageData([{ name: 'maintainer', email: 'dev@MAIL.Example.CO.UK.' }]),
       packageVersion: 'latest'
     })
@@ -344,7 +377,7 @@ describe('Expired domains test suites', () => {
     const testMarshall = createMarshall({ resolve, rdapLookup })
 
     await expect(
-      testMarshall.validate({
+      validateFixture(testMarshall, {
         packageName: packageData([{ name: 'maintainer', email: 'dev@example.co.uk' }]),
         packageVersion: 'latest'
       })
@@ -360,7 +393,7 @@ describe('Expired domains test suites', () => {
     const testMarshall = createMarshall({ resolve, rdapLookup })
 
     await expect(
-      testMarshall.validate({
+      validateFixture(testMarshall, {
         packageName: packageData([{ name: 'maintainer', email: 'dev@service.unknown' }]),
         packageVersion: 'latest'
       })
@@ -376,7 +409,7 @@ describe('Expired domains test suites', () => {
     const resolve = jest.fn().mockResolvedValue(['ns1.example.com'])
     const testMarshall = createMarshall({ resolve })
 
-    await testMarshall.validate({
+    await validateFixture(testMarshall, {
       packageName: packageData([{ name: 'maintainer', email: 'dev@BÜCHER.DE.' }]),
       packageVersion: 'latest'
     })
@@ -393,7 +426,7 @@ describe('Expired domains test suites', () => {
     }
 
     await expect(
-      testMarshall.validate({ packageName: data, packageVersion: 'latest' })
+      validateFixture(testMarshall, { packageName: data, packageVersion: 'latest' })
     ).resolves.toEqual([['ns1.example.com']])
     expect(resolve).toHaveBeenCalledWith('mail.public-domain.com', 'NS')
   })
@@ -407,7 +440,7 @@ describe('Expired domains test suites', () => {
     }
 
     await expect(
-      testMarshall.validate({ packageName: data, packageVersion: 'latest' })
+      validateFixture(testMarshall, { packageName: data, packageVersion: 'latest' })
     ).rejects.toThrow(NotEvaluated)
     expect(resolve).not.toHaveBeenCalled()
   })
@@ -417,7 +450,7 @@ describe('Expired domains test suites', () => {
     const testMarshall = createMarshall({ resolve })
 
     await expect(
-      testMarshall.validate({
+      validateFixture(testMarshall, {
         packageName: packageData([
           { name: 'first', email: 'first@Public-Domain.COM' },
           { name: 'second', email: 'second@public-domain.com' }
@@ -434,7 +467,7 @@ describe('Expired domains test suites', () => {
     const testMarshall = createMarshall({ resolve })
 
     await expect(
-      testMarshall.validate({
+      validateFixture(testMarshall, {
         packageName: packageData([
           { name: 'first', email: 'first@public-domain.com' },
           { name: 'second', email: 'second@public-domain.com' }
@@ -452,7 +485,7 @@ describe('Expired domains test suites', () => {
     const testMarshall = createMarshall({ resolve })
 
     await expect(
-      testMarshall.validate({
+      validateFixture(testMarshall, {
         packageName: packageData([
           { name: 'first', email: 'first@public-domain.com' },
           { name: 'second', email: 'second@public-domain.org' }

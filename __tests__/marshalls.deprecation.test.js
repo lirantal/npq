@@ -24,9 +24,7 @@ describe('Deprecation Marshall test suites', () => {
           latest: '1.0.0'
         },
         versions: {
-          '1.0.0': {
-            deprecated: 'This package is no longer maintained'
-          }
+          '1.0.0': { version: '1.0.0', deprecated: 'This package is no longer maintained' }
         }
       }
 
@@ -49,7 +47,7 @@ describe('Deprecation Marshall test suites', () => {
           latest: '1.0.0'
         },
         versions: {
-          '1.0.0': {}
+          '1.0.0': { version: '1.0.0' }
         }
       }
 
@@ -77,7 +75,7 @@ describe('Deprecation Marshall test suites', () => {
       expect(result).toBe(true)
     })
 
-    test('returns true when package version cannot be resolved', async () => {
+    test('fails closed when package version cannot be resolved', async () => {
       const mockPackageData = {
         'dist-tags': {},
         versions: {}
@@ -90,11 +88,12 @@ describe('Deprecation Marshall test suites', () => {
         }
       })
 
-      const result = await marshall.validate({
-        packageName: 'test-pkg',
-        packageVersion: 'nonexistent'
-      })
-      expect(result).toBe(true)
+      await expect(
+        marshall.validate({
+          packageName: 'test-pkg',
+          packageVersion: 'nonexistent'
+        })
+      ).rejects.toMatchObject({ code: 'EREGISTRYRESOLVE' })
     })
   })
 
@@ -105,7 +104,7 @@ describe('Deprecation Marshall test suites', () => {
           latest: '1.0.0'
         },
         versions: {
-          '1.0.0': {}
+          '1.0.0': { version: '1.0.0' }
         },
         repository: {
           url: 'git+https://github.com/owner/repo.git'
@@ -131,7 +130,7 @@ describe('Deprecation Marshall test suites', () => {
           latest: '1.0.0'
         },
         versions: {
-          '1.0.0': {}
+          '1.0.0': { version: '1.0.0' }
         },
         repository: {
           url: 'git+https://github.com/owner/repo.git'
@@ -157,7 +156,7 @@ describe('Deprecation Marshall test suites', () => {
           latest: '1.0.0'
         },
         versions: {
-          '1.0.0': {}
+          '1.0.0': { version: '1.0.0' }
         }
       }
 
@@ -180,7 +179,7 @@ describe('Deprecation Marshall test suites', () => {
           latest: '1.0.0'
         },
         versions: {
-          '1.0.0': {}
+          '1.0.0': { version: '1.0.0' }
         },
         repository: {
           url: 'git+https://gitlab.com/owner/repo.git'
@@ -206,7 +205,7 @@ describe('Deprecation Marshall test suites', () => {
           latest: '1.0.0'
         },
         versions: {
-          '1.0.0': {}
+          '1.0.0': { version: '1.0.0' }
         },
         repository: {
           url: 'git+https://github.com/owner/repo.git'
@@ -242,9 +241,7 @@ describe('Deprecation Marshall test suites', () => {
           latest: '1.0.0'
         },
         versions: {
-          '1.0.0': {
-            deprecated: 'This package is deprecated'
-          }
+          '1.0.0': { version: '1.0.0', deprecated: 'This package is deprecated' }
         },
         repository: {
           url: 'git+https://github.com/owner/repo.git'

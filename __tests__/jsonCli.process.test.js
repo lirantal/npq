@@ -144,7 +144,7 @@ describe('shipped npq JSON process contract', () => {
       {
         code: 'PACKAGE_LOOKUP_FAILED',
         message: 'Unable to retrieve package metadata',
-        package: 'express@latest'
+        package: 'express@*'
       }
     ])
   })

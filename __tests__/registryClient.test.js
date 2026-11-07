@@ -109,7 +109,7 @@ describe('RegistryClient', () => {
       _time: '2026-01-01T00:00:00.000Z'
     })
     await expect(client.getManifest('pkg@3.0.0', packument)).rejects.toThrow(
-      'Version 3.0.0 not found for package pkg'
+      'Unable to resolve version 3.0.0 for package pkg'
     )
   })
 

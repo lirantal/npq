@@ -130,7 +130,7 @@ describe('CliParser', () => {
       const positionals = ['install', 'express', 'lodash@4.17.21']
       const result = CliParser._extractPackagesFromPositionals(positionals)
 
-      expect(result).toEqual(['express@latest', 'lodash@4.17.21'])
+      expect(result).toEqual(['express@*', 'lodash@4.17.21'])
     })
 
     test('should handle various install command aliases', () => {
@@ -151,7 +151,7 @@ describe('CliParser', () => {
       commands.forEach((command) => {
         const positionals = [command, 'express']
         const result = CliParser._extractPackagesFromPositionals(positionals)
-        expect(result).toEqual(['express@latest'])
+        expect(result).toEqual(['express@*'])
       })
     })
 
@@ -159,14 +159,20 @@ describe('CliParser', () => {
       const positionals = ['express', 'lodash']
       const result = CliParser._extractPackagesFromPositionals(positionals)
 
-      expect(result).toEqual(['express@latest', 'lodash@latest'])
+      expect(result).toEqual(['express@*', 'lodash@*'])
     })
 
     test('should handle version modifiers correctly', () => {
       const positionals = ['install', 'express@*', 'lodash@^4.0.0', 'react@~16.0.0']
       const result = CliParser._extractPackagesFromPositionals(positionals)
 
-      expect(result).toEqual(['express@latest', 'lodash@^4.0.0', 'react@~16.0.0'])
+      expect(result).toEqual(['express@*', 'lodash@^4.0.0', 'react@~16.0.0'])
+    })
+
+    test('preserves the distinction between explicit latest and wildcard requests', () => {
+      expect(CliParser._extractPackagesFromPositionals(['install', 'pkg@latest', 'pkg@*'])).toEqual(
+        ['pkg@latest', 'pkg@*']
+      )
     })
 
     test('should return empty array when no packages provided', () => {
@@ -187,7 +193,7 @@ describe('CliParser', () => {
       const positionals = ['install', '@scope/package', '@another/package@1.0.0']
       const result = CliParser._extractPackagesFromPositionals(positionals)
 
-      expect(result).toEqual(['@scope/package@latest', '@another/package@1.0.0'])
+      expect(result).toEqual(['@scope/package@*', '@another/package@1.0.0'])
     })
 
     test('should exit early when earlyExitNoInstall is true and no install command', () => {
@@ -201,7 +207,7 @@ describe('CliParser', () => {
       const positionals = ['install', 'express']
       const result = CliParser._extractPackagesFromPositionals(positionals, true)
 
-      expect(result).toEqual(['express@latest'])
+      expect(result).toEqual(['express@*'])
     })
   })
 
@@ -270,7 +276,7 @@ describe('CliParser', () => {
       const result = CliParser.parseArgsFull()
 
       expect(result).toEqual({
-        packages: ['express@latest', 'lodash@latest'],
+        packages: ['express@*', 'lodash@*'],
         packageManager: 'yarn',
         dryRun: true,
         plain: true,
@@ -354,7 +360,7 @@ describe('CliParser', () => {
       })
 
       expect(CliParser.parseArgsFull()).toEqual({
-        packages: ['express@latest'],
+        packages: ['express@*'],
         packageManager: 'npm',
         dryRun: false,
         plain: false,
@@ -642,7 +648,7 @@ describe('CliParser', () => {
       const result = CliParser.parseArgsMinimal()
 
       expect(result).toEqual({
-        packages: ['express@latest', 'lodash@latest'],
+        packages: ['express@*', 'lodash@*'],
         registryConfigArgs: [],
         installSubcommandExplicit: true,
         json: false,
@@ -687,7 +693,7 @@ describe('CliParser', () => {
       mockParseArgs.mockReturnValue({ values: {}, positionals: ['install', 'express'] })
 
       expect(CliParser.parseArgsMinimal()).toEqual({
-        packages: ['express@latest'],
+        packages: ['express@*'],
         registryConfigArgs: [],
         installSubcommandExplicit: true,
         json: false,
@@ -753,8 +759,8 @@ describe('CliParser', () => {
       expect(result.packages).toEqual([
         'express@4.18.2',
         '@types/node@^18.0.0',
-        'lodash@latest',
-        '@babel/core@latest',
+        'lodash@*',
+        '@babel/core@*',
         'react@~17.0.0'
       ])
     })
@@ -773,7 +779,7 @@ describe('CliParser', () => {
       const result = CliParser.parseArgsFull()
 
       expect(result).toEqual({
-        packages: ['express@latest'],
+        packages: ['express@*'],
         packageManager: 'yarn',
         dryRun: true,
         plain: true,
@@ -799,7 +805,7 @@ describe('CliParser', () => {
       const result = CliParser.parseArgsFull()
 
       expect(result).toEqual({
-        packages: ['express@latest'],
+        packages: ['express@*'],
         packageManager: 'yarn',
         dryRun: true,
         plain: true,

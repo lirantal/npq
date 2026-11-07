@@ -50,6 +50,11 @@ npq install express
 
 When npq completes its signal checks it hands over the actual package install job to the package manager (npm by default, or as specified via the `NPQ_PKG_MGR` environment variable).
 
+Version-specific checks use npm's registry manifest selection rules for versions,
+ranges, and tags. A version that cannot be resolved stops the audit. These checks
+do not pin the subsequent install: lockfiles, package-manager-specific resolution,
+and registry changes after the audit can affect what is installed.
+
 **DISCLAIMER**: there's no guaranteed absolute safety; a malicious or vulnerable package could still exist that has no security vulnerabilities publicly disclosed and passes npq's checks.
 
 ## Demo
