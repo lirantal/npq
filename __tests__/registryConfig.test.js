@@ -4,6 +4,7 @@ const fs = require('node:fs')
 const os = require('node:os')
 const path = require('node:path')
 const RegistryConfig = require('../lib/helpers/registryConfig')
+const RegistryClient = require('../lib/helpers/registryClient')
 
 describe('RegistryConfig', () => {
   let root
@@ -68,6 +69,34 @@ describe('RegistryConfig', () => {
     ).toBe('scope-token')
     expect(config.describeRegistry('@company/tool')).not.toContain('scope-token')
   })
+
+  test.each(['cli', 'environment'])(
+    'applies the %s tag setting to manifest selection',
+    async (source) => {
+      const config = await RegistryConfig.load({
+        argv: source === 'cli' ? ['--tag=beta'] : [],
+        env: { ...env, npm_config_tag: source === 'environment' ? 'beta' : 'latest' },
+        cwd: project
+      })
+      expect(config.requestOptions.defaultTag).toBe('beta')
+      expect(config.requestOptions.tag).toBeUndefined()
+
+      const client = new RegistryClient(config)
+      const data = {
+        name: 'pkg',
+        'dist-tags': { latest: '2.1.0', beta: '2.0.0' },
+        versions: {
+          '2.0.0': { name: 'pkg', version: '2.0.0' },
+          '2.1.0': { name: 'pkg', version: '2.1.0' }
+        }
+      }
+      for (const spec of ['*', '2.x']) {
+        await expect(client.getManifest(`pkg@${spec}`, data)).resolves.toMatchObject({
+          version: '2.0.0'
+        })
+      }
+    }
+  )
 
   test('uses environment over project and project over user and global', async () => {
     const environmentConfig = await RegistryConfig.load({

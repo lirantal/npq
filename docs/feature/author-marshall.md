@@ -128,7 +128,7 @@ They are **complementary**: one stresses **trust in a new publisher on this pack
 
 - **`versionPublishedDateString`:** If it were missing, the new-author block is skipped when it depends on that field; the dormant block is skipped if the current version time cannot be parsed; the recency block still runs with `new Date(undefined)`, which yields **NaN** math and typically **no** recency flags. In normal npm metadata, `time[version]` should exist for published versions.
 
-- **Dist-tags vs explicit versions:** There is an in-code **TODO** to fully align behavior when the requested spec is a **dist-tag** (e.g. `latest`) versus an explicit semver; keep that in mind when testing edge cases.
+- **Version selection:** `packageRepoUtils.getSemVer` uses the [shared registry-manifest resolver](../architecture.md#registry-version-selection) for explicit versions, ranges, and dist-tags. It follows npm's manifest selection rules, including default-tag preferences; a semver-shaped tag cannot override a version or range. Unresolved targets fail the audit. This selects metadata for the check and does not pin the subsequent install.
 
 ### User-visible messages
 

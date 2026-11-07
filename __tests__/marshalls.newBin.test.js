@@ -267,7 +267,7 @@ describe('NewBinMarshall', () => {
     expect(newBinMarshall.ctx.marshalls.newBin.warnings).toHaveLength(0)
   })
 
-  it('should pass if target version string cannot be resolved', async () => {
+  it('fails closed if target version string cannot be resolved', async () => {
     const pkg = {
       packageName: 'test-pkg',
       packageVersion: 'nonexistent-tag',
@@ -277,7 +277,7 @@ describe('NewBinMarshall', () => {
     packageRepoUtilsMock.getPackageInfo.mockResolvedValue(mockPackageInfo('test-pkg', versions))
     packageRepoUtilsMock.parsePackageVersion.mockReturnValue(null) // Simulate version not resolving
 
-    await expect(newBinMarshall.validate(pkg)).resolves.toBeUndefined()
+    await expect(newBinMarshall.validate(pkg)).rejects.toMatchObject({ code: 'EREGISTRYRESOLVE' })
     expect(newBinMarshall.ctx.marshalls.newBin.warnings).toHaveLength(0)
   })
 

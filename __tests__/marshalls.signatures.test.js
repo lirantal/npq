@@ -183,7 +183,7 @@ describe('Signature test suites', () => {
       packageRepoUtils: {
         getPackageInfo: jest.fn().mockResolvedValue({
           'dist-tags': { latest: '1.0.0' },
-          versions: { '1.0.0': {} }
+          versions: { '1.0.0': { version: '1.0.0' } }
         }),
         parsePackageVersion: jest.fn().mockReturnValue('1.0.0')
       }

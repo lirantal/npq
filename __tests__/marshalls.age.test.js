@@ -28,6 +28,7 @@ describe('Age Marshall', () => {
       packageRepoUtils: {
         getPackageInfo: () => {
           return Promise.resolve({
+            versions: { '1.0.0': { version: '1.0.0' } },
             time: {
               created: daysAgo15.toISOString(),
               '1.0.0': daysAgo15.toISOString()
@@ -58,6 +59,7 @@ describe('Age Marshall', () => {
       packageRepoUtils: {
         getPackageInfo: () => {
           return Promise.resolve({
+            versions: { '1.0.0': { version: '1.0.0' } },
             time: {
               created: almostThreshold.toISOString(),
               '1.0.0': almostThreshold.toISOString()
@@ -95,6 +97,7 @@ describe('Age Marshall', () => {
         packageRepoUtils: {
           getPackageInfo: () =>
             Promise.resolve({
+              versions: { '1.0.0': { version: '1.0.0' } },
               time: {
                 created: exactlyTwentyTwoDaysAgo.toISOString(),
                 '1.0.0': exactlyTwentyTwoDaysAgo.toISOString()
@@ -117,6 +120,7 @@ describe('Age Marshall', () => {
         packageRepoUtils: {
           getPackageInfo: () =>
             Promise.resolve({
+              versions: { '1.0.0': { version: '1.0.0' } },
               time: {
                 created: justUnderTwentyTwoDaysAgo.toISOString(),
                 '1.0.0': justUnderTwentyTwoDaysAgo.toISOString()
@@ -147,6 +151,7 @@ describe('Age Marshall', () => {
       packageRepoUtils: {
         getPackageInfo: () => {
           return Promise.resolve({
+            versions: { '1.0.0': { version: '1.0.0' } },
             time: {
               created: exactThreshold.toISOString(),
               '1.0.0': exactThreshold.toISOString()
@@ -177,6 +182,7 @@ describe('Age Marshall', () => {
       packageRepoUtils: {
         getPackageInfo: () => {
           return Promise.resolve({
+            versions: { '1.0.0': { version: '1.0.0' } },
             time: {
               created: daysAgo30.toISOString(),
               '1.0.0': daysAgo30.toISOString()
@@ -207,6 +213,7 @@ describe('Age Marshall', () => {
       packageRepoUtils: {
         getPackageInfo: () => {
           return Promise.resolve({
+            versions: { '1.0.0': { version: '1.0.0' } },
             time: {
               created: veryOld.toISOString(),
               '1.0.0': veryOld.toISOString()
@@ -233,6 +240,7 @@ describe('Age Marshall', () => {
       packageRepoUtils: {
         getPackageInfo: () => {
           return Promise.resolve({
+            versions: { '1.0.0': { version: '1.0.0' } },
             // Missing time.created
             'dist-tags': {
               latest: '1.0.0'
@@ -278,6 +286,7 @@ describe('Age Marshall', () => {
       packageRepoUtils: {
         getPackageInfo: () => {
           return Promise.resolve({
+            versions: { '1.0.0': { version: '1.0.0' } },
             time: {
               created: exactlyHalfwayBelowThreshold.toISOString(),
               '1.0.0': exactlyHalfwayBelowThreshold.toISOString()
@@ -308,6 +317,7 @@ describe('Age Marshall', () => {
       packageRepoUtils: {
         getPackageInfo: () => {
           return Promise.resolve({
+            versions: { '1.0.0': { version: '1.0.0' } },
             time: {
               created: futureDate.toISOString(),
               '1.0.0': futureDate.toISOString()
@@ -343,6 +353,7 @@ describe('Age Marshall', () => {
       packageRepoUtils: {
         getPackageInfo: () => {
           return Promise.resolve({
+            versions: { '1.0.0': { version: '1.0.0' } },
             time: {
               created: packageCreationDate.toISOString(),
               '1.0.0': exactlyOverUnmaintainedThreshold.toISOString()

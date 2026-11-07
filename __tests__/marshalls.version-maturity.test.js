@@ -23,6 +23,7 @@ describe('Version Maturity Marshall', () => {
       packageRepoUtils: {
         getPackageInfo: () => {
           return Promise.resolve({
+            versions: { '1.0.0': { version: '1.0.0' } },
             'dist-tags': {
               latest: '1.0.0'
             },
@@ -53,6 +54,7 @@ describe('Version Maturity Marshall', () => {
       packageRepoUtils: {
         getPackageInfo: () => {
           return Promise.resolve({
+            versions: { '1.0.0': { version: '1.0.0' } },
             'dist-tags': {
               latest: '1.0.0'
             },
@@ -83,6 +85,7 @@ describe('Version Maturity Marshall', () => {
       packageRepoUtils: {
         getPackageInfo: () => {
           return Promise.resolve({
+            versions: { '1.0.0': { version: '1.0.0' } },
             'dist-tags': {
               latest: '1.0.0'
             },
@@ -113,6 +116,7 @@ describe('Version Maturity Marshall', () => {
       packageRepoUtils: {
         getPackageInfo: () => {
           return Promise.resolve({
+            versions: { '1.0.0': { version: '1.0.0' } },
             'dist-tags': {
               latest: '1.0.0'
             },
@@ -159,6 +163,7 @@ describe('Version Maturity Marshall', () => {
       packageRepoUtils: {
         getPackageInfo: () => {
           return Promise.resolve({
+            versions: { '1.0.0': { version: '1.0.0' } },
             'dist-tags': {
               latest: '1.0.0'
             },
@@ -187,6 +192,7 @@ describe('Version Maturity Marshall', () => {
       packageRepoUtils: {
         getPackageInfo: () => {
           return Promise.resolve({
+            versions: { '1.2.3': { version: '1.2.3' } },
             'dist-tags': {
               latest: '1.2.3'
             },

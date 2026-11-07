@@ -177,6 +177,7 @@ describe('Provenance test suites', () => {
           return new Promise((resolve) => {
             resolve({
               name: pkgInfo,
+              versions: { '1.0.0': { name: pkgInfo, version: '1.0.0' } },
               'dist-tags': { latest: '1.0.0' }
             })
           })
@@ -228,6 +229,7 @@ describe('Provenance test suites', () => {
           return new Promise((resolve) => {
             resolve({
               name: pkgInfo,
+              versions: { '1.0.0': { name: pkgInfo, version: '1.0.0' } },
               'dist-tags': { latest: '1.0.0' }
             })
           })
@@ -292,6 +294,7 @@ describe('Provenance test suites', () => {
           return new Promise((resolve) => {
             resolve({
               name: pkgInfo,
+              versions: { '1.0.0': { name: pkgInfo, version: '1.0.0' } },
               'dist-tags': { latest: '1.0.0' }
             })
           })
@@ -554,7 +557,7 @@ describe('Provenance test suites', () => {
 
     await expect(
       testMarshall.validate({ packageName: 'badRange', packageVersion: 'not-in-packument' })
-    ).rejects.toThrow('Unable to find version or dist-tag for package')
+    ).rejects.toThrow('Unable to resolve version not-in-packument for package badRange')
   })
 
   test('throws Warning when verify succeeds but result has no _attestations', async () => {

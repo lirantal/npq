@@ -50,6 +50,12 @@ npq install express
 
 When npq completes its signal checks it hands over the actual package install job to the package manager (npm by default, or as specified via the `NPQ_PKG_MGR` environment variable).
 
+Registry-manifest checks use npm's selection rules for versions, ranges, and tags.
+If an enabled registry-manifest check cannot resolve the requested version, the
+audit fails. The Snyk/OSV vulnerability check handles selectors separately. These
+checks do not pin the subsequent install: lockfiles, package-manager-specific
+resolution, and registry changes after the audit can affect what is installed.
+
 **DISCLAIMER**: there's no guaranteed absolute safety; a malicious or vulnerable package could still exist that has no security vulnerabilities publicly disclosed and passes npq's checks.
 
 ## Demo
