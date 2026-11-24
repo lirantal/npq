@@ -130,11 +130,11 @@ describe.each([npqBinary, heroBinary])('%s unsupported package inputs', (binary)
   test.each(unsupportedSpecs)(
     'rejects mixed install input containing %s before auditing',
     (spec) => {
-      expectRejected(
-        run(binary, ['install', 'express', spec], null, 'reject-before-audit', {
-          NPQ_ALLOW_NON_INTERACTIVE_INSTALL: 'true'
-        })
-      )
+      const result = run(binary, ['install', 'express', spec], null, 'reject-before-audit', {
+        NPQ_ALLOW_NON_INTERACTIVE_INSTALL: 'true'
+      })
+      expectRejected(result)
+      expect(result.stderr).toContain('package argument 2')
     }
   )
 
@@ -147,7 +147,28 @@ describe.each([npqBinary, heroBinary])('%s unsupported package inputs', (binary)
           [section]: { express: '^4.0.0', unsafe: 'npm:target@1.2.3' }
         })
       )
-      expectRejected(run(binary, ['install'], null, 'reject-before-audit'))
+      const result = run(binary, ['install'], null, 'reject-before-audit')
+      expectRejected(result)
+      expect(result.stderr).toContain(`package.json ${section}, entry 2`)
+      expect(result.stderr).toContain('"unsafe"')
+    }
+  )
+
+  test.each(['dependencies', 'devDependencies'])(
+    'rejects malformed %s before auditing or installing',
+    (section) => {
+      fs.writeFileSync(
+        path.join(fixtureDirectory, 'package.json'),
+        JSON.stringify({
+          [section]: ['express']
+        })
+      )
+      const result = run(binary, ['install'], null, 'reject-before-audit')
+      expect(result.error).toBeUndefined()
+      expect(result.status).toBeGreaterThan(0)
+      expect(result.stdout + result.stderr).toContain(`Invalid package.json ${section}`)
+      expect(result.stderr).not.toContain('UNEXPECTED_AUDIT')
+      expect(packageManagerRan()).toBe(false)
     }
   )
 

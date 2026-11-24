@@ -118,6 +118,19 @@ describe('shipped npq JSON process contract', () => {
     expect(`${result.stdout}${result.stderr}`).not.toContain('/private/package.tgz')
   })
 
+  test.each(['dependencies', 'devDependencies'])(
+    'reports malformed %s as a safe manifest error',
+    (section) => {
+      writeProject({ [section]: ['express'] })
+      const result = runJson(['--json'], { scenario: 'reject-before-audit' })
+      const report = expectJsonDocument(result, 2)
+      expect(report.packages).toEqual([])
+      expect(report.failures).toEqual([
+        { code: 'PROJECT_MANIFEST_ERROR', message: 'Unable to read project package.json' }
+      ])
+    }
+  )
+
   test('writes findings with exit one', () => {
     writeProject({ name: 'findings-project' })
 

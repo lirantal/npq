@@ -228,6 +228,12 @@ passed through `npq-hero` are unaffected. If you previously used these sources,
 audit them separately before installing them directly with your package manager;
 npq cannot check them.
 
+Human-readable rejection messages identify the package argument position or the
+manifest section and entry, and include the package name when it was parsed
+successfully. They omit raw specifiers. Present dependency sections must be
+objects mapping names to string specifiers; arrays, strings, booleans, numbers,
+and null sections are rejected. JSON errors keep their existing generic messages.
+
 Project-mode audits currently cover only declared direct dependencies from the current project's `package.json` (`dependencies` and `devDependencies`). They do not read lockfiles or discover transitive dependencies.
 
 ```sh

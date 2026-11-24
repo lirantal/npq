@@ -120,12 +120,57 @@ describe('sourcePackages', () => {
           await expect(getProjectPackages()).resolves.toEqual({
             error: true,
             code: 'EUNSUPPORTEDPACKAGESPEC',
-            message:
-              'Only registry package specifiers are supported (names, versions, ranges, and tags)'
+            message: expect.stringContaining(`package.json ${section}, entry 2`)
           })
         }
       }
     )
+
+    describe.each(['dependencies', 'devDependencies'])('%s shape validation', (section) => {
+      test.each([[], ['express'], 'express', true, false, 1, 0, null])(
+        'rejects a non-object section: %j',
+        async (value) => {
+          fs.readFile.mockResolvedValue(JSON.stringify({ [section]: value }))
+          const result = await getProjectPackages()
+          expect(result.error).toBe(true)
+          expect(result.message).toContain(`Invalid package.json ${section}`)
+          expect(result.message).toContain('expected an object')
+        }
+      )
+
+      test('accepts an empty dependency map', async () => {
+        fs.readFile.mockResolvedValue(JSON.stringify({ [section]: {} }))
+        await expect(getProjectPackages()).resolves.toEqual([])
+      })
+    })
+
+    test('identifies a rejected dependency without repeating its specifier', async () => {
+      fs.readFile.mockResolvedValue(
+        JSON.stringify({
+          dependencies: {
+            express: '*',
+            '@scope/unsafe': 'https://user:credential@example.test/private.tgz'
+          }
+        })
+      )
+      const result = await getProjectPackages()
+      expect(result.message).toContain('"@scope/unsafe"')
+      expect(result.message).toContain('package.json dependencies, entry 2')
+      expect(result.message).not.toContain('credential')
+      expect(result.message).not.toContain('private.tgz')
+    })
+
+    test('does not echo an invalid dependency key', async () => {
+      fs.readFile.mockResolvedValue(
+        JSON.stringify({
+          dependencies: { 'https://user:credential@example.test/private.tgz': 'npm:target@1' }
+        })
+      )
+      const result = await getProjectPackages()
+      expect(result.error).toBe(true)
+      expect(result.message).toContain('package.json dependencies, entry 1')
+      expect(result.message).not.toContain('credential')
+    })
 
     test('preserves scoped registry dependencies, tags, and wildcard ranges', async () => {
       fs.readFile.mockResolvedValue(
