@@ -39,6 +39,8 @@ if (scenario && scenario.startsWith('resolution-')) {
   PackageRepoUtils.prototype.getPackageInfo = async () => ({})
 } else if (scenario) {
   Marshall.prototype.process = async function processJsonFixture() {
+    if (scenario === 'reject-before-audit') process.stderr.write('UNEXPECTED_AUDIT\n')
+
     if (scenario === 'sigint') {
       setInterval(() => {}, 1000)
       if (process.send) process.send({ ready: true })

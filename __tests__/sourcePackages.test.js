@@ -95,6 +95,51 @@ describe('sourcePackages', () => {
       expect(packages).toEqual([])
     })
 
+    test.each(['dependencies', 'devDependencies'])(
+      'rejects unsupported or non-string values in %s without returning partial packages',
+      async (section) => {
+        for (const spec of [
+          'github:user/repo',
+          'user/repo',
+          'git+https://example.test/x.git',
+          'https://example.test/x.tgz',
+          'file:./local',
+          '../local',
+          './local.tgz',
+          'npm:target@1.2.3',
+          null,
+          123,
+          {},
+          []
+        ]) {
+          fs.readFile.mockResolvedValue(
+            JSON.stringify({
+              [section]: { valid: '^1.0.0', unsupported: spec }
+            })
+          )
+          await expect(getProjectPackages()).resolves.toEqual({
+            error: true,
+            code: 'EUNSUPPORTEDPACKAGESPEC',
+            message:
+              'Only registry package specifiers are supported (names, versions, ranges, and tags)'
+          })
+        }
+      }
+    )
+
+    test('preserves scoped registry dependencies, tags, and wildcard ranges', async () => {
+      fs.readFile.mockResolvedValue(
+        JSON.stringify({
+          dependencies: { '@scope/tool': '^1.2.0', tagged: 'next', wildcard: '*' }
+        })
+      )
+      await expect(getProjectPackages()).resolves.toEqual([
+        '@scope/tool@^1.2.0',
+        'tagged@next',
+        'wildcard@*'
+      ])
+    })
+
     it('should return error object when package.json is not found', async () => {
       const error = new Error('File not found')
       error.code = 'ENOENT'
