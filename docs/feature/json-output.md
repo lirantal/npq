@@ -94,8 +94,8 @@ JSON audits accept registry package names with a tag, exact version, or semver
 range. Remote tarball URLs, Git URLs, local file or directory paths, and npm
 aliases are rejected with `INVALID_INPUT`. Rejection reports never repeat the
 unsupported input. This restriction applies both to command-line packages and
-dependencies discovered from `package.json`; human-readable mode keeps its
-existing package-spec support.
+dependencies discovered from `package.json`. Human-readable audits enforce the
+same registry-only restriction.
 
 ## Report contract
 

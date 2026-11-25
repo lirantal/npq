@@ -217,6 +217,23 @@ Here are all the available environment variable names for disabling specific mar
 
 Running `npq` without an `install` / `i` / `add` subcommand (for example from a project directory with a `package.json`) audits dependencies only and does not run the package manager. The same applies to `npq <package>`: checks only, no install passthrough. Use `npq install …` when you want npq to hand off to npm (or `NPQ_PKG_MGR`) after the checks.
 
+Package audits accept registry names (including scoped names), exact versions,
+semver ranges, and tags, such as `express`, `@scope/tool@1.2.3`, `express@^4`,
+and `express@next`. Git URLs and shorthands, remote tarballs, local files and
+directories, and npm aliases are rejected before any package is audited or
+installed. This applies to `npq`, `npq-hero` install commands, and entries in
+`dependencies` and `devDependencies` read from `package.json`, including mixed
+requests containing supported and unsupported specifiers. Non-install commands
+passed through `npq-hero` are unaffected. If you previously used these sources,
+audit them separately before installing them directly with your package manager;
+npq cannot check them.
+
+Human-readable rejection messages identify the package argument position or the
+manifest section and entry, and include the package name when it was parsed
+successfully. They omit raw specifiers. Present dependency sections must be
+objects mapping names to string specifiers; arrays, strings, booleans, numbers,
+and null sections are rejected. JSON errors keep their existing generic messages.
+
 Project-mode audits currently cover only declared direct dependencies from the current project's `package.json` (`dependencies` and `devDependencies`). They do not read lockfiles or discover transitive dependencies.
 
 ```sh

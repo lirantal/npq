@@ -77,6 +77,22 @@ describe('runJsonAudit', () => {
     expect(JSON.stringify(report)).not.toContain('/secret/path')
   })
 
+  test('keeps contextual project input errors generic in JSON reports', async () => {
+    const getProjectPackages = jest.fn().mockResolvedValue({
+      error: true,
+      code: 'EUNSUPPORTEDPACKAGESPEC',
+      message: 'Unsupported private-package (package.json dependencies, entry 2)'
+    })
+    const Marshall = jest.fn()
+    const report = await runJsonAudit({ packages: [] }, { getProjectPackages, Marshall })
+    expect(Marshall).not.toHaveBeenCalled()
+    expect(report.packages).toEqual([])
+    expect(report.failures).toEqual([
+      { code: AUDIT_FAILURE_CODES.INVALID_INPUT, message: 'Invalid package or option argument' }
+    ])
+    expect(JSON.stringify(report)).not.toContain('private-package')
+  })
+
   test.each([
     ['tarball URL', 'unsafe@https://user:credential@example.test/package.tgz'],
     ['git URL', 'unsafe@git+https://user:credential@example.test/repository.git'],

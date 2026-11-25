@@ -102,6 +102,104 @@ afterEach(() => {
   packageManagerLauncher = undefined
 })
 
+const unsupportedSpecs = [
+  'github:user/repo',
+  'user/repo',
+  'git+https://example.test/repository.git',
+  'https://user:credential@example.test/private/package.tgz',
+  'file:./local',
+  '../local',
+  './local.tgz',
+  'alias-name@npm:target@1.2.3',
+  'named@https://example.test/package.tgz',
+  'named@github:user/repo'
+]
+
+describe.each([npqBinary, heroBinary])('%s unsupported package inputs', (binary) => {
+  function expectRejected(result) {
+    expect(result.error).toBeUndefined()
+    expect(result.status).toBeGreaterThan(0)
+    expect(packageManagerRan()).toBe(false)
+    const output = result.stdout + result.stderr
+    expect(output).toContain('Only registry package specifiers are supported')
+    expect(output).not.toContain('UNEXPECTED_AUDIT')
+    expect(output).not.toContain('credential')
+    expect(output).not.toContain('/private/package.tgz')
+  }
+
+  test.each(unsupportedSpecs)(
+    'rejects mixed install input containing %s before auditing',
+    (spec) => {
+      const result = run(binary, ['install', 'express', spec], null, 'reject-before-audit', {
+        NPQ_ALLOW_NON_INTERACTIVE_INSTALL: 'true'
+      })
+      expectRejected(result)
+      expect(result.stderr).toContain('package argument 2')
+    }
+  )
+
+  test.each(['dependencies', 'devDependencies'])(
+    'rejects unsupported %s before auditing or launching a bare install',
+    (section) => {
+      fs.writeFileSync(
+        path.join(fixtureDirectory, 'package.json'),
+        JSON.stringify({
+          [section]: { express: '^4.0.0', unsafe: 'npm:target@1.2.3' }
+        })
+      )
+      const result = run(binary, ['install'], null, 'reject-before-audit')
+      expectRejected(result)
+      expect(result.stderr).toContain(`package.json ${section}, entry 2`)
+      expect(result.stderr).toContain('"unsafe"')
+    }
+  )
+
+  test.each(['dependencies', 'devDependencies'])(
+    'rejects malformed %s before auditing or installing',
+    (section) => {
+      fs.writeFileSync(
+        path.join(fixtureDirectory, 'package.json'),
+        JSON.stringify({
+          [section]: ['express']
+        })
+      )
+      const result = run(binary, ['install'], null, 'reject-before-audit')
+      expect(result.error).toBeUndefined()
+      expect(result.status).toBeGreaterThan(0)
+      expect(result.stdout + result.stderr).toContain(`Invalid package.json ${section}`)
+      expect(result.stderr).not.toContain('UNEXPECTED_AUDIT')
+      expect(packageManagerRan()).toBe(false)
+    }
+  )
+
+  test('still installs supported registry names, versions, ranges, and tags', () => {
+    const result = run(
+      binary,
+      ['install', 'express', '@scope/tool@1.2.3', 'ranged@^1.0.0', 'tagged@next'],
+      null,
+      'clean'
+    )
+    expect(result.error).toBeUndefined()
+    expect(result.status).toBe(0)
+    expect(packageManagerRan()).toBe(true)
+  })
+})
+
+test('npq rejects unsupported project input in audit-only mode', () => {
+  fs.writeFileSync(
+    path.join(fixtureDirectory, 'package.json'),
+    JSON.stringify({
+      dependencies: { unsafe: 'file:./local' }
+    })
+  )
+  const result = run(npqBinary, [], null, 'reject-before-audit')
+  expect(result.error).toBeUndefined()
+  expect(result.status).toBeGreaterThan(0)
+  expect(result.stdout + result.stderr).toContain('Only registry package specifiers are supported')
+  expect(result.stderr).not.toContain('UNEXPECTED_AUDIT')
+  expect(packageManagerRan()).toBe(false)
+})
+
 describe('non-interactive executable routing', () => {
   test.each([
     [npqBinary, 'resolution-shadow', '2.x'],

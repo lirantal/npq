@@ -516,13 +516,15 @@ describe('CliParser', () => {
       'file:/tmp/package.tgz',
       '../package',
       'alias-name@npm:express@1.0.0'
-    ])('preserves human-mode support for %s', (packageSpec) => {
+    ])('rejects unsupported human-mode input %s', (packageSpec) => {
       mockParseArgs.mockReturnValue({
         values: {},
         positionals: ['install', packageSpec]
       })
 
-      expect(() => CliParser.parseArgsFull()).not.toThrow()
+      expect(() => CliParser.parseArgsFull()).toThrow(
+        'Only registry package specifiers are supported'
+      )
     })
 
     test('defaults JSON audit mode to false', () => {
@@ -730,13 +732,15 @@ describe('CliParser', () => {
       }
     })
 
-    test('preserves human parsing for install package types outside JSON mode', () => {
+    test('rejects unsupported human-mode npq-hero install input', () => {
       mockParseArgs.mockReturnValue({
         values: {},
         positionals: ['install', 'https://example.test/package.tgz']
       })
 
-      expect(() => CliParser.parseArgsMinimal()).not.toThrow()
+      expect(() => CliParser.parseArgsMinimal()).toThrow(
+        'Only registry package specifiers are supported'
+      )
     })
   })
 
