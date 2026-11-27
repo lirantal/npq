@@ -44,7 +44,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@npmcli/config": "^10.10.0",
+    "@npmcli/config": "^11.0.0",
     "cross-spawn": "^7.0.6",
     "npm-package-arg": "^13.0.2",
     "npm-pick-manifest": "^11.0.3",
